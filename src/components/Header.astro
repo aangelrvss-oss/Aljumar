@@ -83,6 +83,8 @@ const isCurrent = (href: string) => path === href || (href !== '/' && path.start
   function setOpen(open: boolean, focusToggle = false) {
     if (!toggle || !menu) return;
     toggle.setAttribute('aria-expanded', String(open));
+    // El menú empieza justo debajo de la cabecera (que puede no estar arriba del todo).
+    if (open && header) menu.style.setProperty('--menu-top', `${Math.max(0, header.getBoundingClientRect().bottom)}px`);
     menu.hidden = !open;
     document.documentElement.classList.toggle('menu-open', open);
     if (label) label.textContent = open ? 'Cerrar menú' : 'Abrir menú';
@@ -109,8 +111,9 @@ const isCurrent = (href: string) => path === href || (href !== '/' && path.start
     position: sticky;
     top: 0;
     z-index: 50;
-    background: rgb(255 255 255 / 0.96);
-    backdrop-filter: saturate(1.4) blur(10px);
+    /* Fondo sólido: un backdrop-filter convertiría la cabecera en el contenedor
+       de los elementos fixed y el menú móvil no ocuparía la pantalla. */
+    background: var(--white);
     border-bottom: 1px solid transparent;
     transition:
       border-color var(--dur) var(--ease),
@@ -214,7 +217,8 @@ const isCurrent = (href: string) => path === href || (href !== '/' && path.start
 
   .mobile-menu {
     position: fixed;
-    inset: var(--header-h) 0 0;
+    inset: var(--menu-top, var(--header-h)) 0 0;
+    z-index: 49;
     overflow-y: auto;
     padding: var(--s-5) var(--gutter) var(--s-8);
     background: var(--white);

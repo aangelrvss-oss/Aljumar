@@ -1,10 +1,10 @@
 /*
  * Tokens de diseño de Aljumar Inmuebles.
  * Paleta derivada del logotipo (azul marino + verde lima). Contrastes WCAG
- * verificados en tests/unit/contrast.test.ts:
- *   --ink sobre --white ........ 14,9:1   --ink-2 sobre --white ...... 4,9:1
- *   --navy-700 sobre --white ... 8,9:1    --lime-500 sobre --navy-900 . 7,5:1
- *   --navy-900 sobre --lime-500  7,5:1    --white sobre --navy-700 .... 8,9:1
+ * (calculados; los verifica tests/unit/contrast.test.ts):
+ *   --ink sobre --white ........ 14,5:1   --ink-2 sobre --bg ......... 5,3:1
+ *   --navy-700 sobre --white ... 9,1:1    --lime-500 sobre --navy-900 . 7,7:1
+ *   --navy-950 sobre --lime-500  9,6:1   --white sobre --navy-700 .... 9,1:1
  * El lima NO se usa como color de texto sobre fondos claros (1,6:1).
  */
 :root {

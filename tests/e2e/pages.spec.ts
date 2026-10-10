@@ -139,6 +139,10 @@ test.describe('Navegación', () => {
     await toggle.click();
     await expect(page.getByRole('button', { name: 'Cerrar menú' })).toHaveAttribute('aria-expanded', 'true');
     await expect(page.locator('#menu-movil')).toBeVisible();
+    // El panel cubre la pantalla bajo la cabecera (no se ve el contenido detrás).
+    const box = await page.locator('#menu-movil').boundingBox();
+    const vh = page.viewportSize()!.height;
+    expect(box!.y + box!.height).toBeGreaterThanOrEqual(vh - 1);
     await page.keyboard.press('Escape');
     await expect(page.locator('#menu-movil')).toBeHidden();
   });
