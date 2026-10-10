@@ -42,6 +42,10 @@ const exists = (path: string) => {
   return existsSync(join(dist, clean));
 };
 
+// Compilación de pruebas (STAGING=1): todo debe estar bloqueado a los buscadores.
+const robotsTxt = existsSync(join(dist, 'robots.txt')) ? readFileSync(join(dist, 'robots.txt'), 'utf8') : '';
+const staging = /^Disallow: \/$/m.test(robotsTxt);
+
 const titles = new Map<string, string>();
 const descs = new Map<string, string>();
 const indexable: string[] = [];
@@ -55,14 +59,17 @@ for (const f of htmlFiles) {
   const desc = get(html, /<meta name="description" content="([^"]*)"/);
   const robots = get(html, /<meta name="robots" content="([^"]*)"/) ?? '';
   const noindex = robots.includes('noindex');
+  if (staging && !noindex) errors.push(`${route}: compilación de pruebas sin noindex`);
+  // En pruebas todas las páginas son noindex: el resto de reglas se evalúan como si no lo fueran.
+  const intendedNoindex = staging ? /contacto\/enviado|inmueble-no-disponible|404/.test(route) : noindex;
   if (!/<html lang="es"/.test(html)) errors.push(`${route}: falta lang="es"`);
   if (!title) errors.push(`${route}: sin <title>`);
   if (!desc) errors.push(`${route}: sin meta description`);
-  else if (!noindex && (desc.length < 50 || desc.length > 170)) warnings.push(`${route}: description de ${desc.length} caracteres`);
+  else if (!intendedNoindex && (desc.length < 50 || desc.length > 170)) warnings.push(`${route}: description de ${desc.length} caracteres`);
   if (!is404 && !/<link rel="canonical" href="https:\/\/[^"]+"/.test(html)) errors.push(`${route}: sin canonical absoluto`);
   const h1 = (html.match(/<h1[\s>]/g) ?? []).length;
   if (h1 !== 1) errors.push(`${route}: ${h1} elementos <h1>`);
-  if (!noindex) {
+  if (!intendedNoindex) {
     indexable.push(route);
     if (title && titles.has(title)) errors.push(`${route}: <title> duplicado con ${titles.get(title)}`);
     if (desc && descs.has(desc)) errors.push(`${route}: description duplicada con ${descs.get(desc)}`);
@@ -96,8 +103,10 @@ const inSitemap = new Set(
   sitemapFiles.flatMap((f) => [...readFileSync(f, 'utf8').matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]!).pathname)),
 );
 if (!sitemapFiles.length) errors.push('No se ha generado el sitemap');
-for (const r of inSitemap) if (!indexable.includes(r)) errors.push(`sitemap: incluye una página no indexable o inexistente: ${r}`);
-for (const r of indexable) if (!inSitemap.has(r) && r !== '/404.html') errors.push(`sitemap: falta la página indexable ${r}`);
+if (!staging) {
+  for (const r of inSitemap) if (!indexable.includes(r)) errors.push(`sitemap: incluye una página no indexable o inexistente: ${r}`);
+  for (const r of indexable) if (!inSitemap.has(r) && r !== '/404.html') errors.push(`sitemap: falta la página indexable ${r}`);
+}
 
 // Redirecciones
 const rules = parseCsv(readFileSync(resolve(root, 'docs/migration/redirect-map.csv'), 'utf8'));
@@ -123,6 +132,7 @@ const blogImages = readdirSync(resolve(root, 'src/content/blog')).filter((f) =>
 ).length;
 if (!existsSync(join(root, 'public/wp-content'))) warnings.push(`Medios de la web antigua sin descargar: ${blogImages} imágenes de artículos y 4 fotos del equipo se muestran con marcador (npm run media:fetch)`);
 
+if (staging) console.log('Modo pruebas (STAGING=1): robots.txt cerrado y todas las páginas con noindex.');
 console.log(`Páginas: ${htmlFiles.length} (${indexable.length} indexables) · sitemap: ${inSitemap.size} URL · redirecciones: ${rules.length}`);
 for (const w of warnings) console.warn(`! ${w}`);
 if (errors.length) {
