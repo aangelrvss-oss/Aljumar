@@ -71,3 +71,28 @@ Formato breve: contexto → decisión → consecuencias / reversión.
 
 - Fraunces (titulares, serif contemporánea con eje óptico) y Plus Jakarta Sans (texto e interfaz), ambas OFL y autoalojadas.
 - Paleta del encargo validada con pruebas de contraste (`tests/unit/contrast.test.ts`); el gris secundario se oscureció de `#647180` a `#5b6876` para dar margen (sobre el fondo neutro pasa de 4,64:1, justo por encima del mínimo, a 5,3:1). El lima no se usa como texto sobre blanco.
+
+## ADR-014 · Logotipo obtenido de la web oficial (actualiza ADR-011)
+
+- **Contexto**: sin acceso a aljumar.es desde el entorno, pero con capturas de la web oficial (Firecrawl, autorizado).
+- **Decisión**: extraer el logotipo de las capturas de cabecera y pie quitando el fondo azul sin redibujar nada (`migration/brand-captures/extract-logo.py`, algoritmo «color a alfa»). Resultado: `public/brand/logo-vertical.png`, `logo-horizontal.png`, `logo-simbolo.png`, y a partir de ellos el favicon, el icono de iOS y la imagen para redes.
+- **Consecuencias**: versiones claras para fondo azul, fieles al original pero rasterizadas. Los originales con fondo que descarga `npm run media:fetch` se guardan en `public/brand/originales/` como referencia; si Aljumar entrega un SVG transparente, `Logo.astro` lo usa automáticamente.
+
+## ADR-015 · Listados: páginas estáticas + índice JSON bajo demanda
+
+- **Contexto**: la iteración 1 metía todas las tarjetas en el HTML y «Ver más» solo las mostraba. Con un inventario de 1.373 inmuebles (XML de demostración de Inmovilla), `/comprar/` pesaba 4,3 MB (113 KB comprimido) con 1.106 tarjetas en el DOM.
+- **Decisión**: páginas estáticas de 24 inmuebles (`/comprar/`, `/comprar/pagina/2/`…) con paginación enlazada, indexables y usables sin JavaScript; al filtrar u ordenar, el navegador descarga una vez `/datos/inmuebles-<operación>.json` (excluido en robots.txt) y pinta las tarjetas de 24 en 24 con el mismo HTML que el servidor (`src/lib/inventory/card.ts`).
+- **Resultado medido** con 1.373 inmuebles: `/comprar/` 62 KB (11,8 KB comprimido), 24 tarjetas; índice 766 KB (39,5 KB comprimido) solo al filtrar; 46 páginas de paginación.
+- **Alternativas descartadas**: renderizar todo y ocultar (coste de DOM); una página por combinación de filtros (explosión de URL de poco valor); búsqueda en servidor (no hay servidor de aplicación y no se quiere consultar la API de Inmovilla en cada visita).
+- **Sin JavaScript** no se ofrecen filtros (no funcionarían); el listado paginado sigue completo.
+
+## ADR-016 · Movimiento que no oculta contenido
+
+- **Contexto**: defecto crítico de la iteración 1: bloques en blanco al hacer scroll rápido o saltar a un ancla.
+- **Decisión**: `src/scripts/motion.ts` solo oculta lo que está por debajo de la pantalla al cargar y lo muestra al entrar, al pasar de largo, al llegar al final, al imprimir o al cambiar el ancla; sin JavaScript o con movimiento reducido no oculta nada. La presentación de marca es una capa fija sin eventos, una vez por sesión, solo en la portada.
+- **Verificación**: pruebas e2e con movimiento activado (salto al final, ancla, sin JavaScript, movimiento reducido, presentación una vez por sesión).
+
+## ADR-017 · Fotografía principal de la portada
+
+- **Decisión**: regla determinista (`pickHero()`): elección manual en `/admin/` → destacado en Inmovilla → más fotos → mayor precio → identificador. La tarjeta grande de la cartera solo se usa para inmuebles destacados.
+- **Motivo**: la iteración 1 tomaba las dos primeras propiedades con fotos y mostraba un baño y un plano. Ninguna regla automática puede juzgar la calidad de una foto: por eso existe la elección manual.

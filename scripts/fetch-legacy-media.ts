@@ -2,7 +2,9 @@
  * Descarga de la web antigua (aljumar.es, WordPress) los medios que usa la
  * nueva web, ANTES de retirar WordPress:
  *
- *   - logotipos originales     → public/brand/logo-vertical.svg, logo-horizontal.jpg
+ *   - logotipos originales     → public/brand/originales/ (con su fondo; de
+ *                                referencia: la web usa las versiones
+ *                                transparentes public/brand/logo-*.png)
  *   - icono del sitio          → public/favicon.png
  *   - fotos del equipo         → public/wp-content/uploads/… (misma ruta que hoy)
  *   - imágenes de los artículos→ public/wp-content/uploads/… (misma ruta que hoy)
@@ -24,8 +26,8 @@ const ORIGIN = process.env.LEGACY_ORIGIN ?? 'https://aljumar.es';
 const force = process.argv.includes('--force');
 
 const jobs: { url: string; dest: string }[] = [
-  { url: '/wp-content/uploads/2026/06/Aljumar_Inmuebles_V-FONDO.svg', dest: 'public/brand/logo-vertical.svg' },
-  { url: '/wp-content/uploads/2026/05/Aljumar_Inmuebles_H-FONDO_www.jpg', dest: 'public/brand/logo-horizontal.jpg' },
+  { url: '/wp-content/uploads/2026/06/Aljumar_Inmuebles_V-FONDO.svg', dest: 'public/brand/originales/Aljumar_Inmuebles_V-FONDO.svg' },
+  { url: '/wp-content/uploads/2026/05/Aljumar_Inmuebles_H-FONDO_www.jpg', dest: 'public/brand/originales/Aljumar_Inmuebles_H-FONDO_www.jpg' },
   { url: '/wp-content/uploads/2026/05/cropped-Aljumar_WWW_Vpeq-1-2-270x270.png', dest: 'public/favicon.png' },
 ];
 

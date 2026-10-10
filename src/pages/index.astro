@@ -11,7 +11,12 @@ import { topics } from '../data/topics';
 // Foto principal: regla documentada en heroProperty() (src/lib/inventory).
 const hero = heroProperty();
 const heroOp = hero ? primaryOperation(hero) : 'venta';
-const highlights = featured(5, hero?.id ?? null);
+// Solo se amplía la primera tarjeta si Aljumar la ha marcado como destacada
+// en Inmovilla: ampliar sin criterio puede agrandar una foto de un baño o un
+// plano. Sin destacados, rejilla uniforme de 4.
+const candidates = featured(5, hero?.id ?? null);
+const hasLead = candidates[0]?.featured === true;
+const highlights = hasLead ? candidates : candidates.slice(0, 4);
 
 const posts = (await getCollection('blog', (e) => !e.data.draft))
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
@@ -111,7 +116,7 @@ const method = [
         highlights.length > 0 ? (
           <ul class="featured__list" aria-label="Inmuebles destacados">
             {highlights.map((p, i) => (
-              <li class:list={['featured__item', { 'featured__item--lead': i === 0 }]} data-motion="up">
+              <li class:list={['featured__item', { 'featured__item--lead': hasLead && i === 0 }]} data-motion="up">
                 <PropertyCard property={p} showOperation={counts.alquiler > 0} />
               </li>
             ))}

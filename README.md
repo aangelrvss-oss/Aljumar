@@ -42,6 +42,8 @@ npm run dev                  # http://localhost:4321
 | `npm run media:fetch` | Descarga logotipo, icono, fotos del equipo e imágenes del blog de la web antigua |
 | `npm run import:blog` | Reimporta los artículos desde `migration/wp-posts-export-*.json` |
 | `node scripts/make-og.ts` | Regenera la imagen para redes sociales |
+| `node scripts/qa-states.ts <carpeta>` | Capturas de revisión de páginas y estados (con `npm run preview` en marcha) |
+| `node scripts/qa-screenshots.ts <carpeta> [rutas]` | Capturas de página completa de rutas concretas |
 
 ## Estructura
 
