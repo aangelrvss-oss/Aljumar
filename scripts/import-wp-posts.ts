@@ -3,24 +3,29 @@
  *
  *   node scripts/import-wp-posts.ts
  *
- * Origen: migration/wp-posts-export-2026-10-10.json (API REST de WordPress,
- * /wp-json/wp/v2/posts). En ese volcado las etiquetas HTML de apertura
- * llegaron eliminadas y solo quedan las de cierre (</p>, </h2>, </li>…), así
- * que la estructura se reconstruye a partir de ellas: párrafos, encabezados y
- * listas se conservan; las negritas y los enlaces internos se pierden (ver
- * docs/migration/seo-and-content-migration.md).
+ * Orígenes:
+ *  - migration/wp-posts-html-2026-10-10.json: HTML completo de cada artículo
+ *    (API REST de WordPress en modo JSONP, para que el HTML llegue intacto).
+ *    Se convierte con turndown conservando encabezados, listas, negritas,
+ *    cursivas y enlaces; los enlaces al dominio temporal o a la marca anterior
+ *    se reescriben a las rutas nuevas.
+ *  - migration/wp-posts-export-2026-10-10.json: metadatos (título, fechas,
+ *    categoría, resumen). Su HTML llegó sin etiquetas de apertura; solo se usa
+ *    como reserva si un artículo faltara en el volcado completo.
  *
  * Cada artículo conserva su slug, y por tanto su URL (/slug/).
  * Las menciones a la marca anterior «Look and Find Moratalaz» se sustituyen
  * por «Aljumar Inmuebles» (el original queda en el JSON de migración).
  */
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, unlinkSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, unlinkSync } from 'node:fs';
+import TurndownService from 'turndown';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { decodeEntities } from '../src/lib/inventory/text.ts';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = resolve(root, 'migration/wp-posts-export-2026-10-10.json');
+const SRC_HTML = resolve(root, 'migration/wp-posts-html-2026-10-10.json');
 const OUT = resolve(root, 'src/content/blog');
 
 interface WpPost {
@@ -162,22 +167,92 @@ export function wpToMarkdown(html: string): string {
   return blocks.join('\n\n') + '\n';
 }
 
+/** Enlaces de la web antigua → rutas de la nueva (sin pasar por redirecciones). */
+const LINK_MAP: [RegExp, string][] = [
+  [/^\/(comprar|ofertas)\b.*$/, '/comprar/'],
+  [/^\/alquilar\b.*$/, '/alquilar/'],
+  [/^\/(servicios|quieres-vender)\b.*$/, '/vender-mi-vivienda/'],
+  [/^\/(nuestra-esencia)\b.*$/, '/sobre-aljumar/'],
+  [/^\/(formulario-cliente|contacto)\b.*$/, '/contacto/'],
+  [/^\/blog\b.*$/, '/consejos-inmobiliarios/'],
+];
+
+export function rewriteHref(href: string, slugs: Set<string>): string {
+  let url: URL;
+  try {
+    url = new URL(href, 'https://aljumar.es');
+  } catch {
+    return href;
+  }
+  const host = url.hostname.replace(/^www\./, '');
+  if (!/^(aljumar\.es(\.mialias\.net)?|lookandfind\.es)$/.test(host)) return href;
+  if (host === 'lookandfind.es') return '/';
+  const path = url.pathname.endsWith('/') ? url.pathname : `${url.pathname}/`;
+  if (path === '/') return '/';
+  const slug = path.replace(/^\/|\/$/g, '');
+  if (slugs.has(slug)) return `/${slug}/`;
+  for (const [re, to] of LINK_MAP) if (re.test(path)) return to;
+  return '/';
+}
+
+export function htmlToMarkdown(html: string, slugs: Set<string>): string {
+  const td = new TurndownService({ headingStyle: 'atx', bulletListMarker: '-', emDelimiter: '*', strongDelimiter: '**' });
+  td.remove(['script', 'style', 'iframe', 'img', 'figure', 'noscript']);
+  // Subrayados: sin equivalente en Markdown; se conserva el texto.
+  td.addRule('subrayado', { filter: ['u', 'span'], replacement: (c) => c });
+  // h1 dentro del cuerpo → h2 (el título de la página es el único h1).
+  td.addRule('h1', { filter: 'h1', replacement: (c) => `\n\n## ${c.trim()}\n\n` });
+  td.addRule('enlaces', {
+    filter: (node) => node.nodeName === 'A' && Boolean((node as HTMLElement).getAttribute('href')),
+    replacement: (content, node) => {
+      const text = content.trim();
+      if (!text) return '';
+      const href = rewriteHref((node as HTMLElement).getAttribute('href') ?? '', slugs);
+      return `[${text}](${href})`;
+    },
+  });
+  const cleaned = html
+    // Marca anterior: solo en el texto visible, nunca dentro de atributos (URL).
+    .replace(/>([^<]+)</g, (_, text: string) => `>${text.replace(LEGACY_BRAND, 'Aljumar Inmuebles')}<`)
+    .replace(/&nbsp;|\u00a0/g, ' ')
+    // Negritas y cursivas vacías o solo con espacios (frecuentes en el editor)
+    .replace(/<(strong|b|em|i)>(\s*)<\/\1>/g, '$2')
+    // Los espacios dentro de <strong> impiden que Markdown reconozca la negrita:
+    // se sacan fuera de la etiqueta.
+    .replace(/<(strong|b|em|i)>(\s+)/g, '$2<$1>')
+    .replace(/(\s+)<\/(strong|b|em|i)>/g, '</$2>$1');
+  return (
+    td
+      .turndown(cleaned)
+      .replace(/\n{3,}/g, '\n\n')
+      .replace(/^#{4,} /gm, '### ')
+      .trim() + '\n'
+  );
+}
+
 function yamlString(s: string): string {
   return JSON.stringify(s);
 }
 
 function main() {
   const posts = JSON.parse(readFileSync(SRC, 'utf8')) as WpPost[];
+  const full = existsSync(SRC_HTML)
+    ? new Map((JSON.parse(readFileSync(SRC_HTML, 'utf8')) as { id: number; content: { rendered: string } }[]).map((p) => [p.id, p.content.rendered]))
+    : new Map<number, string>();
+  const slugs = new Set(posts.map((p) => p.slug));
+  let fromFull = 0;
   mkdirSync(OUT, { recursive: true });
   for (const f of readdirSync(OUT)) if (f.endsWith('.md')) unlinkSync(resolve(OUT, f));
   let replaced = 0;
   for (const p of posts) {
     const rawText = p.content.rendered;
-    const hadLegacy = new RegExp(LEGACY_BRAND.source, 'i').test(rawText) || /lookfind/.test(p.slug);
+    const hadLegacy = new RegExp(LEGACY_BRAND.source, 'i').test(full.get(p.id) ?? rawText) || /lookfind/.test(p.slug);
     if (hadLegacy) replaced++;
     const title = inline(p.title.rendered);
     const description = inline(p.excerpt.rendered).replace(/\s*\[…\]$|\s*\[&hellip;\]$/, '').replace(/…$/, '');
-    const body = wpToMarkdown(rawText);
+    const html = full.get(p.id);
+    if (html) fromFull++;
+    const body = html ? htmlToMarkdown(html, slugs) : wpToMarkdown(rawText);
     const image = IMAGES[p.slug] ? `/wp-content/uploads/${IMAGES[p.slug]}` : null;
     const fm = [
       '---',
@@ -196,7 +271,7 @@ function main() {
       .join('\n');
     writeFileSync(resolve(OUT, `${p.slug}.md`), fm + body);
   }
-  console.log(`✓ ${posts.length} artículos importados en src/content/blog (marca anterior sustituida en ${replaced}).`);
+  console.log(`✓ ${posts.length} artículos importados en src/content/blog (${fromFull} con HTML completo; marca anterior sustituida en ${replaced}).`);
 }
 
-main();
+if (import.meta.url === `file://${process.argv[1]}`) main();

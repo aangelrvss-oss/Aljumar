@@ -10,13 +10,13 @@ legacyBrandReplaced: true
 ---
 Cada vez estamos más concienciados con el medio ambiente y nos vamos adaptando a tener actitudes más sostenibles con nuestro entorno. Esto implica que también buscamos soluciones para que nuestros hogares estén mucho más optimizados energéticamente para practicar el ahorro y reducir las facturas.
 
-En Aljumar Inmuebles te contamos cómo puedes mejorar la eficiencia energética de tu hogar para poder vender antes un inmueble.
+En **Aljumar Inmuebles** te contamos cómo puedes mejorar la eficiencia energética de tu hogar para poder vender antes un inmueble.
 
 Para que un hogar sea eficientemente energético hay que optimizar el consumo de energía de todas las instalaciones y los dispositivos que se incluyen en el hogar. Para que así realizando las mismas actividades, reduzcamos el consumo de energía.
 
 Cuando tenemos un hogar eficientemente energético, conseguimos un ahorro sustancial de nuestras facturas. Que además, contribuye a la sostenibilidad del planeta.
 
-### Propuestas para mejorar la eficiencia energética en el hogar
+### **Propuestas para mejorar la eficiencia energética en el hogar**
 
 A veces no se trata solamente de invertir dinero para mejorar la sostenibilidad sino que también tenemos que cambiar aquellos hábitos que tienen un impacto directo en nuestro consumo y que consiguen reducir el gasto energético y ser más sostenibles.
 
@@ -30,9 +30,9 @@ Utilizar luces LED para la iluminación
 
 Las luces LED (Diodo Emisor de Luz) es la alternativa a las bombillas tradicionales que consiguen un mayor ahorro energético. Además de que podemos beneficiarnos de todas las ventajas de este tipo de luces:
 
-- Una vida útil de más de 60.000 horas.
-- Un encendido instantáneo con un coste mínimo.
-- Son luces sin componentes contaminantes.
+-   Una vida útil de más de 60.000 horas.
+-   Un encendido instantáneo con un coste mínimo.
+-   Son luces sin componentes contaminantes.
 
 Por todo esto, además de reducir la factura son sostenibles con el medio ambiente.
 
@@ -40,11 +40,11 @@ Manejar de forma eficiente los dispositivos electrónicos
 
 Hoy en día utilizamos innumerables dispositivos electrónicos en nuestras rutinas, por eso, es importante utilizarlos de una forma eficiente para mejorar el consumo energético.
 
-Para evitar el «consumo vampiro», es decir, ese consumo que se produce en los aparatos cuando los dejamos en modo standby, lo más recomendable es apagarlos por completo.
+Para evitar el «consumo vampiro», es decir, ese consumo que se produce en los aparatos cuando los dejamos en modo *standby*, lo más recomendable es apagarlos por completo.
 
 Asimismo, hay que aprender a utilizar todos los electrodomésticos de forma eficiente empezando por comprar aquellos que tengan una calificación energética alta. Y hay que procurar utilizarlos cuando realmente sean necesarios.
 
-#### Cómo vender antes mejorando la eficiencia energética
+### **Cómo vender antes mejorando la eficiencia energética**
 
 Para poder conocer cuál es el consumo energético de nuestro hogar podemos solicitar un certificado energético. Se trata de un documento obligatorio que tenemos que obtener si queremos alquilar o vender un inmueble. Este certificado determina la eficiencia de una vivienda por medio de una etiqueta de colores que es muy similar a la que podemos ver en los electrodomésticos.
 

@@ -12,7 +12,7 @@ Por supuesto, llenarán la habitación de luz solar y te permitirán ahorrar un 
 
 Según el arquitecto Jeffrey Dungan, conocido por construir casas en torno a vistas inspiradoras: «Las ventanas son los ojos del alma de una casa». Sigue leyendo y descubre todo lo que conlleva el diseño y la renovación de ventanas en el futuro y descubre lo que necesitas saber antes de embarcarte en tu propio proyecto.
 
-Encuentra el estilo que se ajusta a ti
+**Encuentra el estilo que se ajusta a ti**
 
 Si vas a sustituir las ventanas o a empezar desde cero, querrás elegir ventanas que armonicen con la arquitectura interior y exterior de tu casa. Es importante además que tengan un estilo que te guste y en el que te veas reflejado. Existen varios tipos de ventanas, te dejamos unos ejemplos de ellas para que te puedas hacer una idea y así tomar la mejor decisión:
 
@@ -26,4 +26,4 @@ Si vas a sustituir las ventanas o a empezar desde cero, querrás elegir ventanas
 
 ⦁ Bahía: estos crean un espacio empotrado ideal para un asiento en la ventana o una banqueta en la sala de desayunos.
 
-Es el momento de dejar entrar en casa esa luz que tanto buscas y necesitas, un cambio en tus ventanas puede ser de gran ayuda. En Aljumar Inmuebles, como expertos en el sector con experiencia en el hogar, podemos ayudarte en todas aquellas dudas que te surjan sobre el tema. No dudes en contactarnos, da a tu vivienda ese nuevo aspecto que tanto deseas.
+Es el momento de dejar entrar en casa esa luz que tanto buscas y necesitas, un cambio en tus ventanas puede ser de gran ayuda. En **[Aljumar Inmuebles](/)**, como expertos en el sector con experiencia en el hogar, podemos ayudarte en todas aquellas dudas que te surjan sobre el tema. No dudes en contactarnos, da a tu vivienda ese nuevo aspecto que tanto deseas.

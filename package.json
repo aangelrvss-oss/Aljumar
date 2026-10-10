@@ -34,7 +34,9 @@
     "@astrojs/check": "0.9.10",
     "@axe-core/playwright": "4.13.0",
     "@playwright/test": "1.56.1",
+    "@types/turndown": "^5.0.6",
     "playwright-core": "^1.56.1",
+    "turndown": "^7.2.4",
     "typescript": "5.9.3",
     "vitest": "5.0.3"
   }

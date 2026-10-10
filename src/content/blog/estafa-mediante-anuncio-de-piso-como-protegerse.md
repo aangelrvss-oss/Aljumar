@@ -13,12 +13,12 @@ Para protegerse de estas estafas, se recomiendan varias medidas: verificar la le
 
 Recomendaciones para evitar estafas:
 
-Verifica la legitimidad: Comprueba que el anuncio sea auténtico buscando la propiedad en diferentes plataformas.
-
-Desconfía de ofertas demasiado atractivas: Si parece demasiado bueno para ser verdad, probablemente lo sea; los precios muy bajos son sospechosos.
-
-Evita pagos adelantados: No envíes dinero sin haber visto la propiedad y sin un contrato firmado, ya que los estafadores suelen presionar para recibir pagos rápidamente.
-
-Contacta directamente: Utiliza canales oficiales para comunicarte con el propietario o agencia y verifica su identidad a través de llamadas o visitas.
-
-Consulta a profesionales: Acude a expertos inmobiliarios para obtener asesoría y confirmar la legitimidad de las ofertas.
+1.  Verifica la legitimidad: Comprueba que el anuncio sea auténtico buscando la propiedad en diferentes plataformas.
+    
+2.  Desconfía de ofertas demasiado atractivas: Si parece demasiado bueno para ser verdad, probablemente lo sea; los precios muy bajos son sospechosos.
+    
+3.  Evita pagos adelantados: No envíes dinero sin haber visto la propiedad y sin un contrato firmado, ya que los estafadores suelen presionar para recibir pagos rápidamente.
+    
+4.  Contacta directamente: Utiliza canales oficiales para comunicarte con el propietario o agencia y verifica su identidad a través de llamadas o visitas.
+    
+5.  Consulta a profesionales: Acude a expertos inmobiliarios para obtener asesoría y confirmar la legitimidad de las ofertas.

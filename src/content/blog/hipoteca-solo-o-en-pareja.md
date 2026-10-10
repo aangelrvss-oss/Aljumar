@@ -12,7 +12,7 @@ Pedir un crédito hipotecario con tu pareja puede ofrecer ventajas, pero tambié
 
 Comprar una vivienda es el objetivo principal de muchas parejas, por lo que conlleva pedir un préstamo hipotecario conjunto. Firmar una hipoteca a medias ofrece ventajas, pero también puede ocasionar riesgos, sobre todo en caso de ruptura. En nuestro post podrás encontrar qué pros y contras puede tener.
 
-¿Cuáles son los pros y los contras?
+**¿Cuáles son los pros y los contras?**
 
 Siempre serán mayores las posibilidades de que te puedan conceder una hipoteca cuando se solicita en pareja más que de manera individual. Esto se debe a que en caso de que uno de los titulares pierda el trabajo, siempre estará la otra persona para hacerse cargo de las cuotas establecidas.
 
@@ -30,7 +30,7 @@ En el caso de parejas de novios, de hecho, o matrimonios con separación de bien
 
 Cuando contratamos una hipoteca con dos titulares, el asesoramiento profesional ayuda, ya que facilita toda la información sobre el préstamo hipotecario y guía a los compradores durante el proceso.
 
-Cómo enfrentar la hipoteca sí se rompe el vínculo
+**Cómo enfrentar la hipoteca sí se rompe el vínculo**
 
 Si la pareja pone fin a la relación, existen diversas soluciones a la hora de gestionar la hipoteca.
 
@@ -40,4 +40,4 @@ También es posible encontrarse con otro caso, si la pareja ya es un matrimonio 
 
 La situación cambia cuando hay hijos de por medio. Un juez puede considerar el domicilio habitual como una vivienda familiar y decretar que los menores deban permanecer en el hogar, lo que obligaría a los padres turnarse, aunque uno de ellos no sea el propietario.
 
-Todas estas son las ventajas y desventajas que podrás encontrar por el camino, por eso, antes de querer pedir un crédito hipotecario a una entidad bancaria deberías pensarlo bien. ¡Tómate tu tiempo y hazlo siempre con cabeza! Nosotros en Aljumar Inmuebles estaremos encantados de ayudarte con todo aquello que necesitas para conseguir tomar la mejor decisión en cuanto a tu vivienda.
+Todas estas son las ventajas y desventajas que podrás encontrar por el camino, por eso, antes de querer pedir un crédito hipotecario a una entidad bancaria deberías pensarlo bien. ¡Tómate tu tiempo y hazlo siempre con cabeza! Nosotros en **Aljumar Inmuebles** estaremos encantados de ayudarte con todo aquello que necesitas para conseguir tomar la mejor decisión en cuanto a tu vivienda.
