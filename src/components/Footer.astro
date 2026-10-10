@@ -1,75 +1,76 @@
 ---
 import Logo from './Logo.astro';
-import Icon from './Icon.astro';
 import { site } from '../data/site';
 
 const year = new Date().getFullYear();
 ---
 
 <footer class="site-footer on-dark">
-  <div class="container site-footer__grid">
-    <div class="site-footer__brand">
-      <Logo variant="vertical" tone="dark" height={96} />
-      <p>
-        Inmobiliaria en Moratalaz (Madrid) desde {site.foundingYear}. Compraventa y alquiler de viviendas con trato
-        cercano y acompañamiento de principio a fin.
+  <div class="container">
+    <div class="site-footer__top">
+      <p class="site-footer__claim display">
+        ¿Hablamos? <a href={`tel:${site.phones.office.tel}`}>{site.phones.office.display}</a>
+      </p>
+      <p class="site-footer__sub">
+        O escríbenos a <a class="link" href={`mailto:${site.email}`}>{site.email}</a>. Te atiende una persona del equipo, no
+        una centralita.
       </p>
     </div>
 
-    <div>
-      <h2 class="site-footer__title">Inmuebles</h2>
-      <ul>
-        <li><a href="/comprar/">Viviendas en venta</a></li>
-        <li><a href="/alquilar/">Viviendas en alquiler</a></li>
-        <li><a href="/traspasos/">Traspasos</a></li>
-        <li><a href="/vender-mi-vivienda/">Vender mi vivienda</a></li>
-      </ul>
-    </div>
+    <div class="site-footer__grid">
+      <div class="site-footer__brand">
+        <Logo variant="vertical" height={112} />
+        <p>Inmobiliaria en Moratalaz (Madrid) desde {site.foundingYear}.</p>
+      </div>
 
-    <div>
-      <h2 class="site-footer__title">Aljumar</h2>
-      <ul>
-        <li><a href="/sobre-aljumar/">Sobre nosotros</a></li>
-        <li><a href="/sobre-aljumar/#equipo">Equipo</a></li>
-        <li><a href="/consejos-inmobiliarios/">Consejos inmobiliarios</a></li>
-        <li><a href="/contacto/">Contacto</a></li>
-      </ul>
-    </div>
+      <nav aria-label="Inmuebles">
+        <h2 class="site-footer__title">Inmuebles</h2>
+        <ul>
+          <li><a href="/comprar/">Viviendas en venta</a></li>
+          <li><a href="/alquilar/">Viviendas en alquiler</a></li>
+          <li><a href="/traspasos/">Traspasos</a></li>
+          <li><a href="/vender-mi-vivienda/">Vender mi vivienda</a></li>
+        </ul>
+      </nav>
 
-    <div>
-      <h2 class="site-footer__title">Oficina</h2>
-      <address>
-        <a class="site-footer__contact" href={site.mapUrl} rel="noopener" target="_blank">
-          <Icon name="pin" size={18} />
-          <span>
+      <nav aria-label="Aljumar">
+        <h2 class="site-footer__title">Aljumar</h2>
+        <ul>
+          <li><a href="/sobre-aljumar/">Sobre nosotros</a></li>
+          <li><a href="/sobre-aljumar/#equipo">Equipo</a></li>
+          <li><a href="/consejos-inmobiliarios/">Consejos inmobiliarios</a></li>
+          <li><a href="/contacto/">Contacto</a></li>
+        </ul>
+      </nav>
+
+      <div>
+        <h2 class="site-footer__title">Oficina</h2>
+        <address>
+          <p>
             {site.address.street}<br />
-            {site.address.postalCode} {site.address.city} ({site.address.note})
-            <span class="visually-hidden"> (abre un mapa en una pestaña nueva)</span>
-          </span>
-        </a>
-        <a class="site-footer__contact" href={`tel:${site.phones.office.tel}`}>
-          <Icon name="phone" size={18} />
-          <span>{site.phones.office.display}</span>
-        </a>
-        <a class="site-footer__contact" href={`tel:${site.phones.mobile.tel}`}>
-          <Icon name="phone" size={18} />
-          <span>{site.phones.mobile.display} <span class="muted-dark">(móvil)</span></span>
-        </a>
-        <a class="site-footer__contact" href={`mailto:${site.email}`}>
-          <Icon name="mail" size={18} />
-          <span>{site.email}</span>
-        </a>
-      </address>
+            {site.address.postalCode} {site.address.city} · {site.address.note}
+          </p>
+          <p>
+            <a href={site.mapUrl} rel="noopener" target="_blank">
+              Ver en el mapa<span class="visually-hidden"> (se abre en una pestaña nueva)</span>
+            </a>
+          </p>
+          <p>
+            <a href={`tel:${site.phones.office.tel}`}>{site.phones.office.display}</a> ·
+            <a href={`tel:${site.phones.mobile.tel}`}>{site.phones.mobile.display}</a> <span>(móvil)</span>
+          </p>
+        </address>
+      </div>
     </div>
-  </div>
 
-  <div class="container site-footer__legal">
-    <p>© {year} {site.legalName} · CIF {site.taxId}</p>
-    <ul>
-      <li><a href="/aviso-legal/">Aviso legal</a></li>
-      <li><a href="/politica-privacidad/">Política de privacidad</a></li>
-      <li><a href="/politica-cookies/">Política de cookies</a></li>
-    </ul>
+    <div class="site-footer__legal">
+      <p>© {year} {site.legalName} · CIF {site.taxId}</p>
+      <ul>
+        <li><a href="/aviso-legal/">Aviso legal</a></li>
+        <li><a href="/politica-privacidad/">Privacidad</a></li>
+        <li><a href="/politica-cookies/">Cookies</a></li>
+      </ul>
+    </div>
   </div>
 </footer>
 
@@ -77,68 +78,92 @@ const year = new Date().getFullYear();
   .site-footer {
     background: var(--navy-950);
     color: var(--navy-200);
-    padding-top: var(--s-8);
     font-size: var(--fs-sm);
   }
   .site-footer a {
     color: var(--white);
     text-decoration: none;
   }
-  .site-footer a:hover {
+  .site-footer a:not(.link):hover {
     color: var(--lime-500);
-    text-decoration: underline;
+  }
+  .site-footer__top {
+    display: grid;
+    gap: var(--s-4);
+    padding-block: var(--s-9) var(--s-7);
+    border-bottom: 1px solid rgb(255 255 255 / 0.12);
+  }
+  .site-footer__claim {
+    margin: 0;
+    font-size: var(--fs-3xl);
+    color: var(--white);
+    line-height: 1.02;
+  }
+  .site-footer__claim a {
+    display: inline-block;
+    font-style: italic;
+    font-weight: 330;
+    color: var(--lime-500);
+    font-variant-numeric: lining-nums;
+    background: linear-gradient(currentColor, currentColor) 0 100% / 0 2px no-repeat;
+    transition: background-size 500ms var(--ease-out);
+  }
+  .site-footer__claim a:hover {
+    color: var(--lime-500);
+    background-size: 100% 2px;
+  }
+  .site-footer__sub {
+    margin: 0;
+    max-width: 52ch;
+    font-size: var(--fs-md);
+  }
+  .site-footer__sub .link {
+    color: var(--white);
   }
   .site-footer__grid {
     display: grid;
-    gap: var(--s-6);
-    grid-template-columns: 1fr;
-    padding-bottom: var(--s-7);
+    gap: var(--s-7) var(--s-6);
+    grid-template-columns: 1fr 1fr;
+    padding-block: var(--s-7);
+  }
+  .site-footer__brand {
+    grid-column: 1 / -1;
   }
   .site-footer__brand p {
-    max-width: 34ch;
-    margin-top: var(--s-4);
+    margin: var(--s-4) 0 0;
+    max-width: 30ch;
   }
   .site-footer__title {
-    margin-bottom: var(--s-3);
+    margin-bottom: var(--s-4);
     font-family: var(--font-sans);
-    font-size: var(--fs-xs);
-    font-weight: 700;
-    letter-spacing: 0.12em;
+    font-size: var(--fs-label);
+    font-weight: 650;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--lime-500);
+    color: var(--navy-300);
   }
   .site-footer ul {
+    display: grid;
+    gap: var(--s-2);
     margin: 0;
     padding: 0;
     list-style: none;
-    display: grid;
-    gap: var(--s-2);
   }
   address {
-    display: grid;
-    gap: var(--s-3);
     font-style: normal;
   }
-  .site-footer__contact {
-    display: flex;
-    gap: var(--s-3);
-    align-items: flex-start;
-  }
-  .site-footer__contact :global(svg) {
-    margin-top: 3px;
-    flex: none;
-    color: var(--lime-500);
-  }
-  .muted-dark {
-    color: var(--navy-200);
+  address p {
+    margin: 0 0 var(--s-2);
   }
   .site-footer__legal {
     display: flex;
     flex-wrap: wrap;
     gap: var(--s-3) var(--s-6);
     justify-content: space-between;
-    padding-block: var(--s-5) calc(var(--s-5) + 72px);
+    padding-block: var(--s-5) calc(var(--s-5) + 76px);
     border-top: 1px solid rgb(255 255 255 / 0.12);
+    font-size: var(--fs-xs);
+    color: var(--navy-300);
   }
   .site-footer__legal p {
     margin: 0;
@@ -148,14 +173,19 @@ const year = new Date().getFullYear();
     flex-wrap: wrap;
     gap: var(--s-2) var(--s-5);
   }
-  @media (min-width: 720px) {
-    .site-footer__grid {
-      grid-template-columns: 1fr 1fr;
-    }
+  .site-footer__legal a {
+    color: var(--navy-200);
   }
   @media (min-width: 1024px) {
+    .site-footer__top {
+      grid-template-columns: 1.4fr 1fr;
+      align-items: end;
+    }
     .site-footer__grid {
-      grid-template-columns: 1.4fr 1fr 1fr 1.3fr;
+      grid-template-columns: 1.6fr 1fr 1fr 1.3fr;
+    }
+    .site-footer__brand {
+      grid-column: auto;
     }
     .site-footer__legal {
       padding-bottom: var(--s-5);

@@ -1,48 +1,47 @@
 ---
 /**
  * Logotipo corporativo. Se usa SIEMPRE el archivo original de Aljumar, sin
- * redibujarlo. Busca, por orden, estos archivos en public/brand/:
+ * redibujarlo. Versiones claras para fondo azul, con transparencia, en
+ * public/brand/:
  *
- *   logo-horizontal.svg | .png | .jpg   (cabecera)
- *   logo-vertical.svg   | .png | .jpg   (pie, bloques cuadrados)
+ *   logo-horizontal.png   (cabecera)
+ *   logo-vertical.png     (pie, presentación de marca)
  *
- * Los originales están publicados en la web antigua y los descarga
- * `npm run media:fetch` (ver docs/migration). Mientras no exista ningún
- * archivo, se muestra el nombre comercial en texto, sin imitar el símbolo,
- * y `npm run check` lo marca como pendiente.
+ * Se obtuvieron de las capturas de la web oficial (ver
+ * migration/brand-captures/). Si Aljumar entrega los vectoriales, basta con
+ * dejarlos como logo-*.svg: se usan con preferencia. Si no existe ningún
+ * archivo, se muestra el nombre en texto (sin imitar el símbolo) y
+ * `npm run check` lo marca como pendiente.
  */
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { site } from '../data/site';
 
 interface Props {
-  variant?: 'horizontal' | 'vertical';
-  /** Fondo sobre el que se coloca: ajusta el texto alternativo de reserva. */
-  tone?: 'light' | 'dark';
+  variant?: 'horizontal' | 'vertical' | 'simbolo';
   height?: number;
+  class?: string;
+  /** Texto alternativo; vacío si el logotipo es decorativo en ese contexto. */
+  alt?: string;
 }
-const { variant = 'horizontal', tone = 'light', height = 48 } = Astro.props;
+const { variant = 'horizontal', height = 48, class: className, alt = site.name } = Astro.props;
 
 const publicDir = resolve(process.cwd(), 'public');
-const candidates = [variant, variant === 'horizontal' ? 'vertical' : 'horizontal'].flatMap((v) =>
-  ['svg', 'png', 'jpg', 'webp'].map((ext) => `/brand/logo-${v}.${ext}`),
-);
-const file = candidates.find((c) => existsSync(resolve(publicDir, '.' + c)));
-const isVerticalFile = file?.includes('vertical');
+const file = ['svg', 'png'].map((ext) => `/brand/logo-${variant}.${ext}`).find((c) => existsSync(resolve(publicDir, '.' + c)));
+
+// Dimensiones intrínsecas del PNG (cabecera IHDR) para reservar el hueco.
+let width: number | undefined;
+if (file?.endsWith('.png')) {
+  const buf = readFileSync(resolve(publicDir, '.' + file));
+  width = Math.round((buf.readUInt32BE(16) / buf.readUInt32BE(20)) * height);
+}
 ---
 
 {
   file ? (
-    <img
-      class:list={['logo', `logo--${isVerticalFile ? 'vertical' : 'horizontal'}`]}
-      src={file}
-      alt={site.name}
-      height={height}
-      style={`height:${height}px;width:auto`}
-      decoding="async"
-    />
+    <img class:list={['logo', `logo--${variant}`, className]} src={file} alt={alt} width={width} height={height} decoding="async" />
   ) : (
-    <span class:list={['logo-text', `logo-text--${tone}`]} data-logo-pending>
+    <span class:list={['logo-text', className]} data-logo-pending>
       <span class="logo-text__name">Aljumar</span>
       <span class="logo-text__sub">Inmuebles</span>
     </span>
@@ -52,13 +51,13 @@ const isVerticalFile = file?.includes('vertical');
 <style>
   .logo {
     display: block;
-    border-radius: 4px;
   }
   .logo-text {
     display: inline-grid;
     line-height: 1;
     font-family: var(--font-sans);
     text-transform: uppercase;
+    color: var(--white);
   }
   .logo-text__name {
     font-weight: 800;
@@ -70,17 +69,6 @@ const isVerticalFile = file?.includes('vertical');
     font-size: 0.66rem;
     font-weight: 700;
     letter-spacing: 0.42em;
-  }
-  .logo-text--light .logo-text__name {
-    color: var(--navy-900);
-  }
-  .logo-text--light .logo-text__sub {
-    color: var(--navy-700);
-  }
-  .logo-text--dark .logo-text__name {
-    color: var(--white);
-  }
-  .logo-text--dark .logo-text__sub {
     color: var(--lime-500);
   }
 </style>

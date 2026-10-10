@@ -1,9 +1,15 @@
 ---
 /**
- * Galería de la ficha. Mosaico con la foto principal y miniaturas; el visor
- * a pantalla completa usa <dialog> nativo (foco atrapado y Escape para
- * cerrar), con botones anterior/siguiente, flechas del teclado y gesto de
- * deslizar en móvil.
+ * Galería de la ficha.
+ *
+ * - Escenario: una pista horizontal con todas las fotos y scroll-snap. En
+ *   móvil se desliza con el dedo de forma nativa; en escritorio se usan las
+ *   flechas o las miniaturas. Sin JavaScript sigue siendo una pista que se
+ *   puede desplazar.
+ * - Visor a pantalla completa con <dialog> nativo (foco atrapado, Escape):
+ *   fundido entre fotos, tira de miniaturas, flechas del teclado y gesto de
+ *   deslizar.
+ * - Si una foto no carga, queda el marcador con el símbolo de la marca.
  */
 import Icon from './Icon.astro';
 import type { Photo } from '../lib/inventory/types';
@@ -13,49 +19,80 @@ interface Props {
   title: string;
 }
 const { photos, title } = Astro.props;
-const mosaic = photos.slice(0, 5);
+const many = photos.length > 1;
 ---
 
 {
   photos.length === 0 ? (
     <div class="gallery-empty">
-      <Icon name="camera" size={32} />
       <p>Este inmueble todavía no tiene fotografías publicadas. Pídenos más información y te las enviamos.</p>
     </div>
   ) : (
     <div class="gallery" data-gallery>
-      <div class:list={['gallery__mosaic', `gallery__mosaic--${Math.min(mosaic.length, 5)}`]}>
-        {mosaic.map((ph, i) => (
-          <button type="button" class="gallery__tile" data-open={i} aria-label={`Ampliar fotografía ${i + 1} de ${photos.length}`}>
-            <img
-              src={ph.url}
-              alt={ph.alt}
-              width={i === 0 ? 1200 : 600}
-              height={i === 0 ? 800 : 400}
-              loading={i === 0 ? 'eager' : 'lazy'}
-              fetchpriority={i === 0 ? 'high' : undefined}
-              decoding="async"
-              data-fallback
-            />
-          </button>
-        ))}
+      <div class="gallery__stage">
+        <ul class="gallery__track" data-track aria-label={`Fotografías: ${title}`} tabindex="0">
+          {photos.map((ph, i) => (
+            <li class="gallery__slide" data-slide={i}>
+              <img
+                src={ph.url}
+                alt={ph.alt}
+                width="1200"
+                height="800"
+                loading={i === 0 ? 'eager' : 'lazy'}
+                fetchpriority={i === 0 ? 'high' : undefined}
+                decoding="async"
+                data-fallback
+              />
+            </li>
+          ))}
+        </ul>
+        {many && (
+          <>
+            <button type="button" class="gallery__nav gallery__nav--prev" data-step="-1" disabled>
+              <Icon name="arrow-left" />
+              <span class="visually-hidden">Foto anterior</span>
+            </button>
+            <button type="button" class="gallery__nav gallery__nav--next" data-step="1">
+              <Icon name="arrow-right" />
+              <span class="visually-hidden">Foto siguiente</span>
+            </button>
+          </>
+        )}
+        <p class="gallery__count" aria-hidden="true">
+          <span data-current>1</span> / {photos.length}
+        </p>
+        <button type="button" class="gallery__all" data-open="0">
+          <Icon name="expand" size={16} /> Ver las {photos.length} fotografías
+        </button>
       </div>
-      <button type="button" class="btn btn--ghost btn--sm gallery__all" data-open="0">
-        <Icon name="expand" size={18} /> Ver las {photos.length} fotografías
-      </button>
+
+      {many && (
+        <ol class="gallery__thumbs" aria-label="Miniaturas">
+          {photos.map((ph, i) => (
+            <li>
+              <button type="button" class="gallery__thumb" data-goto={i} aria-label={`Ver fotografía ${i + 1} de ${photos.length}`} aria-current={i === 0 ? 'true' : undefined}>
+                <img src={ph.url} alt="" width="160" height="107" loading="lazy" decoding="async" data-fallback />
+              </button>
+            </li>
+          ))}
+        </ol>
+      )}
 
       <dialog class="lightbox" aria-label={`Fotografías: ${title}`} data-lightbox>
         <div class="lightbox__bar">
-          <p class="lightbox__count" aria-live="polite" data-counter>1 / {photos.length}</p>
+          <p class="lightbox__count" aria-live="polite" data-counter>
+            1 / {photos.length}
+          </p>
           <button type="button" class="lightbox__btn" data-close>
             <Icon name="close" />
             <span class="visually-hidden">Cerrar</span>
           </button>
         </div>
-        <figure class="lightbox__stage">
-          <img src="" alt="" data-stage />
+        <figure class="lightbox__stage" data-stage-wrap>
+          <img src="" alt="" class="is-current" data-layer />
+          <img src="" alt="" aria-hidden="true" data-layer />
         </figure>
-        {photos.length > 1 && (
+        {many && (
           <>
             <button type="button" class="lightbox__btn lightbox__nav lightbox__nav--prev" data-prev>
               <Icon name="arrow-left" />
@@ -65,6 +102,15 @@ const mosaic = photos.slice(0, 5);
               <Icon name="arrow-right" />
               <span class="visually-hidden">Foto siguiente</span>
             </button>
+            <ol class="lightbox__thumbs" data-lb-thumbs>
+              {photos.map((ph, i) => (
+                <li>
+                  <button type="button" data-lb-goto={i} aria-label={`Fotografía ${i + 1}`}>
+                    <img src={ph.url} alt="" width="96" height="64" loading="lazy" decoding="async" />
+                  </button>
+                </li>
+              ))}
+            </ol>
           </>
         )}
         <script type="application/json" data-photos set:html={JSON.stringify(photos)} />
@@ -75,34 +121,103 @@ const mosaic = photos.slice(0, 5);
 
 <script>
   document.querySelectorAll<HTMLElement>('[data-gallery]').forEach((g) => {
-    const dialog = g.querySelector<HTMLDialogElement>('[data-lightbox]')!;
-    const stage = g.querySelector<HTMLImageElement>('[data-stage]')!;
-    const counter = g.querySelector<HTMLElement>('[data-counter]')!;
     const photos = JSON.parse(g.querySelector('[data-photos]')!.textContent || '[]') as { url: string; alt: string }[];
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+
+    // ---------- Escenario con pista desplazable ----------
+    const track = g.querySelector<HTMLElement>('[data-track]')!;
+    const slides = [...track.children] as HTMLElement[];
+    const current = g.querySelector<HTMLElement>('[data-current]')!;
+    const prev = g.querySelector<HTMLButtonElement>('[data-step="-1"]');
+    const next = g.querySelector<HTMLButtonElement>('[data-step="1"]');
+    const thumbs = [...g.querySelectorAll<HTMLButtonElement>('[data-goto]')];
+    let active = 0;
+
+    const goTo = (i: number) => {
+      const target = slides[Math.max(0, Math.min(slides.length - 1, i))];
+      if (target) track.scrollTo({ left: target.offsetLeft - track.offsetLeft, behavior: reduce.matches ? 'auto' : 'smooth' });
+    };
+    const setActive = (i: number) => {
+      if (i === active) return;
+      active = i;
+      current.textContent = String(i + 1);
+      if (prev) prev.disabled = i === 0;
+      if (next) next.disabled = i === slides.length - 1;
+      thumbs.forEach((t, k) => (k === i ? t.setAttribute('aria-current', 'true') : t.removeAttribute('aria-current')));
+      thumbs[i]?.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
+    };
+    let raf = 0;
+    track.addEventListener(
+      'scroll',
+      () => {
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(() => setActive(Math.round(track.scrollLeft / Math.max(1, track.clientWidth))));
+      },
+      { passive: true },
+    );
+    prev?.addEventListener('click', () => goTo(active - 1));
+    next?.addEventListener('click', () => goTo(active + 1));
+    thumbs.forEach((t) => t.addEventListener('click', () => goTo(Number(t.dataset.goto))));
+    track.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') (e.preventDefault(), goTo(active + 1));
+      if (e.key === 'ArrowLeft') (e.preventDefault(), goTo(active - 1));
+    });
+    // Un toque/clic en la foto abre el visor en esa foto.
+    slides.forEach((s, i) =>
+      s.addEventListener('click', () => {
+        opener = g.querySelector<HTMLElement>('[data-open]');
+        openAt(i);
+      }),
+    );
+
+    // ---------- Visor ----------
+    const dialog = g.querySelector<HTMLDialogElement>('[data-lightbox]')!;
+    const layers = [...dialog.querySelectorAll<HTMLImageElement>('[data-layer]')];
+    const counter = dialog.querySelector<HTMLElement>('[data-counter]')!;
+    const lbThumbs = [...dialog.querySelectorAll<HTMLButtonElement>('[data-lb-goto]')];
     let index = 0;
+    let front = 0;
     let opener: HTMLElement | null = null;
 
-    function show(i: number) {
+    function show(i: number, instant = false) {
       index = (i + photos.length) % photos.length;
       const p = photos[index]!;
-      stage.src = p.url;
-      stage.alt = p.alt;
+      const incoming = layers[1 - front]!;
+      const outgoing = layers[front]!;
+      if (instant || reduce.matches) {
+        outgoing.src = p.url;
+        outgoing.alt = p.alt;
+      } else {
+        incoming.src = p.url;
+        incoming.alt = p.alt;
+        incoming.removeAttribute('aria-hidden');
+        outgoing.setAttribute('aria-hidden', 'true');
+        incoming.classList.add('is-current');
+        outgoing.classList.remove('is-current');
+        front = 1 - front;
+      }
       counter.textContent = `${index + 1} / ${photos.length}`;
+      lbThumbs.forEach((t, k) => (k === index ? t.setAttribute('aria-current', 'true') : t.removeAttribute('aria-current')));
+      lbThumbs[index]?.scrollIntoView({ block: 'nearest', inline: 'center' });
       // Precarga la siguiente para que el paso sea inmediato.
-      const next = photos[(index + 1) % photos.length];
-      if (next) new Image().src = next.url;
+      const n = photos[(index + 1) % photos.length];
+      if (n) new Image().src = n.url;
+    }
+    function openAt(i: number) {
+      show(i, true);
+      dialog.showModal();
     }
 
     g.querySelectorAll<HTMLElement>('[data-open]').forEach((b) =>
       b.addEventListener('click', () => {
         opener = b;
-        show(Number(b.dataset.open) || 0);
-        dialog.showModal();
+        openAt(active || Number(b.dataset.open) || 0);
       }),
     );
-    g.querySelector('[data-close]')?.addEventListener('click', () => dialog.close());
-    g.querySelector('[data-prev]')?.addEventListener('click', () => show(index - 1));
-    g.querySelector('[data-next]')?.addEventListener('click', () => show(index + 1));
+    dialog.querySelector('[data-close]')?.addEventListener('click', () => dialog.close());
+    dialog.querySelector('[data-prev]')?.addEventListener('click', () => show(index - 1));
+    dialog.querySelector('[data-next]')?.addEventListener('click', () => show(index + 1));
+    lbThumbs.forEach((t) => t.addEventListener('click', () => show(Number(t.dataset.lbGoto))));
     dialog.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowLeft') show(index - 1);
       if (e.key === 'ArrowRight') show(index + 1);
@@ -110,7 +225,11 @@ const mosaic = photos.slice(0, 5);
     dialog.addEventListener('click', (e) => {
       if (e.target === dialog) dialog.close();
     });
-    dialog.addEventListener('close', () => opener?.focus());
+    dialog.addEventListener('close', () => {
+      goTo(index);
+      opener?.focus();
+    });
+    const stage = dialog.querySelector<HTMLElement>('[data-stage-wrap]')!;
     let startX = 0;
     stage.addEventListener('touchstart', (e) => (startX = e.touches[0]?.clientX ?? 0), { passive: true });
     stage.addEventListener(
@@ -125,106 +244,225 @@ const mosaic = photos.slice(0, 5);
 </script>
 
 <style>
-  .gallery {
-    position: relative;
-  }
-  .gallery__mosaic {
+  .gallery-empty {
     display: grid;
-    gap: var(--s-2);
-    border-radius: var(--r-lg);
-    overflow: hidden;
-    aspect-ratio: 3 / 2;
-    background: var(--navy-50);
+    place-content: center;
+    justify-items: center;
+    gap: var(--s-4);
+    aspect-ratio: 16 / 9;
+    padding: var(--s-6);
+    background: var(--navy-800);
+    color: var(--navy-200);
+    text-align: center;
   }
-  .gallery__tile {
+  .gallery-empty::before {
+    content: '';
+    width: 56px;
+    height: 68px;
+    background: url('/brand/logo-simbolo.png') center / contain no-repeat;
+    opacity: 0.6;
+  }
+  .gallery-empty p {
+    max-width: 40ch;
+    margin: 0;
+  }
+
+  .gallery__stage {
     position: relative;
-    display: block;
-    min-height: 0;
-    padding: 0;
-    border: 0;
-    background: linear-gradient(135deg, var(--navy-100), var(--navy-50));
-    cursor: zoom-in;
-    overflow: hidden;
+    background: var(--navy-800);
   }
-  .gallery__tile img {
+  .gallery__track {
+    display: flex;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+  .gallery__track::-webkit-scrollbar {
+    display: none;
+  }
+  .gallery__track:focus-visible {
+    outline: 2px solid var(--lime-500);
+    outline-offset: -4px;
+  }
+  .gallery__slide {
+    position: relative;
+    flex: 0 0 100%;
+    aspect-ratio: 3 / 2;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    cursor: zoom-in;
+    background: url('/brand/logo-simbolo.png') center / 52px auto no-repeat;
+  }
+  .gallery__slide img {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 500ms var(--ease);
   }
-  .gallery__tile:hover img {
-    transform: scale(1.03);
+  .gallery__slide img[data-broken],
+  .gallery__thumb img[data-broken] {
+    visibility: hidden;
   }
-  .gallery__tile:focus-visible {
-    outline-offset: -4px;
-    outline-color: var(--lime-500);
-  }
-  .gallery__tile:nth-child(n + 2) {
+  .gallery__nav {
+    position: absolute;
+    top: 50%;
     display: none;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    margin-top: -26px;
+    border: 0;
+    background: rgb(255 255 255 / 0.92);
+    color: var(--navy-900);
+    cursor: pointer;
+    transition:
+      opacity var(--dur) var(--ease),
+      background-color var(--dur) var(--ease);
+  }
+  .gallery__nav:hover {
+    background: var(--white);
+  }
+  .gallery__nav:disabled {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .gallery__nav--prev {
+    left: var(--s-4);
+  }
+  .gallery__nav--next {
+    right: var(--s-4);
+  }
+  .gallery__count {
+    position: absolute;
+    left: var(--s-4);
+    bottom: var(--s-4);
+    margin: 0;
+    padding: 0.2rem 0.6rem;
+    background: rgb(15 37 55 / 0.75);
+    color: var(--white);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
   }
   .gallery__all {
     position: absolute;
-    right: var(--s-3);
-    bottom: var(--s-3);
-    background: var(--white);
-  }
-  @media (min-width: 768px) {
-    .gallery__mosaic {
-      aspect-ratio: 16 / 8;
-    }
-    .gallery__mosaic--3,
-    .gallery__mosaic--4,
-    .gallery__mosaic--5 {
-      grid-template-columns: 2fr 1fr;
-      grid-template-rows: 1fr 1fr;
-    }
-    .gallery__mosaic--5 {
-      grid-template-columns: 2fr 1fr 1fr;
-    }
-    .gallery__mosaic--2 {
-      grid-template-columns: 2fr 1fr;
-    }
-    .gallery__tile:nth-child(n + 2) {
-      display: block;
-    }
-    .gallery__mosaic--3 .gallery__tile:first-child,
-    .gallery__mosaic--4 .gallery__tile:first-child,
-    .gallery__mosaic--5 .gallery__tile:first-child {
-      grid-row: span 2;
-    }
-    .gallery__mosaic--4 .gallery__tile:nth-child(4) {
-      display: none;
-    }
-  }
-  .gallery-empty {
-    display: grid;
-    justify-items: center;
+    right: var(--s-4);
+    bottom: var(--s-4);
+    display: inline-flex;
+    align-items: center;
     gap: var(--s-2);
-    padding: var(--s-8) var(--s-5);
-    border-radius: var(--r-lg);
-    background: var(--navy-50);
-    color: var(--navy-700);
-    text-align: center;
+    min-height: 40px;
+    padding: 0 var(--s-4);
+    border: 0;
+    background: var(--white);
+    color: var(--navy-900);
+    font: inherit;
+    font-size: var(--fs-xs);
+    font-weight: 650;
+    cursor: pointer;
+  }
+  .gallery__all:hover {
+    background: var(--lime-500);
+  }
+  .gallery__thumbs {
+    display: none;
   }
 
+  @media (hover: hover) and (pointer: fine) {
+    .gallery__nav {
+      display: grid;
+    }
+  }
+  @media (min-width: 900px) {
+    .gallery__slide {
+      aspect-ratio: 16 / 9;
+    }
+    .gallery__thumbs {
+      display: flex;
+      gap: var(--s-2);
+      margin: var(--s-2) 0 0;
+      padding: 0 0 var(--s-1);
+      list-style: none;
+      overflow-x: auto;
+      scrollbar-width: thin;
+    }
+    .gallery__thumb {
+      position: relative;
+      display: block;
+      width: 112px;
+      aspect-ratio: 3 / 2;
+      padding: 0;
+      border: 0;
+      background: var(--navy-800);
+      cursor: pointer;
+      opacity: 0.55;
+      transition: opacity var(--dur) var(--ease);
+    }
+    .gallery__thumb::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -5px;
+      height: 2px;
+      background: var(--lime-500);
+      transform: scaleX(0);
+      transition: transform 360ms var(--ease-out);
+    }
+    .gallery__thumb:hover,
+    .gallery__thumb[aria-current='true'] {
+      opacity: 1;
+    }
+    .gallery__thumb[aria-current='true']::after {
+      transform: scaleX(1);
+    }
+    .gallery__thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .gallery__thumbs li {
+      flex: none;
+      padding-bottom: 6px;
+    }
+  }
+
+  /* ---------- Visor ---------- */
   .lightbox {
     width: 100vw;
-    max-width: 100vw;
+    max-width: none;
     height: 100dvh;
-    max-height: 100dvh;
+    max-height: none;
     margin: 0;
     padding: 0;
     border: 0;
     background: rgb(10 22 33 / 0.97);
     color: var(--white);
   }
+  .lightbox[open] {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .lightbox[open] {
+      animation: lb-in 320ms var(--ease-out);
+    }
+  }
+  @keyframes lb-in {
+    from {
+      opacity: 0;
+    }
+  }
   .lightbox::backdrop {
     background: rgb(10 22 33 / 0.9);
   }
   .lightbox__bar {
-    position: absolute;
-    inset: 0 0 auto;
-    z-index: 2;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -232,47 +470,84 @@ const mosaic = photos.slice(0, 5);
   }
   .lightbox__count {
     margin: 0;
-    font-weight: 600;
+    font-size: var(--fs-sm);
+    font-variant-numeric: tabular-nums;
   }
   .lightbox__stage {
-    display: grid;
-    place-items: center;
-    height: 100%;
+    position: relative;
     margin: 0;
-    padding: var(--s-8) var(--s-2);
+    min-height: 0;
   }
   .lightbox__stage img {
-    max-width: 100%;
-    max-height: 100%;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
-    border-radius: var(--r-sm);
+    opacity: 0;
+    transition: opacity 420ms var(--ease-out);
+  }
+  .lightbox__stage img.is-current {
+    opacity: 1;
   }
   .lightbox__btn {
     display: inline-grid;
     place-items: center;
     width: 48px;
     height: 48px;
-    border: 1px solid rgb(255 255 255 / 0.3);
-    border-radius: 50%;
+    border: 0;
     background: rgb(255 255 255 / 0.08);
     color: var(--white);
     cursor: pointer;
+    transition: background-color var(--dur) var(--ease);
   }
   .lightbox__btn:hover {
     background: rgb(255 255 255 / 0.18);
   }
-  .lightbox__btn:focus-visible {
-    outline-color: var(--lime-500);
-  }
   .lightbox__nav {
     position: absolute;
     top: 50%;
-    transform: translateY(-50%);
+    margin-top: -24px;
   }
   .lightbox__nav--prev {
     left: var(--s-3);
   }
   .lightbox__nav--next {
     right: var(--s-3);
+  }
+  .lightbox__thumbs {
+    display: flex;
+    gap: var(--s-2);
+    margin: 0;
+    padding: var(--s-3) var(--s-4) var(--s-4);
+    list-style: none;
+    overflow-x: auto;
+  }
+  .lightbox__thumbs li {
+    flex: none;
+  }
+  .lightbox__thumbs button {
+    display: block;
+    width: 72px;
+    aspect-ratio: 3 / 2;
+    padding: 0;
+    border: 0;
+    background: var(--navy-800);
+    opacity: 0.45;
+    cursor: pointer;
+    transition: opacity var(--dur) var(--ease);
+  }
+  .lightbox__thumbs button[aria-current='true'] {
+    opacity: 1;
+    outline: 2px solid var(--lime-500);
+    outline-offset: 2px;
+  }
+  .lightbox__thumbs img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .lightbox :focus-visible {
+    outline-color: var(--lime-500);
   }
 </style>

@@ -5,7 +5,8 @@ interface Props {
 const { items } = Astro.props;
 ---
 
-<nav class="crumbs container" aria-label="Ruta de navegación">
+<nav class="crumbs" aria-label="Ruta de navegación">
+  <div class="container">
   <ol>
     {
       items.map((c, i) => (
@@ -15,11 +16,13 @@ const { items } = Astro.props;
       ))
     }
   </ol>
+  </div>
 </nav>
 
 <style>
   .crumbs {
-    padding-top: var(--s-4);
+    padding-top: var(--s-5);
+    background: var(--paper);
     font-size: var(--fs-xs);
   }
   ol {

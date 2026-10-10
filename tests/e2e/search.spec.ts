@@ -16,7 +16,9 @@ test.describe('Buscador de compra', () => {
     await page.goto('/comprar/');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Viviendas en venta');
     await expect(page.locator('[data-count]')).toContainText(`${sale.length} inmuebles`);
-    await expect(visibleCards(page)).toHaveCount(Math.min(sale.length, 12));
+    // Primera página estática: hasta 24 tarjetas en el HTML, sin tarjetas ocultas.
+    await expect(visibleCards(page)).toHaveCount(Math.min(sale.length, 24));
+    await expect(page.locator('[data-results] > li[hidden]')).toHaveCount(0);
     await noHorizontalOverflow(page);
     expect(consoleErrors).toEqual([]);
   });
@@ -25,7 +27,7 @@ test.describe('Buscador de compra', () => {
     const expected = sale.filter((p) => (p.bedrooms ?? 0) >= 4).length;
     await page.goto('/comprar/');
     await openFilters(page);
-    await page.locator('label.chip', { hasText: '4+' }).first().click();
+    await page.locator('#f-dorm').selectOption('4');
     if (isMobile(page)) await page.locator('[data-apply]').click();
     await expect(page.locator('[data-count]')).toContainText(`${expected} inmueble`);
     await expect(visibleCards(page)).toHaveCount(expected);
@@ -58,7 +60,7 @@ test.describe('Buscador de compra', () => {
   test('ordena por precio ascendente', async ({ page }) => {
     await page.goto('/comprar/?orden=precio-asc');
     const prices = await visibleCards(page)
-      .locator('.card__price')
+      .locator('.pcard__price')
       .allTextContents()
       .then((t) => t.map((x) => Number(x.replace(/\D/g, ''))));
     expect(prices).toEqual([...prices].sort((a, b) => a - b));
@@ -99,10 +101,10 @@ test.describe('Panel de filtros en móvil', () => {
 test.describe('Buscador rápido de la portada', () => {
   test('envía a /comprar/ con los criterios elegidos y sin campos vacíos', async ({ page }) => {
     await page.goto('/');
-    await page.getByLabel('Dormitorios').selectOption('2');
+    await page.getByLabel('Precio máximo').selectOption('300000');
     await page.getByRole('button', { name: 'Buscar', exact: true }).click();
-    await expect(page).toHaveURL(/\/comprar\/\?dormitorios=2$/);
-    const expected = sale.filter((p) => (p.bedrooms ?? 0) >= 2).length;
+    await expect(page).toHaveURL(/\/comprar\/\?precio_max=300000$/);
+    const expected = sale.filter((p) => p.salePrice === null || p.salePrice <= 300000).length;
     await expect(visibleCards(page)).toHaveCount(expected);
   });
 

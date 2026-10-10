@@ -1,279 +1,343 @@
 ---
 /**
- * Buscador con filtros. Todas las tarjetas se generan en HTML (indexables y
- * visibles sin JavaScript); el script filtra, ordena y pagina en el navegador
- * con la misma lógica que las pruebas (src/lib/inventory/filters.ts) y guarda
- * los criterios en la URL (?ciudad=…&dormitorios=…).
+ * Listado con filtros.
+ *
+ * Sin JavaScript (y para los buscadores): páginas estáticas de 24 inmuebles
+ * (/comprar/, /comprar/pagina/2/…) con enlaces de paginación normales.
+ *
+ * Con JavaScript, al filtrar u ordenar: el navegador descarga el índice
+ * /datos/inmuebles-<operación>.json (una sola vez y solo cuando hace falta),
+ * filtra con la misma lógica que las pruebas (src/lib/inventory/filters.ts),
+ * guarda los criterios en la URL y pinta las tarjetas de 24 en 24 con el
+ * mismo HTML que el servidor (src/lib/inventory/card.ts). «Mostrar más»
+ * añade de verdad las siguientes tarjetas al DOM: no hay tarjetas ocultas.
  */
-import PropertyCard from './PropertyCard.astro';
 import Icon from './Icon.astro';
+import Pagination from './Pagination.astro';
 import { byOperation, filterOptions } from '../lib/inventory';
-import { SORTS, toSearchItem } from '../lib/inventory/filters';
+import { SORTS } from '../lib/inventory/filters';
 import { TYPE_GROUP_LABEL } from '../lib/inventory/format';
+import { cardModel, renderCard } from '../lib/inventory/card';
 import type { Operation } from '../lib/inventory/types';
+import { LISTING_BASE, PAGE_SIZE } from '../lib/inventory/listing';
 
 interface Props {
   operation: Operation;
+  page?: number;
 }
-const { operation } = Astro.props;
-const list = byOperation(operation);
+const { operation, page = 1 } = Astro.props;
+const all = byOperation(operation);
+const lastPage = Math.max(1, Math.ceil(all.length / PAGE_SIZE));
+const slice = all.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 const opts = filterOptions(operation);
-const items = list.map((p, i) => toSearchItem(p, i));
+const base = LISTING_BASE[operation];
+const dataUrl = `/datos/inmuebles-${operation}.json`;
+const contactHref = `/contacto/?motivo=${operation === 'alquiler' ? 'alquilar' : 'comprar'}#formulario`;
 
 const priceSteps =
   operation === 'alquiler'
     ? [500, 700, 900, 1100, 1300, 1500, 1800, 2200, 2600, 3000, 4000]
     : [60000, 100000, 150000, 200000, 250000, 300000, 350000, 400000, 500000, 600000, 750000, 1000000, 1500000, 2000000];
 const fmt = (n: number) => new Intl.NumberFormat('es-ES').format(n) + (operation === 'alquiler' ? ' €/mes' : ' €');
-const PAGE = 12;
+const features = [...opts.features].sort((a, b) => b.count - a.count).slice(0, 10);
+const plural = (n: number) => (n === 1 ? 'inmueble' : 'inmuebles');
 ---
 
-<div class="search" data-search data-operation={operation} data-page-size={PAGE}>
-  <script type="application/json" data-search-items set:html={JSON.stringify(items)} />
+<div
+  class="search"
+  data-search
+  data-operation={operation}
+  data-src={dataUrl}
+  data-total={all.length}
+  data-page-size={PAGE_SIZE}
+  data-base={base}
+>
+  {
+    all.length > 0 && (
+      <div class="search__bar">
+        <button type="button" class="btn btn--ghost search__open" aria-controls="filtros" aria-expanded="false" data-filters-open>
+          <Icon name="sliders" size={18} /> Filtros <span class="search__badge" data-active-count hidden />
+        </button>
+
+        <div class="filters" id="filtros" aria-labelledby="filtros-titulo" data-filters>
+          <div class="filters__head">
+            <h2 id="filtros-titulo" class="filters__title">Filtrar inmuebles</h2>
+            <button type="button" class="filters__close" data-filters-close>
+              <Icon name="close" />
+              <span class="visually-hidden">Cerrar filtros</span>
+            </button>
+          </div>
+
+          <form id="form-filtros" class="filters__form" method="get" action={base} data-form>
+            <div class="filters__main">
+              {opts.cities.length > 1 && (
+                <div class="ff">
+                  <label for="f-ciudad">Localidad</label>
+                  <select id="f-ciudad" name="ciudad" class="ff__select">
+                    <option value="">Todas</option>
+                    {opts.cities.map((c) => (
+                      <option value={c.value}>
+                        {c.label} ({c.count})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              {opts.typeGroups.length > 1 && (
+                <div class="ff">
+                  <label for="f-tipo">Tipo</label>
+                  <select id="f-tipo" name="tipo" class="ff__select">
+                    <option value="">Todos</option>
+                    {opts.typeGroups.map((t) => (
+                      <option value={t.value}>
+                        {TYPE_GROUP_LABEL[t.value as keyof typeof TYPE_GROUP_LABEL]} ({t.count})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <fieldset class="ff ff--pair">
+                <legend>Precio</legend>
+                <label class="visually-hidden" for="f-pmin">
+                  Precio mínimo
+                </label>
+                <select id="f-pmin" name="precio_min" class="ff__select">
+                  <option value="">Mín.</option>
+                  {priceSteps.map((s) => (
+                    <option value={s}>{fmt(s)}</option>
+                  ))}
+                </select>
+                <label class="visually-hidden" for="f-pmax">
+                  Precio máximo
+                </label>
+                <select id="f-pmax" name="precio_max" class="ff__select">
+                  <option value="">Máx.</option>
+                  {priceSteps.map((s) => (
+                    <option value={s}>{fmt(s)}</option>
+                  ))}
+                </select>
+              </fieldset>
+              <div class="ff">
+                <label for="f-dorm">Dormitorios</label>
+                <select id="f-dorm" name="dormitorios" class="ff__select">
+                  <option value="">Todos</option>
+                  {[1, 2, 3, 4].map((n) => (
+                    <option value={n}>{n} o más</option>
+                  ))}
+                </select>
+              </div>
+              <button type="button" class="filters__more" aria-expanded="false" aria-controls="mas-filtros" data-more-toggle>
+                Más filtros <span class="search__badge" data-extra-count hidden />
+              </button>
+            </div>
+
+            <div class="filters__extra" id="mas-filtros" data-extra>
+              {opts.zones.length > 0 && (
+                <div class="ff">
+                  <label for="f-zona">Zona o barrio</label>
+                  <select id="f-zona" name="zona" class="ff__select">
+                    <option value="">Todas</option>
+                    {opts.zones.map((z) => (
+                      <option value={z.value}>
+                        {z.label} ({z.count})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <div class="ff">
+                <label for="f-sup">Superficie mínima</label>
+                <select id="f-sup" name="superficie_min" class="ff__select">
+                  <option value="">Cualquiera</option>
+                  {[40, 60, 80, 100, 150, 200, 300].map((s) => (
+                    <option value={s}>{s} m² o más</option>
+                  ))}
+                </select>
+              </div>
+              <div class="ff">
+                <label for="f-banos">Baños</label>
+                <select id="f-banos" name="banos" class="ff__select">
+                  <option value="">Todos</option>
+                  {[1, 2, 3].map((n) => (
+                    <option value={n}>{n} o más</option>
+                  ))}
+                </select>
+              </div>
+              {features.length > 0 && (
+                <fieldset class="ff ff--wide">
+                  <legend>Características</legend>
+                  <div class="toggles">
+                    {features.map((f) => (
+                      <label class="toggle">
+                        <input type="checkbox" name="extra" value={f.value} />
+                        <span>
+                          {f.label} <span class="toggle__n">{f.count}</span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+              )}
+            </div>
+
+            <div class="filters__actions">
+              <button type="reset" class="btn btn--ghost" data-reset>
+                Limpiar
+              </button>
+              <button type="submit" class="btn filters__apply" data-apply>
+                Ver <span data-apply-count>{all.length}</span> resultados
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    )
+  }
 
   <div class="search__toolbar">
     <p class="search__count" aria-live="polite" aria-atomic="true" data-count>
-      <strong>{list.length}</strong>
-      {list.length === 1 ? 'inmueble' : 'inmuebles'}
+      <strong>{all.length}</strong> <span>{plural(all.length)}</span>
     </p>
-    <div class="search__tools">
-      <button
-        type="button"
-        class="btn btn--ghost btn--sm search__open"
-        aria-controls="filtros"
-        aria-expanded="false"
-        data-filters-open
-      >
-        <Icon name="sliders" size={18} /> Filtros <span class="search__badge" data-active-count hidden></span>
-      </button>
-      <label class="search__sort">
-        <span class="visually-hidden">Ordenar resultados</span>
-        <select class="select" name="orden" form="form-filtros" data-sort>
-          {SORTS.map((s) => <option value={s.value}>{s.label}</option>)}
-        </select>
-      </label>
-    </div>
-  </div>
-
-  <div class="search__layout">
-    <aside class="filters" id="filtros" aria-labelledby="filtros-titulo" data-filters>
-      <div class="filters__head">
-        <h2 id="filtros-titulo" class="filters__title">Filtrar</h2>
-        <button type="button" class="filters__close" data-filters-close>
-          <Icon name="close" />
-          <span class="visually-hidden">Cerrar filtros</span>
-        </button>
-      </div>
-
-      <form id="form-filtros" class="filters__form" method="get" data-form>
-        {
-          opts.cities.length > 1 && (
-            <div class="field">
-              <label for="f-ciudad">Localidad</label>
-              <select id="f-ciudad" name="ciudad" class="select">
-                <option value="">Todas</option>
-                {opts.cities.map((c) => (
-                  <option value={c.value}>
-                    {c.label} ({c.count})
-                  </option>
-                ))}
-              </select>
-            </div>
-          )
-        }
-        {
-          opts.zones.length > 0 && (
-            <div class="field">
-              <label for="f-zona">Zona o barrio</label>
-              <select id="f-zona" name="zona" class="select">
-                <option value="">Todas</option>
-                {opts.zones.map((z) => (
-                  <option value={z.value}>
-                    {z.label} ({z.count})
-                  </option>
-                ))}
-              </select>
-            </div>
-          )
-        }
-        {
-          opts.typeGroups.length > 1 && (
-            <div class="field">
-              <label for="f-tipo">Tipo de inmueble</label>
-              <select id="f-tipo" name="tipo" class="select">
-                <option value="">Todos</option>
-                {opts.typeGroups.map((t) => (
-                  <option value={t.value}>
-                    {TYPE_GROUP_LABEL[t.value as keyof typeof TYPE_GROUP_LABEL]} ({t.count})
-                  </option>
-                ))}
-              </select>
-            </div>
-          )
-        }
-        <fieldset class="field filters__pair">
-          <legend>Precio</legend>
-          <label class="visually-hidden" for="f-pmin">Precio mínimo</label>
-          <select id="f-pmin" name="precio_min" class="select">
-            <option value="">Mín.</option>
-            {priceSteps.map((s) => <option value={s}>{fmt(s)}</option>)}
-          </select>
-          <label class="visually-hidden" for="f-pmax">Precio máximo</label>
-          <select id="f-pmax" name="precio_max" class="select">
-            <option value="">Máx.</option>
-            {priceSteps.map((s) => <option value={s}>{fmt(s)}</option>)}
-          </select>
-        </fieldset>
-        <div class="field">
-          <label for="f-sup">Superficie mínima</label>
-          <select id="f-sup" name="superficie_min" class="select">
-            <option value="">Cualquiera</option>
-            {[40, 60, 80, 100, 150, 200, 300].map((s) => <option value={s}>{s} m² o más</option>)}
-          </select>
-        </div>
-        <fieldset class="field">
-          <legend>Dormitorios</legend>
-          <div class="chips" role="radiogroup">
-            {
-              ['', '1', '2', '3', '4'].map((v) => (
-                <label class="chip">
-                  <input type="radio" name="dormitorios" value={v} checked={v === ''} />
-                  <span>{v === '' ? 'Todos' : `${v}+`}</span>
-                </label>
-              ))
-            }
-          </div>
-        </fieldset>
-        <fieldset class="field">
-          <legend>Baños</legend>
-          <div class="chips" role="radiogroup">
-            {
-              ['', '1', '2', '3'].map((v) => (
-                <label class="chip">
-                  <input type="radio" name="banos" value={v} checked={v === ''} />
-                  <span>{v === '' ? 'Todos' : `${v}+`}</span>
-                </label>
-              ))
-            }
-          </div>
-        </fieldset>
-        {
-          opts.features.length > 0 && (
-            <fieldset class="field">
-              <legend>Características</legend>
-              <div class="checks">
-                {opts.features
-                  .sort((a, b) => b.count - a.count)
-                  .slice(0, 10)
-                  .map((f) => (
-                    <label class="check">
-                      <input type="checkbox" name="extra" value={f.value} />
-                      <span>
-                        {f.label} <span class="muted">({f.count})</span>
-                      </span>
-                    </label>
-                  ))}
-              </div>
-            </fieldset>
-          )
-        }
-        <div class="filters__actions">
-          <button type="reset" class="btn btn--ghost" data-reset>Limpiar filtros</button>
-          <button type="submit" class="btn btn--accent filters__apply" data-apply>
-            Ver <span data-apply-count>{list.length}</span> resultados
-          </button>
-        </div>
-      </form>
-    </aside>
-
-    <div class="search__results">
-      <div class="search__chips" data-chips hidden></div>
-      <ul class="results" data-results>
-        {
-          list.map((p, i) => (
-            <li data-item={p.id}>
-              <PropertyCard property={p} operation={operation} eager={i < 3} headingLevel="h2" />
-            </li>
-          ))
-        }
-      </ul>
-
-      <div class="search__empty" data-empty hidden={list.length > 0 ? true : undefined}>
-        <Icon name="search" size={32} />
-        <h2>{list.length === 0 ? 'Ahora mismo no hay inmuebles publicados' : 'No hay inmuebles con estos filtros'}</h2>
-        <p>
-          {
-            list.length === 0
-              ? 'Nuestra cartera cambia cada semana. Cuéntanos qué buscas y te avisaremos en cuanto tengamos algo que encaje.'
-              : 'Prueba a ampliar el precio o quitar alguna característica. Si nos cuentas qué buscas, te avisamos cuando entre algo que encaje.'
-          }
+    {
+      lastPage > 1 && (
+        <p class="search__page" data-page-info>
+          Página {page} de {lastPage}
         </p>
-        <div class="search__empty-actions">
-          {list.length > 0 && (
-            <button type="button" class="btn btn--ghost" data-clear>
-              Quitar todos los filtros
-            </button>
-          )}
-          <a class="btn btn--accent" href={`/contacto/?motivo=${operation === 'alquiler' ? 'alquilar' : 'comprar'}#formulario`}>
-            Cuéntanos qué buscas
-          </a>
-        </div>
-      </div>
+      )
+    }
+    {
+      all.length > 1 && (
+        <label class="search__sort">
+          <span>Ordenar</span>
+          <select class="ff__select" name="orden" form="form-filtros" data-sort>
+            {SORTS.map((s) => (
+              <option value={s.value}>{s.label}</option>
+            ))}
+          </select>
+        </label>
+      )
+    }
+  </div>
+  <div class="search__chips" data-chips hidden></div>
+  <p class="search__status" role="status" data-status></p>
 
-      <div class="search__more" data-more-wrap hidden>
-        <button type="button" class="btn btn--ghost" data-more>Ver más inmuebles</button>
-      </div>
+  <ul class="results" data-results>
+    {slice.map((p, i) => <li data-item={p.id} set:html={renderCard(cardModel(p, operation), { heading: 'h2', eager: i < 3 })} />)}
+  </ul>
+
+  <div class="search__empty" data-empty hidden={all.length > 0 ? true : undefined}>
+    <h2 data-empty-title>{all.length === 0 ? 'Ahora mismo no hay inmuebles publicados' : 'No hay inmuebles con estos filtros'}</h2>
+    <p data-empty-text>
+      {
+        all.length === 0
+          ? 'Nuestra cartera cambia cada semana. Cuéntanos qué buscas y te avisaremos en cuanto tengamos algo que encaje.'
+          : 'Prueba a quitar alguno de los filtros. Si nos cuentas qué buscas, te avisamos cuando entre algo que encaje.'
+      }
+    </p>
+    <ul class="search__suggest" data-suggest hidden></ul>
+    <div class="search__empty-actions">
+      {
+        all.length > 0 && (
+          <button type="button" class="btn btn--ghost" data-clear>
+            Quitar todos los filtros
+          </button>
+        )
+      }
+      <a class="btn" href={contactHref}>Cuéntanos qué buscas</a>
     </div>
   </div>
+
+  <div class="search__more" data-more-wrap hidden>
+    <p data-more-info></p>
+    <button type="button" class="btn btn--ghost" data-more>Mostrar más</button>
+  </div>
+
+  <Pagination current={page} last={lastPage} base={base} prefix="pagina/" label="Páginas de resultados" />
 </div>
 
 <script>
   import { activeCount, criteriaFromParams, criteriaToParams, search, type Criteria, type SearchItem } from '../lib/inventory/filters';
+  import { renderCard, type CardModel } from '../lib/inventory/card';
   import type { Operation } from '../lib/inventory/types';
+
+  type Item = SearchItem & { card: CardModel };
+  const EXTRA = ['zona', 'superficie_min', 'banos', 'extra'];
 
   const root = document.querySelector<HTMLElement>('[data-search]');
   if (root) init(root);
 
   function init(root: HTMLElement) {
+    const $ = <T extends Element = HTMLElement>(sel: string) => root.querySelector<T>(sel);
     const operation = root.dataset.operation as Operation;
-    const pageSize = Number(root.dataset.pageSize) || 12;
-    const items = JSON.parse(root.querySelector('[data-search-items]')!.textContent || '[]') as SearchItem[];
-    const form = root.querySelector<HTMLFormElement>('[data-form]')!;
-    const sort = root.querySelector<HTMLSelectElement>('[data-sort]')!;
-    const list = root.querySelector<HTMLElement>('[data-results]')!;
-    const countEl = root.querySelector<HTMLElement>('[data-count]')!;
-    const applyCount = root.querySelector<HTMLElement>('[data-apply-count]');
-    const activeBadge = root.querySelector<HTMLElement>('[data-active-count]')!;
-    const empty = root.querySelector<HTMLElement>('[data-empty]')!;
-    const moreWrap = root.querySelector<HTMLElement>('[data-more-wrap]')!;
-    const more = root.querySelector<HTMLButtonElement>('[data-more]')!;
-    const chips = root.querySelector<HTMLElement>('[data-chips]')!;
-    const panel = root.querySelector<HTMLElement>('[data-filters]')!;
-    const openBtn = root.querySelector<HTMLButtonElement>('[data-filters-open]')!;
-    const closeBtn = root.querySelector<HTMLButtonElement>('[data-filters-close]')!;
-    const rows = new Map<string, HTMLElement>();
-    list.querySelectorAll<HTMLElement>('[data-item]').forEach((li) => rows.set(li.dataset.item!, li));
-    let shown = pageSize;
-    const mobile = window.matchMedia('(max-width: 959px)');
+    const pageSize = Number(root.dataset.pageSize) || 24;
+    const staticTotal = Number(root.dataset.total) || 0;
+    const form = $<HTMLFormElement>('[data-form]');
+    const sort = $<HTMLSelectElement>('[data-sort]');
+    const list = $('[data-results]')!;
+    const countEl = $('[data-count]')!;
+    const status = $('[data-status]')!;
+    const applyCount = $('[data-apply-count]');
+    const activeBadge = $('[data-active-count]');
+    const extraBadge = $('[data-extra-count]');
+    const empty = $('[data-empty]')!;
+    const emptyTitle = $('[data-empty-title]')!;
+    const emptyText = $('[data-empty-text]')!;
+    const suggest = $('[data-suggest]')!;
+    const moreWrap = $('[data-more-wrap]')!;
+    const moreBtn = $<HTMLButtonElement>('[data-more]')!;
+    const moreInfo = $('[data-more-info]')!;
+    const chips = $('[data-chips]')!;
+    const pager = $('[data-pager]');
+    const pageInfo = $('[data-page-info]');
+    const panel = $('[data-filters]');
+    const openBtn = $<HTMLButtonElement>('[data-filters-open]');
+    const closeBtn = $<HTMLButtonElement>('[data-filters-close]');
+    const moreToggle = $<HTMLButtonElement>('[data-more-toggle]');
+    const extra = $('[data-extra]');
+    if (!form || !sort) return;
 
-    // --- Estado ⇄ formulario ⇄ URL ---
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+    const mobile = matchMedia('(max-width: 959px)');
+    const originalPath = location.pathname;
+    const staticNodes = [...list.children];
+    let mode: 'static' | 'client' = 'static';
+    let result: Item[] = [];
+    let shown = 0;
+    let shownCount = staticTotal;
+    let token = 0;
+
+    // --- Índice de búsqueda: se descarga una vez, cuando hace falta ---
+    let loading: Promise<Item[]> | null = null;
+    const load = () =>
+      (loading ??= fetch(root.dataset.src!)
+        .then((r) => {
+          if (!r.ok) throw new Error(String(r.status));
+          return r.json() as Promise<{ items: Item[] }>;
+        })
+        .then((d) => d.items)
+        .catch((e) => {
+          loading = null;
+          throw e;
+        }));
+    // Intención de filtrar: se adelanta la descarga.
+    const prefetch = () => load().catch(() => {});
+    root.addEventListener('pointerover', prefetch, { once: true });
+    root.addEventListener('focusin', prefetch, { once: true });
+
+    // --- Formulario ⇄ criterios ⇄ URL ---
     function readForm(): Criteria {
       const params = new URLSearchParams();
-      new FormData(form).forEach((v, k) => {
+      new FormData(form!).forEach((v, k) => {
         if (typeof v === 'string' && v !== '') params.append(k, v);
       });
-      params.set('orden', sort.value);
+      params.set('orden', sort!.value);
       return criteriaFromParams(params, operation);
     }
 
     function writeForm(c: Criteria) {
       const set = (name: string, value: string) => {
-        const el = form.elements.namedItem(name);
-        if (el instanceof HTMLSelectElement) {
-          el.value = [...el.options].some((o) => o.value === value) ? value : '';
-        } else if (el instanceof RadioNodeList) {
-          for (const r of el) if (r instanceof HTMLInputElement) r.checked = r.value === value;
-        }
+        const el = form!.elements.namedItem(name);
+        if (el instanceof HTMLSelectElement) el.value = [...el.options].some((o) => o.value === value) ? value : '';
       };
       set('ciudad', c.city ?? '');
       set('zona', c.zone ?? '');
@@ -283,38 +347,46 @@ const PAGE = 12;
       set('superficie_min', c.areaMin?.toString() ?? '');
       set('dormitorios', c.bedroomsMin?.toString() ?? '');
       set('banos', c.bathroomsMin?.toString() ?? '');
-      form.querySelectorAll<HTMLInputElement>('input[name="extra"]').forEach((cb) => (cb.checked = c.features.includes(cb.value)));
-      sort.value = c.sort;
+      form!.querySelectorAll<HTMLInputElement>('input[name="extra"]').forEach((cb) => (cb.checked = c.features.includes(cb.value)));
+      sort!.value = c.sort;
     }
 
+    const isDefault = (c: Criteria) => activeCount(c) === 0 && c.sort === 'recientes';
+
     function labelFor(name: string, value: string): string {
-      const el = form.elements.namedItem(name);
-      if (el instanceof HTMLSelectElement) return el.selectedOptions[0]?.textContent?.replace(/\s*\(\d+\)$/, '') ?? value;
+      const el = form!.elements.namedItem(name);
+      const text = el instanceof HTMLSelectElement ? (el.selectedOptions[0]?.textContent ?? value).replace(/\s*\(\d+\)$/, '') : value;
+      if (name === 'precio_min') return `Desde ${text}`;
+      if (name === 'precio_max') return `Hasta ${text}`;
       if (name === 'dormitorios') return `${value}+ dormitorios`;
       if (name === 'banos') return `${value}+ baños`;
-      return value;
+      if (name === 'superficie_min') return `${value}+ m²`;
+      return text;
+    }
+
+    function without(c: Criteria, key: string, value: string): Criteria {
+      const next = criteriaToParams(c);
+      const keep = next.getAll(key).filter((x) => x !== value);
+      next.delete(key);
+      keep.forEach((x) => next.append(key, x));
+      return criteriaFromParams(next, operation);
     }
 
     function renderChips(c: Criteria) {
       const params = criteriaToParams(c);
       params.delete('orden');
-      chips.replaceChildren();
       const entries = [...params.entries()];
+      chips.replaceChildren();
       chips.hidden = entries.length === 0;
       for (const [k, v] of entries) {
         const b = document.createElement('button');
         b.type = 'button';
         b.className = 'filter-chip';
-        const prefix = k === 'precio_min' ? 'Desde ' : k === 'precio_max' ? 'Hasta ' : '';
-        b.textContent = prefix + labelFor(k, v);
+        b.textContent = labelFor(k, v);
         b.setAttribute('aria-label', `Quitar filtro: ${b.textContent}`);
         b.addEventListener('click', () => {
-          const next = criteriaToParams(readForm());
-          const all = next.getAll(k).filter((x) => x !== v);
-          next.delete(k);
-          all.forEach((x) => next.append(k, x));
-          writeForm(criteriaFromParams(next, operation));
-          update(true);
+          writeForm(without(readForm(), k, v));
+          update();
         });
         chips.append(b);
       }
@@ -326,64 +398,180 @@ const PAGE = 12;
         clear.addEventListener('click', clearAll);
         chips.append(clear);
       }
+      const active = activeCount(c);
+      if (activeBadge) {
+        activeBadge.hidden = active === 0;
+        activeBadge.textContent = String(active);
+      }
+      const extraActive = entries.filter(([k]) => EXTRA.includes(k)).length;
+      if (extraBadge) {
+        extraBadge.hidden = extraActive === 0;
+        extraBadge.textContent = String(extraActive);
+      }
     }
 
-    function update(resetPage = false, pushUrl = true) {
-      const c = readForm();
-      const result = search(items, c);
-      if (resetPage) shown = pageSize;
-      // Reordena y muestra solo los resultados (y la página actual).
-      const visible = new Set(result.slice(0, shown).map((i) => i.id));
-      for (const r of result) {
-        const li = rows.get(r.id);
-        if (li) list.append(li);
-      }
-      rows.forEach((li, id) => (li.hidden = !visible.has(id)));
-      const n = result.length;
-      countEl.innerHTML = `<strong>${n}</strong> ${n === 1 ? 'inmueble' : 'inmuebles'}`;
+    // --- Recuento con transición numérica ---
+    function setCount(n: number) {
+      const from = shownCount;
+      shownCount = n;
+      const strong = countEl.querySelector('strong')!;
+      countEl.querySelector('span')!.textContent = n === 1 ? 'inmueble' : 'inmuebles';
       if (applyCount) applyCount.textContent = String(n);
-      empty.hidden = n > 0;
-      moreWrap.hidden = n <= shown;
-      const active = activeCount(c);
-      activeBadge.hidden = active === 0;
-      activeBadge.textContent = String(active);
-      renderChips(c);
-      if (pushUrl) {
-        const qs = criteriaToParams(c).toString();
-        history.replaceState(null, '', qs ? `?${qs}` : location.pathname);
+      if (reduce.matches || from === n) {
+        strong.textContent = String(n);
+        return;
       }
+      const t0 = performance.now();
+      const step = (t: number) => {
+        const k = Math.min(1, (t - t0) / 380);
+        strong.textContent = String(Math.round(from + (n - from) * (1 - Math.pow(1 - k, 3))));
+        if (k < 1 && shownCount === n) requestAnimationFrame(step);
+        else if (shownCount === n) strong.textContent = String(n);
+      };
+      requestAnimationFrame(step);
+    }
+
+    // --- Pintado incremental ---
+    function appendNext(focusFirst = false) {
+      const next = result.slice(shown, shown + pageSize);
+      const frag = document.createDocumentFragment();
+      next.forEach((it, i) => {
+        const li = document.createElement('li');
+        li.dataset.item = it.id;
+        li.className = 'is-new';
+        li.style.setProperty('--i', String(Math.min(i, 8)));
+        li.innerHTML = renderCard(it.card, { heading: 'h2', eager: shown === 0 && i < 3 });
+        frag.append(li);
+      });
+      const firstNew = frag.firstElementChild as HTMLElement | null;
+      list.append(frag);
+      shown += next.length;
+      const left = result.length - shown;
+      moreWrap.hidden = left <= 0;
+      moreInfo.textContent = `Mostrando ${shown} de ${result.length}`;
+      moreBtn.textContent = `Mostrar ${Math.min(left, pageSize)} más`;
+      if (focusFirst) firstNew?.querySelector<HTMLAnchorElement>('a')?.focus();
+    }
+
+    function showStatic() {
+      if (mode === 'client') list.replaceChildren(...staticNodes);
+      mode = 'static';
+      setCount(staticTotal);
+      moreWrap.hidden = true;
+      empty.hidden = staticTotal > 0;
+      if (pager) pager.hidden = false;
+      if (pageInfo) pageInfo.hidden = false;
+    }
+
+    function renderEmpty(c: Criteria, items: Item[]) {
+      emptyTitle.textContent = 'No hay inmuebles con estos filtros';
+      emptyText.textContent = 'Prueba a quitar alguno de los filtros. Si nos cuentas qué buscas, te avisamos cuando entre algo que encaje.';
+      // Qué filtro conviene quitar: los que más resultados devuelven al quitarlos.
+      const params = criteriaToParams(c);
+      params.delete('orden');
+      const options = [...params.entries()]
+        .map(([k, v]) => ({ k, v, n: search(items, without(c, k, v)).length }))
+        .filter((o) => o.n > 0)
+        .sort((a, b) => b.n - a.n)
+        .slice(0, 3);
+      suggest.replaceChildren(
+        ...options.map((o) => {
+          const li = document.createElement('li');
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'link-arrow';
+          b.textContent = `Sin «${labelFor(o.k, o.v)}»: ${o.n} ${o.n === 1 ? 'inmueble' : 'inmuebles'}`;
+          b.addEventListener('click', () => {
+            writeForm(without(readForm(), o.k, o.v));
+            update();
+          });
+          li.append(b);
+          return li;
+        }),
+      );
+      suggest.hidden = options.length === 0;
+    }
+
+    async function update(pushUrl = true) {
+      const c = readForm();
+      renderChips(c);
+      const qs = criteriaToParams(c).toString();
+      if (pushUrl) {
+        const path = isDefault(c) ? originalPath : root.dataset.base!;
+        history.replaceState(null, '', qs ? `${path}?${qs}` : path);
+      }
+      if (isDefault(c)) return showStatic();
+
+      const mine = ++token;
+      list.setAttribute('aria-busy', 'true');
+      root.classList.add('is-loading');
+      let items: Item[];
+      try {
+        items = await load();
+      } catch {
+        if (mine !== token) return;
+        list.removeAttribute('aria-busy');
+        root.classList.remove('is-loading');
+        status.textContent = 'No se ha podido cargar el buscador. Comprueba la conexión y vuelve a intentarlo.';
+        return;
+      }
+      if (mine !== token) return;
+      status.textContent = '';
+      list.removeAttribute('aria-busy');
+      root.classList.remove('is-loading');
+      mode = 'client';
+      result = search(items, c) as Item[];
+      shown = 0;
+      list.replaceChildren();
+      appendNext();
+      setCount(result.length);
+      empty.hidden = result.length > 0;
+      if (!result.length) renderEmpty(c, items);
+      if (pager) pager.hidden = true;
+      if (pageInfo) pageInfo.hidden = true;
     }
 
     function clearAll() {
-      form.reset();
-      sort.value = 'recientes';
-      update(true);
+      form!.reset();
+      sort!.value = 'recientes';
+      update();
     }
+
+    // --- «Más filtros» (escritorio) ---
+    function setExtra(open: boolean) {
+      moreToggle?.setAttribute('aria-expanded', String(open));
+      extra?.classList.toggle('is-open', open);
+    }
+    moreToggle?.addEventListener('click', () => setExtra(moreToggle.getAttribute('aria-expanded') !== 'true'));
 
     // --- Panel de filtros en móvil (diálogo accesible) ---
     function openPanel() {
+      if (!panel) return;
       panel.classList.add('is-open');
       panel.setAttribute('role', 'dialog');
       panel.setAttribute('aria-modal', 'true');
-      openBtn.setAttribute('aria-expanded', 'true');
+      openBtn?.setAttribute('aria-expanded', 'true');
       document.documentElement.classList.add('filters-open');
-      closeBtn.focus();
+      closeBtn?.focus();
     }
     function closePanel(focus = true) {
+      if (!panel) return;
       panel.classList.remove('is-open');
       panel.removeAttribute('role');
       panel.removeAttribute('aria-modal');
-      openBtn.setAttribute('aria-expanded', 'false');
+      openBtn?.setAttribute('aria-expanded', 'false');
       document.documentElement.classList.remove('filters-open');
-      if (focus) openBtn.focus();
+      if (focus) openBtn?.focus();
     }
-    openBtn.addEventListener('click', openPanel);
-    closeBtn.addEventListener('click', () => closePanel());
-    panel.addEventListener('keydown', (e) => {
+    openBtn?.addEventListener('click', openPanel);
+    closeBtn?.addEventListener('click', () => closePanel());
+    panel?.addEventListener('keydown', (e) => {
       if (!panel.classList.contains('is-open')) return;
       if (e.key === 'Escape') closePanel();
       if (e.key === 'Tab') {
-        const f = [...panel.querySelectorAll<HTMLElement>('button, select, input, a[href]')].filter((el) => !el.hasAttribute('disabled') && el.offsetParent !== null);
+        const f = [...panel.querySelectorAll<HTMLElement>('button, select, input, a[href]')].filter(
+          (el) => !el.hasAttribute('disabled') && el.offsetParent !== null,
+        );
         const first = f[0];
         const last = f[f.length - 1];
         if (e.shiftKey && document.activeElement === first) {
@@ -400,158 +588,150 @@ const PAGE = 12;
     });
 
     // --- Eventos ---
-    form.addEventListener('change', () => update(true));
-    sort.addEventListener('change', () => update(true));
+    form.addEventListener('change', () => update());
+    sort.addEventListener('change', () => update());
     form.addEventListener('submit', (e) => {
       e.preventDefault();
-      update(true);
+      update();
       if (mobile.matches) closePanel();
-      countEl.scrollIntoView({ block: 'start' });
+      countEl.scrollIntoView({ block: 'center' });
     });
-    form.addEventListener('reset', () => setTimeout(() => update(true)));
+    form.addEventListener('reset', () => setTimeout(() => update()));
     root.querySelector('[data-clear]')?.addEventListener('click', clearAll);
-    more.addEventListener('click', () => {
-      const firstHidden = [...list.querySelectorAll<HTMLElement>('[data-item][hidden]')][0];
-      shown += pageSize;
-      update(false);
-      firstHidden?.querySelector<HTMLAnchorElement>('a')?.focus();
-    });
+    moreBtn.addEventListener('click', () => appendNext(true));
 
     // Estado inicial desde la URL (búsqueda compartida o recargada).
-    writeForm(criteriaFromParams(new URLSearchParams(location.search), operation));
-    update(true, false);
+    const initial = criteriaFromParams(new URLSearchParams(location.search), operation);
+    writeForm(initial);
+    if (EXTRA.some((k) => new URLSearchParams(location.search).has(k))) setExtra(true);
+    if (!isDefault(initial)) update(false);
+    else renderChips(initial);
     root.classList.add('is-ready');
   }
 </script>
 
 <style>
-  .search__toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--s-3);
-    margin-bottom: var(--s-5);
+  /* ---------- Barra de filtros ---------- */
+  .search__bar {
+    display: none;
+    margin-bottom: var(--s-6);
   }
-  .search__count {
+  :global(.js) .search__bar {
+    display: block;
+  }
+  .ff {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
     margin: 0;
-    font-size: var(--fs-md);
+    padding: 0;
+    border: 0;
+  }
+  .ff label,
+  .ff legend,
+  .search__sort span {
+    padding: 0;
+    font-size: var(--fs-label);
+    font-weight: 650;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
     color: var(--ink-2);
   }
-  .search__count :global(strong) {
+  .ff__select {
+    width: 100%;
+    min-height: 44px;
+    padding: 0 1.6rem 0 0;
+    border: 0;
+    border-bottom: 1px solid var(--line-strong);
+    border-radius: 0;
+    background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2317354f' stroke-width='1.5'/%3E%3C/svg%3E") right 2px center no-repeat;
+    appearance: none;
     color: var(--navy-900);
-    font-family: var(--font-display);
-    font-size: var(--fs-lg);
-  }
-  .search__tools {
-    display: flex;
-    gap: var(--s-2);
-    align-items: center;
-  }
-  .search__sort .select {
-    min-height: 40px;
-    padding-block: 0.4rem;
+    font: inherit;
     font-size: var(--fs-sm);
-    width: auto;
+    font-weight: 550;
+    cursor: pointer;
+    transition: border-color var(--dur) var(--ease);
+  }
+  .ff__select:hover {
+    border-bottom-color: var(--navy-900);
+  }
+  .ff__select:focus-visible {
+    outline: 2px solid var(--navy-700);
+    outline-offset: 2px;
+  }
+  .ff--pair {
+    grid-template-columns: 1fr 1fr;
+    column-gap: var(--s-3);
+  }
+  .ff--pair legend {
+    grid-column: 1 / -1;
+    float: left;
+    width: 100%;
+  }
+  .ff--wide {
+    grid-column: 1 / -1;
+  }
+  .toggles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+    margin-top: var(--s-2);
+  }
+  .toggle {
+    position: relative;
+  }
+  .toggle input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    margin: 0;
+    cursor: pointer;
+  }
+  .toggle > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    min-height: 40px;
+    padding: 0 var(--s-3);
+    border: 1px solid var(--line-strong);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: var(--navy-900);
+    background: var(--white);
+    transition:
+      background-color var(--dur) var(--ease),
+      border-color var(--dur) var(--ease),
+      color var(--dur) var(--ease);
+  }
+  .toggle__n {
+    color: var(--ink-3);
+    font-weight: 500;
+  }
+  .toggle input:checked + span {
+    background: var(--navy-900);
+    border-color: var(--navy-900);
+    color: var(--white);
+  }
+  .toggle input:checked + span .toggle__n {
+    color: var(--navy-200);
+  }
+  .toggle input:focus-visible + span {
+    outline: 2px solid var(--navy-700);
+    outline-offset: 2px;
   }
   .search__badge {
     display: inline-grid;
     place-items: center;
-    min-width: 22px;
-    height: 22px;
-    border-radius: 11px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
     background: var(--lime-500);
     color: var(--navy-950);
-    font-size: var(--fs-xs);
+    font-size: var(--fs-label);
+    font-weight: 700;
+    letter-spacing: 0;
   }
-  .search__layout {
-    display: grid;
-    gap: var(--s-6);
-  }
-  .results {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr));
-    gap: var(--s-5);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .results > li[hidden] {
-    display: none;
-  }
-  .search__chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--s-2);
-    margin-bottom: var(--s-4);
-  }
-  .search__chips[hidden] {
-    display: none;
-  }
-  .search__chips :global(.filter-chip) {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    min-height: 36px;
-    padding: 0.3rem 0.8rem;
-    border: 1.5px solid var(--navy-200);
-    border-radius: var(--r-pill);
-    background: var(--navy-50);
-    color: var(--navy-900);
-    font: inherit;
-    font-size: var(--fs-xs);
-    font-weight: 650;
-    cursor: pointer;
-  }
-  .search__chips :global(.filter-chip)::after {
-    content: '×';
-    font-size: 1.1em;
-  }
-  .search__chips :global(.filter-chip--clear) {
-    background: transparent;
-    border-style: dashed;
-  }
-  .search__chips :global(.filter-chip--clear)::after {
-    content: none;
-  }
-  .search__empty {
-    display: grid;
-    justify-items: center;
-    gap: var(--s-2);
-    padding: var(--s-7) var(--s-5);
-    border: 1.5px dashed var(--line-strong);
-    border-radius: var(--r-lg);
-    background: var(--bg);
-    text-align: center;
-    color: var(--navy-700);
-  }
-  .search__empty[hidden] {
-    display: none;
-  }
-  .search__empty h2 {
-    margin: var(--s-2) 0 0;
-    font-size: var(--fs-xl);
-  }
-  .search__empty p {
-    max-width: 52ch;
-    color: var(--ink-2);
-  }
-  .search__empty-actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: var(--s-3);
-  }
-  .search__more {
-    display: flex;
-    justify-content: center;
-    margin-top: var(--s-6);
-  }
-  .search__more[hidden] {
-    display: none;
-  }
-
-  /* Filtros */
   .filters__head {
     display: flex;
     justify-content: space-between;
@@ -560,17 +740,15 @@ const PAGE = 12;
   }
   .filters__title {
     margin: 0;
-    font-family: var(--font-sans);
-    font-size: var(--fs-md);
+    font-size: var(--fs-xl);
   }
   .filters__close {
     display: inline-grid;
     place-items: center;
     width: 44px;
     height: 44px;
-    border: 0;
-    border-radius: var(--r-md);
-    background: var(--navy-50);
+    border: 1px solid var(--line-strong);
+    background: var(--white);
     color: var(--navy-900);
     cursor: pointer;
   }
@@ -578,126 +756,322 @@ const PAGE = 12;
     display: grid;
     gap: var(--s-5);
   }
-  .filters fieldset {
-    margin: 0;
-    padding: 0;
-    border: 0;
-  }
-  .filters legend {
-    margin-bottom: var(--s-2);
-  }
-  .filters__pair {
+  .filters__main,
+  .filters__extra {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--s-2);
+    gap: var(--s-5);
   }
-  .filters__pair legend {
-    grid-column: 1 / -1;
-  }
-  .chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--s-2);
-  }
-  .chip {
-    position: relative;
-  }
-  .chip input {
-    position: absolute;
-    opacity: 0;
-    inset: 0;
-    margin: 0;
-    cursor: pointer;
-  }
-  .chip span {
-    display: inline-grid;
-    place-items: center;
-    min-width: 52px;
-    min-height: 44px;
-    padding: 0 var(--s-3);
-    border: 1.5px solid var(--line-strong);
-    border-radius: var(--r-pill);
-    font-size: var(--fs-sm);
-    font-weight: 650;
-    color: var(--navy-900);
-    background: var(--white);
-  }
-  .chip input:checked + span {
-    background: var(--navy-900);
-    border-color: var(--navy-900);
-    color: var(--white);
-  }
-  .chip input:focus-visible + span {
-    outline: 3px solid var(--navy-700);
-    outline-offset: 2px;
-  }
-  .checks {
-    display: grid;
-    gap: var(--s-2);
+  .filters__more {
+    display: none;
   }
   .filters__actions {
     display: grid;
-    grid-template-columns: 1fr 1.4fr;
+    grid-template-columns: 1fr 1.6fr;
     gap: var(--s-2);
-    position: sticky;
-    bottom: 0;
-    padding-top: var(--s-3);
-    background: inherit;
   }
 
+  /* ---------- Barra de resultados ---------- */
+  .search__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--s-2) var(--s-5);
+    padding-bottom: var(--s-4);
+    margin-bottom: var(--s-4);
+    border-bottom: 1px solid var(--line-strong);
+  }
+  .search__count {
+    margin: 0;
+    font-size: var(--fs-sm);
+    color: var(--ink-2);
+  }
+  .search__count :global(strong) {
+    margin-right: 0.15em;
+    font-family: var(--font-display);
+    font-size: var(--fs-xl);
+    font-weight: 380;
+    font-variation-settings: 'opsz' 144;
+    font-variant-numeric: lining-nums tabular-nums;
+    color: var(--navy-900);
+  }
+  .search__page {
+    margin: 0;
+    font-size: var(--fs-sm);
+    color: var(--ink-2);
+  }
+  .search__page[hidden] {
+    display: none;
+  }
+  .search__sort {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    margin-left: auto;
+  }
+  .search__sort .ff__select {
+    width: auto;
+    border-bottom: 0;
+  }
+  .search__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+    margin-bottom: var(--s-5);
+  }
+  .search__chips[hidden] {
+    display: none;
+  }
+  .search__chips :global(.filter-chip) {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    padding: 0.3rem 0.75rem;
+    border: 1px solid var(--navy-900);
+    background: var(--white);
+    color: var(--navy-900);
+    font: inherit;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    cursor: pointer;
+    animation: chip-in 280ms var(--ease-out);
+    transition:
+      background-color var(--dur) var(--ease),
+      color var(--dur) var(--ease);
+  }
+  .search__chips :global(.filter-chip:hover) {
+    background: var(--navy-900);
+    color: var(--white);
+  }
+  .search__chips :global(.filter-chip)::after {
+    content: '×';
+    font-size: 1.2em;
+    line-height: 1;
+  }
+  .search__chips :global(.filter-chip--clear) {
+    border-color: transparent;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  .search__chips :global(.filter-chip--clear)::after {
+    content: none;
+  }
+  @keyframes chip-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+  }
+  .search__status:empty {
+    display: none;
+  }
+  .search__status {
+    padding: var(--s-3) var(--s-4);
+    border-left: 3px solid var(--danger);
+    background: var(--danger-bg);
+    color: var(--danger);
+    font-size: var(--fs-sm);
+  }
+
+  /* ---------- Resultados ---------- */
+  .results {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+    gap: var(--s-7) var(--s-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    transition: opacity 200ms var(--ease);
+  }
+  .is-loading .results {
+    opacity: 0.45;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .results > :global(li.is-new) {
+      animation: result-in 620ms var(--ease-out) both;
+      animation-delay: calc(var(--i, 0) * 45ms);
+    }
+  }
+  @keyframes result-in {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+  }
+  .search__empty {
+    display: grid;
+    justify-items: start;
+    gap: var(--s-2);
+    padding: var(--s-7) 0;
+    border-top: 1px solid var(--line-strong);
+  }
+  .search__empty[hidden] {
+    display: none;
+  }
+  .search__empty h2 {
+    margin: 0;
+    font-size: var(--fs-2xl);
+    max-width: 20ch;
+  }
+  .search__empty p {
+    max-width: 52ch;
+    color: var(--ink-2);
+  }
+  .search__suggest {
+    display: grid;
+    gap: var(--s-2);
+    margin: 0 0 var(--s-4);
+    padding: 0;
+    list-style: none;
+  }
+  .search__suggest[hidden] {
+    display: none;
+  }
+  .search__suggest :global(button) {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: var(--fs-sm);
+    font-weight: 650;
+    color: var(--navy-900);
+    cursor: pointer;
+  }
+  .search__empty-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-3);
+  }
+  .search__more {
+    display: grid;
+    justify-items: center;
+    gap: var(--s-3);
+    margin-top: var(--s-8);
+  }
+  .search__more p {
+    margin: 0;
+    font-size: var(--fs-sm);
+    color: var(--ink-2);
+  }
+  .search__more[hidden],
+  .search :global([data-pager][hidden]) {
+    display: none;
+  }
+
+  /* ---------- Móvil: panel de filtros a pantalla completa ---------- */
   @media (max-width: 959px) {
+    .search__open {
+      width: 100%;
+    }
     .filters {
       position: fixed;
       inset: 0;
       z-index: 60;
       overflow-y: auto;
       padding: var(--s-5) var(--gutter) 0;
-      background: var(--white);
+      background: var(--paper);
       transform: translateY(100%);
       visibility: hidden;
       transition:
-        transform 260ms var(--ease),
-        visibility 0s linear 260ms;
+        transform 320ms var(--ease-out),
+        visibility 0s linear 320ms;
     }
     .filters.is-open {
       transform: none;
       visibility: visible;
-      transition: transform 260ms var(--ease);
+      transition: transform 380ms var(--ease-out);
     }
     .filters__actions {
-      padding-bottom: calc(var(--s-4) + env(safe-area-inset-bottom));
-      background: var(--white);
-      border-top: 1px solid var(--line);
+      position: sticky;
+      bottom: 0;
       margin-inline: calc(-1 * var(--gutter));
-      padding-inline: var(--gutter);
+      padding: var(--s-3) var(--gutter) calc(var(--s-4) + env(safe-area-inset-bottom));
+      background: var(--paper);
+      border-top: 1px solid var(--line-strong);
     }
     :global(html.filters-open) {
       overflow: hidden;
     }
   }
 
+  /* ---------- Escritorio: barra horizontal + «Más filtros» ---------- */
   @media (min-width: 960px) {
-    .search__layout {
-      grid-template-columns: 290px 1fr;
-      align-items: start;
-    }
-    .filters {
-      padding: var(--s-5);
-      border: 1px solid var(--line);
-      border-radius: var(--r-lg);
-      background: var(--white);
-    }
     .search__open,
-    .filters__close,
+    .filters__head,
     .filters__apply {
       display: none;
     }
-    .filters__actions {
-      position: static;
-      grid-template-columns: 1fr;
+    .filters {
+      padding: var(--s-4) var(--s-5) var(--s-5);
+      background: var(--white);
     }
-    .search__toolbar {
-      margin-left: calc(290px + var(--s-6));
+    .filters__form {
+      gap: 0;
+    }
+    .filters__main {
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      align-items: end;
+      gap: var(--s-5);
+    }
+    .filters__main .ff--pair {
+      grid-column: span 2;
+    }
+    .filters__more {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--s-2);
+      min-height: 44px;
+      padding: 0 var(--s-4);
+      border: 1px solid var(--navy-900);
+      background: transparent;
+      color: var(--navy-900);
+      font: inherit;
+      font-size: var(--fs-sm);
+      font-weight: 650;
+      cursor: pointer;
+      transition:
+        background-color var(--dur) var(--ease),
+        color var(--dur) var(--ease);
+    }
+    .filters__more:hover,
+    .filters__more[aria-expanded='true'] {
+      background: var(--navy-900);
+      color: var(--white);
+    }
+    .filters__extra {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      padding-top: var(--s-5);
+      margin-top: var(--s-5);
+      border-top: 1px solid var(--line);
+    }
+    :global(.js) .filters__extra:not(.is-open) {
+      display: none;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .filters__extra.is-open {
+        animation: extra-in 360ms var(--ease-out);
+      }
+    }
+    .filters__actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: var(--s-4);
+    }
+    .filters__actions .btn {
+      min-height: 0;
+      padding: 0;
+      border: 0;
+      background: none;
+      color: var(--ink-2);
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
+    }
+  }
+  @keyframes extra-in {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
     }
   }
 </style>

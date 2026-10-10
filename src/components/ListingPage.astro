@@ -3,55 +3,57 @@ import Base from '../layouts/Base.astro';
 import PropertySearch from './PropertySearch.astro';
 import CtaBand from './CtaBand.astro';
 import { byOperation } from '../lib/inventory';
+import { LISTING_BASE, PAGE_SIZE } from '../lib/inventory/listing';
+import { LISTING_COPY } from '../data/listings';
 import type { Operation } from '../lib/inventory/types';
 
 interface Props {
   operation: Operation;
-  title: string;
-  seoTitle: string;
-  description: string;
-  intro: string;
-  crumb: string;
+  page?: number;
 }
-const { operation, title, seoTitle, description, intro, crumb } = Astro.props;
-const count = byOperation(operation).length;
+const { operation, page = 1 } = Astro.props;
+const copy = LISTING_COPY[operation];
+const all = byOperation(operation);
+const count = all.length;
+const base = LISTING_BASE[operation];
 const path = Astro.url.pathname;
+const pageSuffix = page > 1 ? ` (página ${page})` : '';
 // Una página de resultados vacía no aporta nada en los buscadores.
 const noindex = count === 0;
 const itemList = {
   '@context': 'https://schema.org',
   '@type': 'ItemList',
-  name: title,
+  name: `${copy.title} ${copy.titleEm}`,
   numberOfItems: count,
-  itemListElement: byOperation(operation)
-    .slice(0, 30)
-    .map((p, i) => ({ '@type': 'ListItem', position: i + 1, url: new URL(`/inmueble/${p.slug}/`, Astro.site).href })),
+  itemListElement: all
+    .slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+    .map((p, i) => ({ '@type': 'ListItem', position: (page - 1) * PAGE_SIZE + i + 1, url: new URL(`/inmueble/${p.slug}/`, Astro.site).href })),
 };
 ---
 
 <Base
-  title={seoTitle}
-  description={description}
+  title={copy.seoTitle + pageSuffix}
+  description={copy.description}
   noindex={noindex}
   breadcrumbs={[
     { name: 'Inicio', href: '/' },
-    { name: crumb, href: path },
+    { name: copy.crumb, href: base },
+    ...(page > 1 ? [{ name: `Página ${page}`, href: path }] : []),
   ]}
   jsonLd={count ? [itemList] : []}
 >
   <section class="listing-hero">
-    <div class="container">
-      <p class="eyebrow">{crumb}</p>
-      <h1>{title}</h1>
-      <p class="lead">{intro}</p>
+    <div class="container listing-hero__grid">
+      <h1 data-hero style="--i:0">{copy.title} <em>{copy.titleEm}</em></h1>
+      <p class="lead" data-hero style="--i:1">{copy.intro}</p>
     </div>
   </section>
 
-  <section class="container listing-body">
-    <PropertySearch operation={operation} />
+  <section class="listing-body">
+    <div class="container">
+      <PropertySearch operation={operation} page={page} />
+    </div>
   </section>
-
-  <slot />
 
   <CtaBand
     title="¿No encuentras lo que buscas?"
@@ -62,16 +64,29 @@ const itemList = {
 
 <style>
   .listing-hero {
-    padding-block: var(--s-6) var(--s-5);
+    padding-block: var(--s-6) var(--s-7);
+    background: var(--paper);
+  }
+  .listing-hero__grid {
+    display: grid;
+    gap: var(--s-4);
+    align-items: end;
   }
   .listing-hero h1 {
-    font-size: var(--fs-2xl);
-    margin-bottom: var(--s-3);
+    margin: 0;
+    font-size: var(--fs-3xl);
   }
   .listing-hero .lead {
     margin: 0;
   }
   .listing-body {
     padding-bottom: var(--section);
+    background: var(--paper);
+  }
+  @media (min-width: 1024px) {
+    .listing-hero__grid {
+      grid-template-columns: 7fr 5fr;
+      gap: var(--s-7);
+    }
   }
 </style>

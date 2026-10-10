@@ -372,7 +372,8 @@ const defaultMessage =
   }
   .cform__grid {
     display: grid;
-    gap: var(--s-4);
+    gap: var(--s-4) var(--s-5);
+    align-items: start;
   }
   .cform__radios {
     margin: 0;
@@ -396,13 +397,43 @@ const defaultMessage =
   .cform__submit {
     justify-self: start;
     min-width: 220px;
+    overflow: hidden;
   }
+  /* Enviando: el botón queda bloqueado y una línea recorre su base. */
   .cform__submit[disabled] {
-    opacity: 0.7;
     cursor: progress;
+  }
+  .cform__submit[disabled]::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 2px;
+    width: 40%;
+    background: var(--navy-900);
+    animation: sending 1s var(--ease-in-out) infinite;
+  }
+  @keyframes sending {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(250%);
+    }
   }
   .cform-done:focus {
     outline: none;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .cform-done:not([hidden]) {
+      animation: done-in 520ms var(--ease-out);
+    }
+  }
+  @keyframes done-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
   }
   @media (min-width: 640px) {
     .cform__grid {

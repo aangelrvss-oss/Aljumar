@@ -4,6 +4,7 @@
  */
 import data from '../../data/inventory.json';
 import retiredData from '../../data/retired.json';
+import settings from '../../data/settings.json';
 import type { InventorySnapshot, Operation, Property } from './types.ts';
 
 const inventory = data as unknown as InventorySnapshot;
@@ -22,9 +23,46 @@ export function byOperation(op: Operation): Property[] {
   return inventory.properties.filter((p) => p.operations.includes(op));
 }
 
-export function featured(limit = 6): Property[] {
-  const list = inventory.properties.filter((p) => p.operations.includes('venta') || p.operations.includes('alquiler'));
-  return list.slice(0, limit);
+/** Selección de la portada: destacados primero, sin repetir el inmueble de portada. */
+export function featured(limit = 6, exclude: string | null = null): Property[] {
+  const list = inventory.properties.filter(
+    (p) => p.id !== exclude && (p.operations.includes('venta') || p.operations.includes('alquiler')),
+  );
+  return [...list.filter((p) => p.featured), ...list.filter((p) => !p.featured)].slice(0, limit);
+}
+
+/**
+ * Inmueble cuya foto preside la portada. Regla determinista y explicable
+ * (docs/design-review/art-direction.md):
+ *   1. El que Aljumar elija en /admin/ (Ajustes → «Inmueble de portada»), si
+ *      sigue publicado y tiene fotos.
+ *   2. Si no, entre los disponibles en venta o alquiler con fotos: primero los
+ *      marcados como destacados en Inmovilla, después el que tiene más fotos
+ *      (suele indicar un reportaje completo), después el de mayor precio y,
+ *      por último, el identificador, para que el resultado no cambie entre
+ *      compilaciones.
+ * No se puede saber automáticamente si la primera foto es un plano o un baño:
+ * para eso está la elección manual del punto 1.
+ */
+export function heroProperty(): Property | null {
+  const withPhotos = inventory.properties.filter((p) => p.photos.length > 0 && p.status === 'disponible');
+  const chosen = (settings as { heroPropertyId?: string }).heroPropertyId?.trim();
+  if (chosen) {
+    const p = withPhotos.find((x) => x.id === chosen || x.ref === chosen);
+    if (p) return p;
+  }
+  const price = (p: Property) => p.salePrice ?? p.rentPrice ?? p.transferPrice ?? 0;
+  return (
+    withPhotos
+      .filter((p) => p.operations.includes('venta') || p.operations.includes('alquiler'))
+      .sort(
+        (a, b) =>
+          Number(b.featured) - Number(a.featured) ||
+          b.photos.length - a.photos.length ||
+          price(b) - price(a) ||
+          a.id.localeCompare(b.id),
+      )[0] ?? null
+  );
 }
 
 /** Inmuebles parecidos: misma operación; prioriza misma zona/ciudad y precio cercano. */

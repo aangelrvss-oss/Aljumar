@@ -31,72 +31,80 @@ const statusText: Record<string, string> = {
   energy.letter ? (
     <div class="energy">
       <p class="energy__summary">
-        Consumo: <strong>{energy.letter}</strong>
-        {energy.value && <span> ({energy.value} kWh/m² año)</span>}
+        Consumo <strong>{energy.letter}</strong>
+        {energy.value && <span> · {energy.value} kWh/m² año</span>}
         {emissions.letter && (
           <>
-            {' '}
-            · Emisiones: <strong>{emissions.letter}</strong>
-            {emissions.value && <span> ({emissions.value} kg CO₂/m² año)</span>}
+            <span class="energy__sep" aria-hidden="true" />
+            Emisiones <strong>{emissions.letter}</strong>
+            {emissions.value && <span> · {emissions.value} kg CO₂/m² año</span>}
           </>
         )}
       </p>
       <ol class="energy__scale" aria-hidden="true">
-        {letters.map((l, i) => (
-          <li
-            class:list={['energy__bar', { 'is-current': l === energy.letter }]}
-            style={`--c:${colors[l]};--w:${40 + i * 9}%`}
-          >
-            <span>{l}</span>
-            {l === energy.letter && <b>Este inmueble</b>}
+        {letters.map((l) => (
+          <li class:list={['energy__step', { 'is-current': l === energy.letter }]} style={`--c:${colors[l]}`}>
+            {l}
           </li>
         ))}
       </ol>
     </div>
   ) : (
-    <p class="muted">{statusText[energy.status ?? 'pendiente'] ?? 'Consúltanos la calificación energética.'}</p>
+    <p class="energy__none">{statusText[energy.status ?? 'pendiente'] ?? 'Consúltanos la calificación energética.'}</p>
   )
 }
 
 <style>
+  .energy {
+    display: grid;
+    gap: var(--s-3);
+  }
   .energy__summary {
-    margin-bottom: var(--s-3);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 0.4em;
+    margin: 0;
+    font-size: var(--fs-sm);
+    color: var(--ink-2);
+  }
+  .energy__summary strong {
+    color: var(--navy-900);
+    font-size: var(--fs-md);
+  }
+  .energy__sep {
+    width: 1px;
+    height: 1em;
+    margin-inline: var(--s-3);
+    background: var(--line-strong);
+    align-self: center;
   }
   .energy__scale {
     display: grid;
-    gap: 4px;
+    grid-template-columns: repeat(7, minmax(0, 44px));
+    gap: 3px;
     margin: 0;
     padding: 0;
     list-style: none;
-    max-width: 420px;
   }
-  .energy__bar {
-    display: flex;
-    align-items: center;
-    gap: var(--s-3);
-  }
-  .energy__bar span {
-    display: flex;
-    align-items: center;
-    width: var(--w);
-    height: 24px;
-    padding-left: 10px;
-    border-radius: 3px 12px 12px 3px;
+  .energy__step {
+    display: grid;
+    place-items: center;
+    height: 26px;
     background: var(--c);
-    color: #fff;
+    color: var(--white);
     font-size: var(--fs-xs);
-    font-weight: 800;
-    text-shadow: 0 1px 1px rgb(0 0 0 / 0.35);
-    opacity: 0.55;
+    font-weight: 700;
+    opacity: 0.28;
   }
-  .energy__bar.is-current span {
+  .energy__step.is-current {
+    height: 34px;
+    margin-top: -4px;
     opacity: 1;
-    height: 30px;
-    outline: 2px solid var(--navy-900);
-    outline-offset: 2px;
+    box-shadow: 0 0 0 2px var(--white), 0 0 0 3px var(--navy-900);
   }
-  .energy__bar b {
-    font-size: var(--fs-xs);
-    color: var(--navy-900);
+  .energy__none {
+    margin: 0;
+    color: var(--ink-2);
   }
 </style>

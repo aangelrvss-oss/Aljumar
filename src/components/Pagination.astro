@@ -2,44 +2,58 @@
 interface Props {
   current: number;
   last: number;
-  /** Ruta de la primera página, con barra final. Las siguientes son base + n + '/'. */
+  /** Ruta de la primera página, con barra final. Las siguientes son base + prefix + n + '/'. */
   base: string;
+  /** Segmento entre la base y el número: «pagina/» → /comprar/pagina/2/. */
+  prefix?: string;
+  label?: string;
 }
-const { current, last, base } = Astro.props;
-const href = (n: number) => (n === 1 ? base : `${base}${n}/`);
-const pages = Array.from({ length: last }, (_, i) => i + 1);
+const { current, last, base, prefix = '', label = 'Paginación' } = Astro.props;
+const href = (n: number) => (n === 1 ? base : `${base}${prefix}${n}/`);
+// Primera, última y las dos vecinas de la actual; el resto se resume con «…».
+const pages: (number | null)[] = [];
+for (let n = 1; n <= last; n++) {
+  if (n === 1 || n === last || Math.abs(n - current) <= 2) pages.push(n);
+  else if (pages[pages.length - 1] !== null) pages.push(null);
+}
 ---
 
 {
   last > 1 && (
-    <nav class="pager" aria-label="Paginación">
+    <nav class="pager" aria-label={label} data-pager>
       {current > 1 ? (
         <a class="pager__step" href={href(current - 1)} rel="prev">
-          ← Anterior
+          Anterior
         </a>
       ) : (
         <span class="pager__step" aria-hidden="true" />
       )}
       <ol>
-        {pages.map((n) => (
-          <li>
-            {n === current ? (
-              <span aria-current="page">
-                <span class="visually-hidden">Página </span>
-                {n}
-              </span>
-            ) : (
-              <a href={href(n)}>
-                <span class="visually-hidden">Página </span>
-                {n}
-              </a>
-            )}
-          </li>
-        ))}
+        {pages.map((n) =>
+          n === null ? (
+            <li class="pager__gap" aria-hidden="true">
+              …
+            </li>
+          ) : (
+            <li>
+              {n === current ? (
+                <span aria-current="page">
+                  <span class="visually-hidden">Página </span>
+                  {n}
+                </span>
+              ) : (
+                <a href={href(n)}>
+                  <span class="visually-hidden">Página </span>
+                  {n}
+                </a>
+              )}
+            </li>
+          ),
+        )}
       </ol>
       {current < last ? (
-        <a class="pager__step" href={href(current + 1)} rel="next">
-          Siguiente →
+        <a class="pager__step pager__step--next" href={href(current + 1)} rel="next">
+          Siguiente
         </a>
       ) : (
         <span class="pager__step" aria-hidden="true" />
@@ -55,41 +69,56 @@ const pages = Array.from({ length: last }, (_, i) => i + 1);
     justify-content: space-between;
     align-items: center;
     gap: var(--s-3);
-    margin-top: var(--s-7);
+    margin-top: var(--s-8);
+    padding-top: var(--s-4);
+    border-top: 1px solid var(--line-strong);
   }
   ol {
     display: flex;
-    gap: var(--s-2);
+    flex-wrap: wrap;
+    gap: 2px;
     margin: 0;
     padding: 0;
     list-style: none;
   }
   ol a,
-  ol span[aria-current] {
+  ol span[aria-current],
+  .pager__gap {
     display: inline-grid;
     place-items: center;
     min-width: 44px;
     height: 44px;
-    border-radius: var(--r-md);
-    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
     text-decoration: none;
   }
   ol a {
     color: var(--navy-900);
-    border: 1.5px solid var(--line);
+    background: linear-gradient(currentColor, currentColor) 50% 80% / 0 1px no-repeat;
+    transition: background-size 300ms var(--ease-out);
   }
   ol a:hover {
-    border-color: var(--navy-700);
+    background-size: 14px 1px;
   }
   span[aria-current] {
     background: var(--navy-900);
     color: var(--white);
   }
+  .pager__gap {
+    color: var(--ink-3);
+  }
   .pager__step {
     min-width: 110px;
-    font-weight: 700;
+    color: var(--navy-900);
+    font-size: var(--fs-sm);
+    font-weight: 650;
+    text-decoration: none;
   }
-  .pager__step:last-child {
+  .pager__step:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
+  }
+  .pager__step--next {
     text-align: right;
   }
 </style>

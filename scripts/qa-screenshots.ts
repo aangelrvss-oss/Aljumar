@@ -51,15 +51,19 @@ for (const vp of viewports) {
     await page.goto(BASE + p, { waitUntil: 'networkidle' });
     await page.waitForTimeout(1200); // deja terminar las animaciones de entrada
     if (full) {
-      // Recorre la página para disparar las animaciones al hacer scroll.
+      // Recorre la página como un usuario para disparar las apariciones al
+      // hacer scroll («instant»: con scroll-behavior: smooth, scrollTo se
+      // interrumpiría a sí mismo y la página no llegaría a recorrerse).
       await page.evaluate(async () => {
-        for (let y = 0; y < document.body.scrollHeight; y += 600) {
-          window.scrollTo(0, y);
-          await new Promise((r) => setTimeout(r, 60));
+        for (let y = 0; y < document.documentElement.scrollHeight; y += 500) {
+          window.scrollTo({ top: y, behavior: 'instant' });
+          await new Promise((r) => setTimeout(r, 120));
         }
-        window.scrollTo(0, 0);
+        window.scrollTo({ top: 0, behavior: 'instant' });
       });
-      await page.waitForTimeout(700);
+      await page.waitForTimeout(1500);
+      const hidden = await page.locator('[data-motion].is-pending').count();
+      if (hidden) console.log(`  ⚠ ${hidden} bloques siguen pendientes de aparecer`);
     }
     const name = `${vp.name}${p === '/' ? '_portada' : p.replace(/\/$/, '').replace(/[/?=&]+/g, '_')}.png`;
     await page.screenshot({ path: join(out, name), fullPage: full });

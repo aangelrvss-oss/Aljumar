@@ -4,19 +4,10 @@ import Gallery from '../../components/Gallery.astro';
 import EnergyRating from '../../components/EnergyRating.astro';
 import ContactForm from '../../components/ContactForm.astro';
 import PropertyCard from '../../components/PropertyCard.astro';
-import Icon from '../../components/Icon.astro';
 import { allProperties, related } from '../../lib/inventory';
 import type { Property } from '../../lib/inventory/types';
 import { excerpt } from '../../lib/inventory/text';
-import {
-  formatArea,
-  formatPrice,
-  headline,
-  OPERATION_LABEL,
-  placeLabel,
-  priceFor,
-  primaryOperation,
-} from '../../lib/inventory/format';
+import { formatArea, formatPrice, headline, OPERATION_LABEL, placeLabel, priceFor, primaryOperation } from '../../lib/inventory/format';
 import { propertySchema } from '../../lib/schema';
 import { site } from '../../data/site';
 
@@ -29,7 +20,8 @@ interface Props {
 }
 const { property: p } = Astro.props;
 const op = primaryOperation(p);
-const listing = op === 'alquiler' ? { name: 'Alquilar', href: '/alquilar/' } : op === 'traspaso' ? { name: 'Traspasos', href: '/traspasos/' } : { name: 'Comprar', href: '/comprar/' };
+const listing =
+  op === 'alquiler' ? { name: 'Alquilar', href: '/alquilar/' } : op === 'traspaso' ? { name: 'Traspasos', href: '/traspasos/' } : { name: 'Comprar', href: '/comprar/' };
 const h1 = headline(p);
 const url = new URL(Astro.url.pathname, Astro.site).href;
 const ref = p.ref ?? p.id;
@@ -49,6 +41,15 @@ const paragraphs = description
   .map((s) => s.trim())
   .filter(Boolean);
 
+// Cifras clave (solo las que existen).
+const keys: { value: string; label: string }[] = [];
+if (p.bedrooms !== null) keys.push({ value: String(p.bedrooms), label: p.bedrooms === 1 ? 'dormitorio' : 'dormitorios' });
+if (p.bathrooms !== null) keys.push({ value: String(p.bathrooms), label: p.bathrooms === 1 ? 'baño' : 'baños' });
+if (p.builtArea !== null) keys.push({ value: formatArea(p.builtArea)!, label: 'construidos' });
+else if (p.usableArea !== null) keys.push({ value: formatArea(p.usableArea)!, label: 'útiles' });
+if (p.plotArea !== null) keys.push({ value: formatArea(p.plotArea)!, label: 'de parcela' });
+if (p.energy.letter) keys.push({ value: p.energy.letter, label: 'certificado energético' });
+
 const specs: { label: string; value: string }[] = [];
 specs.push({ label: 'Tipo', value: p.type });
 specs.push({ label: 'Operación', value: p.operations.map((o) => OPERATION_LABEL[o]).join(' y ') });
@@ -58,14 +59,13 @@ if (p.plotArea !== null) specs.push({ label: 'Parcela', value: formatArea(p.plot
 if (p.bedrooms !== null) specs.push({ label: 'Dormitorios', value: String(p.bedrooms) });
 if (p.bathrooms !== null) specs.push({ label: 'Baños', value: String(p.bathrooms) });
 if (p.toilets !== null) specs.push({ label: 'Aseos', value: String(p.toilets) });
+if (p.floor) specs.push({ label: 'Planta', value: p.floor });
 if (p.yearBuilt !== null) specs.push({ label: 'Año de construcción', value: String(p.yearBuilt) });
 if (p.condition) specs.push({ label: 'Estado', value: p.condition });
 if (p.communityFee !== null) specs.push({ label: 'Gastos de comunidad', value: `${p.communityFee} €/mes` });
 specs.push({ label: 'Referencia', value: ref });
 
-const allPrices = p.operations
-  .map((o) => ({ o, v: priceFor(p, o) }))
-  .filter((x) => x.v !== null || p.operations.length === 1);
+const allPrices = p.operations.map((o) => ({ o, v: priceFor(p, o) })).filter((x) => x.v !== null || p.operations.length === 1);
 const similar = related(p, 3);
 const seoDescription = excerpt(
   `${h1}${p.city ? ` (${placeLabel(p)})` : ''}: ${formatPrice(priceFor(p, op), op)}${p.bedrooms ? `, ${p.bedrooms} dormitorios` : ''}${p.builtArea ?? p.usableArea ? `, ${formatArea(p.builtArea ?? p.usableArea)}` : ''}. ${description}`,
@@ -74,61 +74,71 @@ const seoDescription = excerpt(
 const mapLink = p.approxLocation
   ? `https://www.openstreetmap.org/?mlat=${p.approxLocation.lat.toFixed(3)}&mlon=${p.approxLocation.lng.toFixed(3)}#map=15/${p.approxLocation.lat.toFixed(3)}/${p.approxLocation.lng.toFixed(3)}`
   : null;
+const statusLabel = p.status === 'disponible' ? null : p.status === 'reservado' ? 'Reservado' : p.status[0]!.toUpperCase() + p.status.slice(1);
 ---
 
 <Base
   title={`${h1}${p.city && p.zone ? `, ${p.city}` : ''} · ref. ${ref}`}
   description={seoDescription}
   ogImage={p.photos[0]?.url}
-  breadcrumbs={[
-    { name: 'Inicio', href: '/' },
-    listing,
-    { name: h1, href: Astro.url.pathname },
-  ]}
+  breadcrumbs={[{ name: 'Inicio', href: '/' }, listing, { name: h1, href: Astro.url.pathname }]}
   jsonLd={[propertySchema(p, url)]}
   contactSubject={`Interés en ${h1} (ref. ${ref})`}
   contactFormHref="#solicitar"
 >
-  <article class="property container">
-    <header class="property__head">
-      <div>
-        <p class="property__badges">
-          {p.operations.map((o) => <span class="badge badge--dark">{OPERATION_LABEL[o]}</span>)}
-          {p.status !== 'disponible' && <span class="badge badge--accent">{p.status}</span>}
-          <span class="badge">Ref. {ref}</span>
-        </p>
-        <h1>{h1}</h1>
-        {p.title && <p class="property__subtitle">{p.title}</p>}
-        <p class="property__place"><Icon name="pin" size={18} /> {placeLabel(p)}</p>
+  <article class="property">
+    <div class="property__top">
+      <div class="container property__head">
+        <div class="property__title">
+          <p class="label" data-hero style="--i:0">
+            {p.operations.map((o) => OPERATION_LABEL[o]).join(' · ')} · Ref. {ref}
+          </p>
+          <h1 data-hero style="--i:1">{h1}</h1>
+          <p class="property__place" data-hero style="--i:2">
+            {placeLabel(p)}{p.postalCode && ` · ${p.postalCode}`}
+          </p>
+        </div>
+        <div class="property__price" data-hero style="--i:2">
+          {statusLabel && <p class="property__status">{statusLabel}</p>}
+          {
+            allPrices.map(({ o, v }) => (
+              <p>
+                {p.operations.length > 1 && <span class="property__price-label">{OPERATION_LABEL[o]}</span>}
+                <strong>{formatPrice(v, o)}</strong>
+              </p>
+            ))
+          }
+        </div>
       </div>
-      <div class="property__price">
-        {
-          allPrices.map(({ o, v }) => (
-            <p>
-              {p.operations.length > 1 && <span class="property__price-label">{OPERATION_LABEL[o]}</span>}
-              <strong>{formatPrice(v, o)}</strong>
-            </p>
-          ))
-        }
+      <div class="container property__gallery" data-hero="photo" style="--i:1">
+        <Gallery photos={p.photos} title={h1} />
       </div>
-    </header>
+    </div>
 
-    <Gallery photos={p.photos} title={h1} />
+    {
+      keys.length > 0 && (
+        <div class="container">
+          <dl class="keys">
+            {keys.map((k) => (
+              <div>
+                <dt>{k.label}</dt>
+                <dd>{k.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      )
+    }
 
-    <ul class="property__keys" aria-label="Datos principales">
-      {p.bedrooms !== null && <li><Icon name="bed" /><span><strong>{p.bedrooms}</strong> {p.bedrooms === 1 ? 'dormitorio' : 'dormitorios'}</span></li>}
-      {p.bathrooms !== null && <li><Icon name="bath" /><span><strong>{p.bathrooms}</strong> {p.bathrooms === 1 ? 'baño' : 'baños'}</span></li>}
-      {p.builtArea !== null && <li><Icon name="area" /><span><strong>{formatArea(p.builtArea)}</strong> construidos</span></li>}
-      {p.usableArea !== null && <li><Icon name="area" /><span><strong>{formatArea(p.usableArea)}</strong> útiles</span></li>}
-      {p.energy.letter && <li><Icon name="leaf" /><span>Energía <strong>{p.energy.letter}</strong></span></li>}
-    </ul>
-
-    <div class="property__layout">
+    <div class="container property__layout">
       <div class="property__main">
+        {p.title && p.title.toLowerCase() !== h1.toLowerCase() && <p class="property__claim">{p.title}</p>}
         {
           paragraphs.length > 0 && (
-            <section aria-labelledby="desc">
-              <h2 id="desc">Descripción</h2>
+            <section aria-labelledby="desc" class="block">
+              <h2 id="desc" class="block__title">
+                Descripción
+              </h2>
               <div class="prose property__desc">
                 {paragraphs.map((t) => (
                   <p>{t}</p>
@@ -138,8 +148,10 @@ const mapLink = p.approxLocation
           )
         }
 
-        <section aria-labelledby="carac">
-          <h2 id="carac">Características</h2>
+        <section aria-labelledby="carac" class="block">
+          <h2 id="carac" class="block__title">
+            Características
+          </h2>
           <dl class="specs">
             {
               specs.map((s) => (
@@ -153,12 +165,10 @@ const mapLink = p.approxLocation
           {
             p.features.length > 0 && (
               <>
-                <h3>Equipamiento</h3>
+                <h3 class="block__sub">Equipamiento</h3>
                 <ul class="features">
                   {p.features.map((f) => (
-                    <li>
-                      <Icon name="check" size={18} /> {f}
-                    </li>
+                    <li>{f}</li>
                   ))}
                 </ul>
               </>
@@ -166,16 +176,20 @@ const mapLink = p.approxLocation
           }
         </section>
 
-        <section aria-labelledby="energia">
-          <h2 id="energia">Certificado energético</h2>
+        <section aria-labelledby="energia" class="block">
+          <h2 id="energia" class="block__title">
+            Certificado energético
+          </h2>
           <EnergyRating energy={p.energy} emissions={p.emissions} />
         </section>
 
-        <section aria-labelledby="ubicacion">
-          <h2 id="ubicacion">Ubicación</h2>
+        <section aria-labelledby="ubicacion" class="block">
+          <h2 id="ubicacion" class="block__title">
+            Ubicación
+          </h2>
           <p>
-            {placeLabel(p)}{p.postalCode && ` (${p.postalCode})`}. Por privacidad de los propietarios no publicamos la
-            dirección exacta: te la facilitamos al concertar la visita.
+            {placeLabel(p)}{p.postalCode && ` (${p.postalCode})`}. Por privacidad de los propietarios no publicamos la dirección
+            exacta: te la facilitamos al concertar la visita.
           </p>
           {
             mapLink && (
@@ -188,26 +202,35 @@ const mapLink = p.approxLocation
 
         {
           costsNote && (
-            <aside class="alert alert--info property__costs" aria-label="Gastos de compraventa">
-              <Icon name="info" />
-              <div>
-                <strong>Gastos de la compraventa</strong>
-                <p>{costsNote}</p>
-              </div>
-            </aside>
+            <details class="costs">
+              <summary>Gastos de la compraventa que no incluye el precio</summary>
+              <p>{costsNote}</p>
+            </details>
           )
         }
+
+        <section class="request" id="solicitar" aria-labelledby="solicitar-titulo">
+          <h2 id="solicitar-titulo">
+            Pide información <em>o una visita</em>
+          </h2>
+          <p class="request__intro">
+            Te contestamos personalmente y organizamos la visita cuando te venga bien. La referencia del inmueble va incluida.
+          </p>
+          <ContactForm variant="inmueble" id="form-inmueble" propertyRef={ref} propertyTitle={h1} propertyUrl={url} />
+        </section>
       </div>
 
-      <aside class="property__aside" aria-label="Solicitar información">
-        <div class="contact-box" id="solicitar">
-          <p class="contact-box__title">¿Te interesa este inmueble?</p>
-          <p class="muted">Te contamos todos los detalles y organizamos la visita cuando te venga bien.</p>
+      <aside class="property__aside" aria-label="Contacto sobre este inmueble">
+        <div class="contact-box">
+          <p class="contact-box__price">{formatPrice(priceFor(p, op), op)}</p>
+          <p class="contact-box__ref">{h1} · Ref. {ref}</p>
           <a class="btn btn--block" href={`tel:${site.phones.office.tel}`}>
-            <Icon name="phone" /> Llamar al {site.phones.office.display}
+            Llamar al {site.phones.office.display}
           </a>
-          <hr />
-          <ContactForm variant="inmueble" id="form-inmueble" propertyRef={ref} propertyTitle={h1} propertyUrl={url} />
+          <a class="btn btn--ghost btn--block" href="#solicitar">Pedir visita o información</a>
+          <p class="contact-box__note">
+            Oficina en {site.address.street}, {site.address.city}. También en el {site.phones.mobile.display}.
+          </p>
         </div>
       </aside>
     </div>
@@ -215,17 +238,19 @@ const mapLink = p.approxLocation
 
   {
     similar.length > 0 && (
-      <section class="section section--tint" aria-labelledby="similares">
+      <section class="section section--paper similar" aria-labelledby="similares">
         <div class="container">
-          <div class="section-head">
-            <div>
-              <h2 id="similares">Inmuebles parecidos</h2>
-            </div>
-            <a class="link-arrow" href={listing.href}>Ver todos</a>
+          <div class="similar__head">
+            <h2 id="similares">
+              Otros inmuebles <em>que te pueden interesar</em>
+            </h2>
+            <a class="link-arrow" href={listing.href}>
+              Ver todos
+            </a>
           </div>
-          <ul class="grid-cards">
+          <ul class="similar__list">
             {similar.map((s) => (
-              <li>
+              <li data-motion="up">
                 <PropertyCard property={s} operation={op} />
               </li>
             ))}
@@ -237,36 +262,32 @@ const mapLink = p.approxLocation
 </Base>
 
 <style>
-  .property {
+  .property__top {
+    display: flex;
+    flex-direction: column;
+    background: var(--paper);
     padding-top: var(--s-5);
-    padding-bottom: var(--section);
   }
   .property__head {
     display: grid;
     gap: var(--s-4);
-    margin-bottom: var(--s-5);
-  }
-  .property__badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--s-2);
-    margin-bottom: var(--s-3);
+    padding-bottom: var(--s-5);
   }
   .property h1 {
+    margin-bottom: var(--s-2);
     font-size: var(--fs-2xl);
-    margin-bottom: var(--s-2);
   }
-  .property__subtitle {
-    margin-bottom: var(--s-2);
-    font-size: var(--fs-md);
-    color: var(--ink);
+  .property__title .label {
+    margin-bottom: var(--s-3);
   }
   .property__place {
-    display: flex;
-    align-items: center;
-    gap: var(--s-2);
     margin: 0;
     color: var(--ink-2);
+  }
+  .property__price {
+    display: grid;
+    gap: var(--s-1);
+    align-content: end;
   }
   .property__price p {
     margin: 0;
@@ -274,139 +295,296 @@ const mapLink = p.approxLocation
   .property__price strong {
     font-family: var(--font-display);
     font-size: var(--fs-2xl);
-    font-weight: 600;
-    color: var(--navy-900);
+    font-weight: 380;
+    font-variation-settings: 'opsz' 144;
+    font-variant-numeric: lining-nums;
     letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--navy-900);
   }
   .property__price-label {
     display: block;
-    font-size: var(--fs-xs);
-    font-weight: 700;
+    font-size: var(--fs-label);
+    font-weight: 650;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
     color: var(--ink-2);
   }
-  .property__keys {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--s-3);
-    margin: var(--s-5) 0 var(--s-6);
-    padding: 0;
-    list-style: none;
+  .property__status {
+    justify-self: start;
+    padding: 0.25rem 0.6rem;
+    background: var(--lime-500);
+    color: var(--navy-950);
+    font-size: var(--fs-label);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
   }
-  .property__keys li {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--s-2);
-    padding: var(--s-3) var(--s-4);
-    border-radius: var(--r-md);
-    background: var(--bg);
+  /* En móvil, la galería a sangre y antes que el titular (que sigue siendo
+     lo primero en el orden de lectura). */
+  .property__gallery {
+    order: -1;
+    padding-inline: 0;
+    margin-bottom: var(--s-5);
+  }
+
+  /* Cifras clave: rejilla de 2 en móvil, fila con filetes en escritorio */
+  .keys {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin: 0;
+    padding-block: var(--s-3) var(--s-5);
+    border-bottom: 1px solid var(--line-strong);
+  }
+  .keys div {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 2px;
+    padding: var(--s-3) var(--s-4) var(--s-2) 0;
+  }
+  .keys div:nth-child(even) {
+    padding-left: var(--s-4);
+    border-left: 1px solid var(--line);
+  }
+  @media (min-width: 900px) {
+    .keys {
+      display: flex;
+      flex-wrap: wrap;
+      padding-block: var(--s-5);
+    }
+    .keys div {
+      padding: var(--s-2) var(--s-5) var(--s-2) 0;
+      margin-right: var(--s-5);
+      border-left: 0;
+    }
+    .keys div + div {
+      padding-left: var(--s-5);
+      border-left: 1px solid var(--line);
+    }
+  }
+  .keys dt {
+    font-size: var(--fs-xs);
+    color: var(--ink-2);
+  }
+  .keys dd {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--fs-xl);
+    font-weight: 380;
+    font-variation-settings: 'opsz' 144;
+    font-variant-numeric: lining-nums;
+    line-height: 1.05;
     color: var(--navy-900);
   }
-  .property__keys :global(svg) {
-    color: var(--navy-500);
-  }
+
   .property__layout {
     display: grid;
     gap: var(--s-7);
+    padding-block: var(--s-7) var(--section);
   }
   .property__main {
-    display: grid;
-    gap: var(--s-7);
     min-width: 0;
   }
-  .property__main h2 {
-    font-size: var(--fs-xl);
+  .property__claim {
+    margin: 0 0 var(--s-6);
+    font-family: var(--font-display);
+    font-size: var(--fs-lg);
+    font-style: italic;
+    font-weight: 340;
+    color: var(--navy-900);
+    max-width: 40ch;
+  }
+  .block {
+    padding-block: var(--s-6);
+    border-top: 1px solid var(--line);
+  }
+  .block:first-of-type {
+    border-top: 0;
+    padding-top: 0;
+  }
+  .block__title {
+    margin-bottom: var(--s-4);
+    font-family: var(--font-sans);
+    font-size: var(--fs-label);
+    font-weight: 650;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+  }
+  .block__sub {
+    margin: var(--s-6) 0 var(--s-3);
+    font-size: var(--fs-base);
   }
   .property__desc {
     font-size: var(--fs-base);
   }
   .specs {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 0 var(--s-5);
-    margin: 0 0 var(--s-5);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+    column-gap: var(--s-6);
+    margin: 0;
   }
   .specs div {
     display: flex;
     justify-content: space-between;
-    gap: var(--s-3);
-    padding: var(--s-3) 0;
+    gap: var(--s-4);
+    padding-block: var(--s-3);
     border-bottom: 1px solid var(--line);
+    font-size: var(--fs-sm);
   }
   .specs dt {
     color: var(--ink-2);
   }
   .specs dd {
     margin: 0;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--navy-900);
     text-align: right;
   }
   .features {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-    gap: var(--s-2) var(--s-5);
+    columns: 2 220px;
+    column-gap: var(--s-6);
     margin: 0;
     padding: 0;
     list-style: none;
+    font-size: var(--fs-sm);
   }
   .features li {
-    display: flex;
-    align-items: center;
-    gap: var(--s-2);
+    break-inside: avoid;
+    padding: var(--s-2) 0 var(--s-2) 1.4em;
+    position: relative;
   }
-  .features :global(svg) {
-    color: var(--success);
-    flex: none;
+  .features li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 1.05em;
+    width: 0.7em;
+    height: 1px;
+    background: var(--lime-600);
   }
-  .property__costs {
-    font-size: var(--fs-xs);
+  .costs {
+    margin-top: var(--s-4);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
   }
-  .contact-box {
-    padding: var(--s-5);
-    border: 1px solid var(--line);
-    border-radius: var(--r-lg);
-    background: var(--white);
-    box-shadow: var(--shadow-md);
-  }
-  .contact-box__title {
-    margin-bottom: var(--s-1);
-    font-family: var(--font-display);
-    font-size: var(--fs-lg);
+  .costs summary {
+    padding-block: var(--s-4);
+    font-size: var(--fs-sm);
+    font-weight: 650;
     color: var(--navy-900);
+    cursor: pointer;
   }
-  .contact-box hr {
-    margin: var(--s-5) 0;
+  .costs p {
+    font-size: var(--fs-sm);
+    color: var(--ink-2);
   }
-  .contact-box :global(.cform__grid) {
-    grid-template-columns: 1fr;
+  .request {
+    margin-top: var(--s-8);
+    padding: var(--s-6) var(--s-5);
+    background: var(--paper);
   }
-  .grid-cards {
+  .request h2 {
+    font-size: var(--fs-xl);
+    margin-bottom: var(--s-2);
+  }
+  .request__intro {
+    color: var(--ink-2);
+    max-width: 52ch;
+  }
+
+  .contact-box {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr));
-    gap: var(--s-5);
+    gap: var(--s-3);
+    padding: var(--s-5);
+    background: var(--white);
+    border-top: 3px solid var(--navy-900);
+    box-shadow: var(--shadow-float);
+  }
+  .contact-box p {
+    margin: 0;
+  }
+  .contact-box__price {
+    font-family: var(--font-display);
+    font-size: var(--fs-xl);
+    font-variation-settings: 'opsz' 144;
+    font-variant-numeric: lining-nums;
+    color: var(--navy-900);
+    line-height: 1.1;
+  }
+  .contact-box__ref {
+    font-size: var(--fs-sm);
+    color: var(--ink-2);
+    margin-bottom: var(--s-2) !important;
+  }
+  .contact-box__note {
+    font-size: var(--fs-xs);
+    color: var(--ink-2);
+  }
+
+  .similar__head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: end;
+    gap: var(--s-4);
+    margin-bottom: var(--s-6);
+  }
+  .similar__head h2 {
+    margin: 0;
+    font-size: var(--fs-2xl);
+    max-width: 18ch;
+  }
+  .similar__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+    gap: var(--s-6) var(--s-5);
     margin: 0;
     padding: 0;
     list-style: none;
   }
+
   @media (min-width: 900px) {
+    .property__gallery {
+      order: 0;
+      padding-inline: var(--gutter);
+      margin-bottom: 0;
+    }
     .property__head {
       grid-template-columns: 1fr auto;
       align-items: end;
+      gap: var(--s-6);
+      padding-bottom: var(--s-6);
     }
     .property__price {
       text-align: right;
+      justify-items: end;
+    }
+    .property h1 {
+      font-size: var(--fs-3xl);
+      max-width: 18ch;
+    }
+    .property__top {
+      padding-bottom: var(--s-2);
+      background: linear-gradient(var(--paper) 70%, var(--white) 70%);
     }
   }
   @media (min-width: 1080px) {
     .property__layout {
-      grid-template-columns: 1fr 390px;
-      align-items: start;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: var(--s-9);
     }
     .property__aside {
       position: sticky;
-      top: calc(var(--header-h) + var(--s-4));
+      top: calc(var(--header-h) + var(--s-5));
+      align-self: start;
+    }
+  }
+  @media (max-width: 1079px) {
+    /* En móvil y tableta ya está la barra fija de contacto: la caja lateral
+       sobra (el formulario sigue en #solicitar). */
+    .property__aside {
+      display: none;
     }
   }
 </style>

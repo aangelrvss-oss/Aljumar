@@ -11,6 +11,6 @@ export const GET: APIRoute = ({ site }) => {
   const sitemap = new URL('/sitemap-index.xml', site).href;
   const body = staging
     ? 'User-agent: *\nDisallow: /\n'
-    : ['User-agent: *', 'Allow: /', 'Disallow: /api/', 'Disallow: /admin/', 'Disallow: /contacto/enviado/', '', `Sitemap: ${sitemap}`, ''].join('\n');
+    : ['User-agent: *', 'Allow: /', 'Disallow: /api/', 'Disallow: /admin/', 'Disallow: /datos/', 'Disallow: /contacto/enviado/', '', `Sitemap: ${sitemap}`, ''].join('\n');
   return new Response(body, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
 };

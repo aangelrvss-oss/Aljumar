@@ -5,18 +5,21 @@ import { nav, site } from '../data/site';
 
 const path = Astro.url.pathname;
 const isCurrent = (href: string) => path === href || (href !== '/' && path.startsWith(href));
+// «Vender mi vivienda» es la llamada a la acción de la cabecera; el resto, enlaces.
+const cta = nav.find((i) => i.href === '/vender-mi-vivienda/')!;
+const links = nav.filter((i) => i !== cta);
 ---
 
-<header class="site-header" data-header>
+<header class="site-header on-dark" data-header>
   <div class="container site-header__bar">
     <a class="site-header__brand" href="/" aria-label={`${site.name} — inicio`}>
-      <Logo variant="horizontal" height={46} />
+      <Logo variant="horizontal" height={40} />
     </a>
 
     <nav class="site-nav" aria-label="Principal">
       <ul>
         {
-          nav.map((item) => (
+          links.map((item) => (
             <li>
               <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>
                 {item.label}
@@ -24,37 +27,39 @@ const isCurrent = (href: string) => path === href || (href !== '/' && path.start
             </li>
           ))
         }
+        <li class="site-nav__cta">
+          <a class="btn btn--accent btn--sm" href={cta.href} aria-current={isCurrent(cta.href) ? 'page' : undefined}>
+            {cta.label}
+          </a>
+        </li>
       </ul>
     </nav>
 
-    <div class="site-header__actions">
-      <a class="site-header__phone" href={`tel:${site.phones.office.tel}`}>
-        <Icon name="phone" size={18} />
-        <span>{site.phones.office.display}</span>
-      </a>
-      <button
-        class="site-header__toggle"
-        type="button"
-        aria-expanded="false"
-        aria-controls="menu-movil"
-        data-menu-toggle
-      >
-        <Icon name="menu" class="icon-open" />
-        <Icon name="close" class="icon-close" />
-        <span class="visually-hidden" data-menu-label>Abrir menú</span>
-      </button>
-    </div>
+    <a class="site-header__phone" href={`tel:${site.phones.office.tel}`} aria-label={`Llamar al ${site.phones.office.display}`}>
+      <Icon name="phone" size={16} />
+      <span>{site.phones.office.display}</span>
+    </a>
+    <button
+      class="site-header__toggle"
+      type="button"
+      aria-expanded="false"
+      aria-controls="menu-movil"
+      data-menu-toggle
+    >
+      <span class="visually-hidden" data-menu-label>Abrir menú</span>
+      <span aria-hidden="true">Menú</span>
+      <span class="burger" aria-hidden="true"><span></span><span></span></span>
+    </button>
   </div>
 
   <div class="mobile-menu" id="menu-movil" hidden data-menu>
     <nav aria-label="Principal (móvil)">
       <ul>
         {
-          nav.map((item) => (
-            <li>
+          nav.map((item, i) => (
+            <li style={`--i:${i}`}>
               <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>
                 {item.label}
-                <Icon name="arrow-right" size={18} />
               </a>
             </li>
           ))
@@ -62,14 +67,11 @@ const isCurrent = (href: string) => path === href || (href !== '/' && path.start
       </ul>
     </nav>
     <div class="mobile-menu__contact">
-      <p class="eyebrow">Hablemos</p>
-      <a class="btn btn--accent btn--block" href={`tel:${site.phones.office.tel}`}>
-        <Icon name="phone" /> Llamar al {site.phones.office.display}
-      </a>
-      <a class="btn btn--ghost btn--block" href={`mailto:${site.email}`}>
-        <Icon name="mail" /> {site.email}
-      </a>
-      <p class="muted">{site.address.street}, {site.address.postalCode} {site.address.city}</p>
+      <p class="label">Oficina en Moratalaz</p>
+      <a class="mobile-menu__phone" href={`tel:${site.phones.office.tel}`}>{site.phones.office.display}</a>
+      <a class="link" href={`tel:${site.phones.mobile.tel}`}>{site.phones.mobile.display} (móvil)</a>
+      <a class="link" href={`mailto:${site.email}`}>{site.email}</a>
+      <p>{site.address.street}, {site.address.postalCode} {site.address.city}</p>
     </div>
   </div>
 </header>
@@ -100,7 +102,7 @@ const isCurrent = (href: string) => path === href || (href !== '/' && path.start
     if (e.matches) setOpen(false);
   });
 
-  // Sombra de la cabecera al desplazarse
+  // Filete inferior al desplazarse
   const onScroll = () => header?.classList.toggle('is-scrolled', window.scrollY > 8);
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
@@ -113,15 +115,14 @@ const isCurrent = (href: string) => path === href || (href !== '/' && path.start
     z-index: 50;
     /* Fondo sólido: un backdrop-filter convertiría la cabecera en el contenedor
        de los elementos fixed y el menú móvil no ocuparía la pantalla. */
-    background: var(--white);
-    border-bottom: 1px solid transparent;
-    transition:
-      border-color var(--dur) var(--ease),
-      box-shadow var(--dur) var(--ease);
+    background: var(--navy-900);
+    color: var(--white);
+    transition: box-shadow var(--dur) var(--ease);
   }
   .site-header.is-scrolled {
-    border-color: var(--line);
-    box-shadow: var(--shadow-sm);
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.08),
+      0 10px 30px -18px rgb(0 0 0 / 0.5);
   }
   .site-header__bar {
     display: flex;
@@ -132,6 +133,7 @@ const isCurrent = (href: string) => path === href || (href !== '/' && path.start
   .site-header__brand {
     display: inline-flex;
     flex: none;
+    padding-block: 6px;
     text-decoration: none;
   }
   .site-nav {
@@ -140,120 +142,191 @@ const isCurrent = (href: string) => path === href || (href !== '/' && path.start
   }
   .site-nav ul {
     display: flex;
+    align-items: center;
     gap: var(--s-1);
     margin: 0;
     padding: 0;
     list-style: none;
   }
-  .site-nav a {
+  .site-nav a:not(.btn) {
     position: relative;
     display: block;
-    padding: 0.55rem 0.7rem;
-    border-radius: var(--r-sm);
+    padding: 0.6rem 0.8rem;
     font-size: var(--fs-sm);
-    font-weight: 650;
-    color: var(--navy-900);
+    font-weight: 550;
+    color: var(--navy-100);
     text-decoration: none;
     white-space: nowrap;
+    transition: color var(--dur) var(--ease);
   }
-  .site-nav a::after {
+  .site-nav a:not(.btn)::after {
     content: '';
     position: absolute;
-    left: 0.7rem;
-    right: 0.7rem;
-    bottom: 0.25rem;
-    height: 3px;
-    border-radius: 2px;
+    left: 0.8rem;
+    right: 0.8rem;
+    bottom: 0.2rem;
+    height: 1px;
     background: var(--lime-500);
     transform: scaleX(0);
     transform-origin: left;
-    transition: transform var(--dur) var(--ease);
+    transition: transform 380ms var(--ease-out);
   }
-  .site-nav a:hover::after,
-  .site-nav a[aria-current='page']::after {
+  .site-nav a:not(.btn):hover {
+    color: var(--white);
+  }
+  .site-nav a:not(.btn):hover::after,
+  .site-nav a[aria-current='page']:not(.btn)::after {
     transform: scaleX(1);
   }
-  .site-header__actions {
-    display: flex;
-    align-items: center;
-    gap: var(--s-2);
-    margin-left: auto;
+  .site-nav a[aria-current='page']:not(.btn) {
+    color: var(--white);
+  }
+  .site-nav__cta {
+    margin-left: var(--s-3);
   }
   .site-header__phone {
     display: none;
     align-items: center;
     gap: var(--s-2);
-    padding: 0.55rem 1rem;
-    border-radius: var(--r-pill);
-    background: var(--navy-900);
+    margin-left: auto;
     color: var(--white);
     font-size: var(--fs-sm);
-    font-weight: 700;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
     text-decoration: none;
     white-space: nowrap;
   }
+  .site-header__phone :global(svg) {
+    color: var(--lime-500);
+  }
   .site-header__phone:hover {
-    background: var(--navy-700);
-    color: var(--white);
+    color: var(--lime-500);
   }
   .site-header__toggle {
-    display: inline-grid;
-    place-items: center;
-    width: 48px;
-    height: 48px;
-    border: 1.5px solid var(--line-strong);
-    border-radius: var(--r-md);
-    background: var(--white);
-    color: var(--navy-900);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-3);
+    min-height: 48px;
+    margin-left: auto;
+    padding: 0 0 0 var(--s-2);
+    border: 0;
+    background: none;
+    color: var(--white);
+    font: inherit;
+    font-size: var(--fs-label);
+    font-weight: 650;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
     cursor: pointer;
   }
-  .site-header__toggle :global(.icon-close),
-  .site-header__toggle[aria-expanded='true'] :global(.icon-open) {
-    display: none;
+  .site-header__phone + .site-header__toggle {
+    margin-left: var(--s-2);
   }
-  .site-header__toggle[aria-expanded='true'] :global(.icon-close) {
+  .burger {
+    display: grid;
+    gap: 7px;
+    width: 26px;
+  }
+  .burger span {
     display: block;
+    height: 1.5px;
+    background: currentColor;
+    transition: transform 320ms var(--ease-out);
+  }
+  .site-header__toggle[aria-expanded='true'] .burger span:first-child {
+    transform: translateY(4.25px) rotate(45deg);
+  }
+  .site-header__toggle[aria-expanded='true'] .burger span:last-child {
+    transform: translateY(-4.25px) rotate(-45deg);
   }
 
   .mobile-menu {
     position: fixed;
     inset: var(--menu-top, var(--header-h)) 0 0;
     z-index: 49;
+    display: grid;
+    align-content: space-between;
+    gap: var(--s-7);
     overflow-y: auto;
-    padding: var(--s-5) var(--gutter) var(--s-8);
-    background: var(--white);
-    border-top: 1px solid var(--line);
+    padding: var(--s-4) var(--gutter) var(--s-7);
+    background: var(--navy-900);
+    border-top: 1px solid rgb(255 255 255 / 0.1);
   }
   .mobile-menu ul {
-    margin: 0 0 var(--s-6);
+    margin: 0;
     padding: 0;
     list-style: none;
   }
   .mobile-menu li a {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--s-4) var(--s-1);
-    border-bottom: 1px solid var(--line);
+    display: block;
+    padding: var(--s-3) 0;
+    border-bottom: 1px solid rgb(255 255 255 / 0.1);
     font-family: var(--font-display);
-    font-size: var(--fs-lg);
-    color: var(--navy-900);
+    font-size: clamp(1.7rem, 1.3rem + 2vw, 2.3rem);
+    font-weight: 360;
+    font-variation-settings: 'opsz' 144;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    color: var(--white);
     text-decoration: none;
   }
   .mobile-menu li a[aria-current='page'] {
-    color: var(--navy-700);
-    box-shadow: inset 4px 0 0 var(--lime-500);
-    padding-left: var(--s-4);
+    font-style: italic;
+    color: var(--lime-500);
   }
   .mobile-menu__contact {
     display: grid;
-    gap: var(--s-3);
+    justify-items: start;
+    gap: var(--s-2);
+    color: var(--navy-200);
+    font-size: var(--fs-sm);
+  }
+  .mobile-menu__contact .link {
+    color: var(--white);
+    font-weight: 500;
+  }
+  .mobile-menu__contact p {
+    margin: 0;
+  }
+  .mobile-menu__phone {
+    font-family: var(--font-display);
+    font-size: var(--fs-xl);
+    font-variation-settings: 'opsz' 144;
+    color: var(--white);
+    text-decoration: none;
+    font-variant-numeric: lining-nums;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .mobile-menu:not([hidden]) {
+      animation: menu-in 360ms var(--ease-out);
+    }
+    .mobile-menu:not([hidden]) li {
+      animation: menu-item 520ms var(--ease-out) both;
+      animation-delay: calc(60ms + var(--i) * 45ms);
+    }
+  }
+  @keyframes menu-in {
+    from {
+      clip-path: inset(0 0 100% 0);
+    }
+  }
+  @keyframes menu-item {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
   }
   :global(html.menu-open) {
     overflow: hidden;
   }
 
-  @media (min-width: 640px) {
+  @media (max-width: 420px) {
+    /* En pantallas estrechas solo el icono del teléfono */
+    .site-header__phone span {
+      display: none;
+    }
+  }
+  @media (min-width: 360px) {
     .site-header__phone {
       display: inline-flex;
     }
@@ -262,20 +335,20 @@ const isCurrent = (href: string) => path === href || (href !== '/' && path.start
     .site-nav {
       display: block;
     }
-    .site-header__actions {
+    .site-header__phone {
+      order: 3;
       margin-left: var(--s-2);
+      padding-left: var(--s-5);
+      border-left: 1px solid rgb(255 255 255 / 0.18);
     }
     .site-header__toggle,
     .mobile-menu {
       display: none !important;
     }
   }
-  @media (min-width: 1080px) and (max-width: 1239px) {
-    .site-header__phone span {
-      display: none;
-    }
+  @media (min-width: 1080px) and (max-width: 1279px) {
     .site-header__phone {
-      padding: 0.7rem;
+      display: none;
     }
   }
 </style>

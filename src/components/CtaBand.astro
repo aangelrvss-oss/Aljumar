@@ -1,5 +1,4 @@
 ---
-import Icon from './Icon.astro';
 import { site } from '../data/site';
 
 interface Props {
@@ -11,67 +10,55 @@ interface Props {
 const { title, text, primary, showPhone = true } = Astro.props;
 ---
 
-<section class="cta on-dark" aria-labelledby="cta-title">
+<section class="cta" aria-labelledby="cta-title">
   <div class="container cta__inner">
-    <div>
-      <h2 id="cta-title">{title}</h2>
+    <h2 id="cta-title" data-motion="up">{title}</h2>
+    <div class="cta__side" data-motion="up">
       <p>{text}</p>
-    </div>
-    <div class="cta__actions">
-      <a class="btn btn--accent" href={primary.href}>{primary.label} <Icon name="arrow-right" /></a>
-      {
-        showPhone && (
-          <a class="btn btn--on-dark" href={`tel:${site.phones.office.tel}`}>
-            <Icon name="phone" /> {site.phones.office.display}
-          </a>
-        )
-      }
+      <div class="cta__actions">
+        <a class="btn btn--accent" href={primary.href}>{primary.label}</a>
+        {
+          showPhone && (
+            <a class="link-arrow" href={`tel:${site.phones.office.tel}`}>
+              Llamar al {site.phones.office.display}
+            </a>
+          )
+        }
+      </div>
     </div>
   </div>
 </section>
 
 <style>
   .cta {
-    position: relative;
-    overflow: hidden;
-    background: var(--navy-900);
-    color: var(--navy-100);
-    padding-block: var(--s-8);
-  }
-  .cta::before {
-    content: '';
-    position: absolute;
-    right: -120px;
-    top: -120px;
-    width: 420px;
-    height: 420px;
-    border-radius: 50%;
-    border: 70px solid rgb(191 214 0 / 0.08);
-    pointer-events: none;
+    background: var(--paper-2);
+    color: var(--ink-2);
+    padding-block: var(--s-9);
+    border-top: 1px solid var(--line);
   }
   .cta__inner {
-    position: relative;
     display: grid;
-    gap: var(--s-5);
-    align-items: center;
+    gap: var(--s-5) var(--s-8);
+    align-items: end;
   }
   .cta h2 {
-    color: var(--white);
-    font-size: var(--fs-xl);
-    margin-bottom: var(--s-2);
+    margin: 0;
+    font-size: var(--fs-2xl);
+    max-width: 16ch;
   }
   .cta p {
-    max-width: 58ch;
-    margin: 0;
+    max-width: 48ch;
+    margin: 0 0 var(--s-5);
   }
   .cta__actions {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--s-3);
+    align-items: center;
+    gap: var(--s-4) var(--s-6);
   }
   @media (min-width: 900px) {
     .cta__inner {
-      grid-template-columns: 1.4fr auto;
+      grid-template-columns: 1fr 1fr;
     }
   }
 </style>

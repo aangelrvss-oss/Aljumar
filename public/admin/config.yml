@@ -63,6 +63,7 @@ collections:
           - { name: phoneMobile, label: Teléfono móvil, widget: string }
           - { name: whatsapp, label: WhatsApp, widget: string, required: false, hint: 'Déjalo vacío para no mostrar el botón de WhatsApp.' }
           - { name: openingHours, label: Horario de atención, widget: string, required: false, hint: 'Ejemplo: Lunes a viernes, de 10:00 a 14:00 y de 17:00 a 20:00. Vacío = no se muestra.' }
+          - { name: heroPropertyId, label: Inmueble de portada, widget: string, required: false, hint: 'Código o referencia del inmueble cuya foto principal preside la portada. Vacío = se elige automáticamente (destacado en Inmovilla, con más fotos, de mayor precio). Si deja de estar publicado, se vuelve a la elección automática.' }
           - name: team
             label: Equipo
             widget: list

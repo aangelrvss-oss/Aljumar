@@ -24,9 +24,9 @@ const fmt = (n: number) => new Intl.NumberFormat('es-ES').format(n) + ' €';
   <div class="qs__fields">
     {
       cities.length > 1 && (
-        <div class="field">
+        <div class="qs__field">
           <label for="qs-ciudad">Localidad</label>
-          <select class="select" id="qs-ciudad" name="ciudad">
+          <select class="qs__select" id="qs-ciudad" name="ciudad">
             <option value="">Todas</option>
             {cities.map((c) => (
               <option value={c}>{c}</option>
@@ -35,28 +35,21 @@ const fmt = (n: number) => new Intl.NumberFormat('es-ES').format(n) + ' €';
         </div>
       )
     }
-    <div class="field">
+    <div class="qs__field">
       <label for="qs-tipo">Tipo</label>
-      <select class="select" id="qs-tipo" name="tipo">
+      <select class="qs__select" id="qs-tipo" name="tipo">
         <option value="">Todos</option>
         {groups.map((g) => <option value={g}>{TYPE_GROUP_LABEL[g]}</option>)}
       </select>
     </div>
-    <div class="field">
+    <div class="qs__field">
       <label for="qs-precio">Precio máximo</label>
-      <select class="select" id="qs-precio" name="precio_max" data-price>
+      <select class="qs__select" id="qs-precio" name="precio_max" data-price>
         <option value="">Sin límite</option>
         {sale.map((v) => <option value={v}>{fmt(v)}</option>)}
       </select>
     </div>
-    <div class="field">
-      <label for="qs-dorm">Dormitorios</label>
-      <select class="select" id="qs-dorm" name="dormitorios">
-        <option value="">Cualquiera</option>
-        {[1, 2, 3, 4].map((n) => <option value={n}>{n} o más</option>)}
-      </select>
-    </div>
-    <button class="btn btn--accent qs__submit" type="submit">
+    <button class="btn qs__submit" type="submit">
       <Icon name="search" /> Buscar
     </button>
   </div>
@@ -93,20 +86,16 @@ const fmt = (n: number) => new Intl.NumberFormat('es-ES').format(n) + ' €';
 
 <style>
   .qs {
-    padding: var(--s-5);
-    border-radius: var(--r-lg);
     background: var(--white);
-    box-shadow: var(--shadow-lg);
     color: var(--ink);
+    box-shadow: var(--shadow-float);
   }
   .qs__ops {
-    display: inline-flex;
-    gap: 4px;
-    margin: 0 0 var(--s-4);
-    padding: 4px;
+    display: flex;
+    gap: var(--s-5);
+    margin: 0;
+    padding: var(--s-4) var(--s-5) 0;
     border: 0;
-    border-radius: var(--r-pill);
-    background: var(--navy-50);
   }
   .qs__ops label {
     position: relative;
@@ -120,35 +109,82 @@ const fmt = (n: number) => new Intl.NumberFormat('es-ES').format(n) + ' €';
   }
   .qs__ops span {
     display: inline-block;
-    padding: 0.5rem 1.2rem;
-    border-radius: var(--r-pill);
+    padding-bottom: 6px;
     font-size: var(--fs-sm);
-    font-weight: 700;
-    color: var(--navy-700);
+    font-weight: 650;
+    color: var(--ink-2);
+    background: linear-gradient(var(--lime-500), var(--lime-500)) 0 100% / 0 2px no-repeat;
+    transition:
+      background-size 380ms var(--ease-out),
+      color var(--dur) var(--ease);
   }
   .qs__ops input:checked + span {
-    background: var(--navy-900);
-    color: var(--white);
+    color: var(--navy-900);
+    background-size: 100% 2px;
   }
   .qs__ops input:focus-visible + span {
-    outline: 3px solid var(--navy-700);
-    outline-offset: 2px;
+    outline: 2px solid var(--navy-700);
+    outline-offset: 4px;
   }
   .qs__fields {
     display: grid;
-    gap: var(--s-3);
+    padding: var(--s-2) var(--s-5) var(--s-5);
+  }
+  .qs__field {
+    display: grid;
+    gap: 2px;
+    padding-block: var(--s-3);
+    border-bottom: 1px solid var(--line);
+  }
+  .qs__field label {
+    font-size: var(--fs-label);
+    font-weight: 650;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+  }
+  .qs__select {
+    width: 100%;
+    min-height: 40px;
+    padding: 0 1.6rem 0 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2317354f' stroke-width='1.5'/%3E%3C/svg%3E") right 2px center no-repeat;
+    appearance: none;
+    color: var(--navy-900);
+    font: inherit;
+    font-size: var(--fs-base);
+    font-weight: 550;
+    cursor: pointer;
+  }
+  .qs__select:focus-visible {
+    outline: 2px solid var(--navy-700);
+    outline-offset: 2px;
   }
   .qs__submit {
-    align-self: end;
+    margin-top: var(--s-4);
   }
-  @media (min-width: 560px) {
+  @media (min-width: 760px) {
     .qs__fields {
-      grid-template-columns: 1fr 1fr;
+      display: flex;
+      align-items: stretch;
+      padding: var(--s-1) 0 0;
     }
-  }
-  @media (min-width: 1180px) {
-    .qs__fields {
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    .qs__field {
+      flex: 1 1 0;
+      min-width: 0;
+      padding: var(--s-3) var(--s-5) var(--s-4);
+      border-bottom: 0;
+      border-top: 1px solid var(--line);
+    }
+    .qs__field + .qs__field {
+      border-left: 1px solid var(--line);
+    }
+    .qs__submit {
+      flex: none;
+      margin: 0;
+      min-height: 100%;
+      padding-inline: var(--s-6);
     }
   }
 </style>

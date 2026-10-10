@@ -24,9 +24,13 @@ export function ratio(a: string, b: string) {
 const pairs: [string, string, number][] = [
   // [texto, fondo, mínimo]
   ['ink', 'white', 4.5],
-  ['ink', 'bg', 4.5],
+  ['ink', 'paper', 4.5],
   ['ink-2', 'white', 4.5],
-  ['ink-2', 'bg', 4.5],
+  ['ink-2', 'paper', 4.5],
+  ['ink-2', 'paper-2', 4.5], // banda de llamada a la acción
+  ['ink-3', 'white', 4.5], // recuentos secundarios
+  ['ink-3', 'paper', 4.5],
+  ['navy-900', 'paper', 4.5], // titulares sobre papel
   ['navy-700', 'white', 4.5], // enlaces y botones
   ['navy-900', 'white', 4.5],
   ['white', 'navy-700', 4.5], // botón principal
@@ -34,6 +38,11 @@ const pairs: [string, string, number][] = [
   ['navy-950', 'lime-500', 4.5], // botón de acento
   ['lime-500', 'navy-900', 4.5], // detalles lima sobre azul
   ['navy-200', 'navy-950', 4.5], // texto del pie
+  ['navy-300', 'navy-950', 4.5], // títulos del pie y textos legales
+  ['navy-100', 'navy-900', 4.5], // navegación de la cabecera
+  ['navy-200', 'navy-900', 4.5], // textos sobre azul (propietarios, menú)
+  ['navy-200', 'navy-800', 4.5], // marcador de foto ausente
+  ['lime-500', 'navy-950', 4.5], // teléfono del pie
   ['danger', 'danger-bg', 4.5],
   ['success', 'success-bg', 4.5],
   ['warning', 'warning-bg', 4.5],
