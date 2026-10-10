@@ -19,6 +19,15 @@ html {
   }
 }
 
+/* En móvil, la barra de contacto fija ocupa la parte inferior: al desplazarse
+   hasta un elemento (o enfocarlo con teclado) no debe quedar oculto debajo
+   (WCAG 2.4.11). */
+@media (max-width: 1023px) {
+  html {
+    scroll-padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+}
+
 body {
   margin: 0;
   font-family: var(--font-sans);
