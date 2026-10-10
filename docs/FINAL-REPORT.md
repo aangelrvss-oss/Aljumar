@@ -89,6 +89,8 @@ Ejecutadas el 10/10/2026 en el entorno de desarrollo (resultados de laboratorio,
 
 \* Los 4 puntos se pierden solo porque este entorno no puede descargar las fotos de Inmovilla (error de red en consola). Por el mismo motivo, el rendimiento se midió **sin** las fotos: con ellas, el LCP real dependerá del peso de las imágenes de Inmovilla. Hay que repetir la medición en el entorno de prueba con conexión real y, tras el lanzamiento, seguir las métricas de campo (Core Web Vitals en Search Console).
 
+**Integración continua (GitHub Actions)**: la ejecución completa (tipos, unitarias, compilación de pruebas y de producción, comprobaciones, formulario PHP y e2e) termina en verde sobre el último commit. Durante su puesta a punto la CI destapó un defecto real (en móvil la barra de contacto fija podía tapar un botón al desplazarse; corregido con `scroll-padding-bottom`, WCAG 2.4.11) y dos fallos de las propias pruebas, también corregidos.
+
 Revisión visual: capturas de portada, compra, ficha, vender, menú y filtros en escritorio y móvil. Defectos encontrados y corregidos durante la revisión: alerta de error visible al cargar, iconos del menú duplicados, solapamiento del panel de filtros, menú móvil que no cubría la pantalla, URL con «?» vacío en el buscador rápido.
 
 ## 7. URL, rutas y datos migrados

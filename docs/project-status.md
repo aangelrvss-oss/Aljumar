@@ -25,6 +25,7 @@
 | Comprobación estática de `dist/` | 87 páginas, sin errores (2 avisos: logotipo y medios pendientes) |
 | Formulario PHP real (`php -S`, modo prueba) | 14/14 |
 | E2E Playwright (escritorio, móvil, tableta) + axe WCAG 2.2 AA | 107 superadas, 7 omitidas por dispositivo |
+| CI en GitHub Actions (último commit) | Todos los pasos en verde |
 | Lighthouse móvil (laboratorio) en 5 páginas | Rendimiento 99-100 · Accesibilidad 100 · Buenas prácticas 96-100 · SEO 100 |
 
 ## Problemas pendientes
