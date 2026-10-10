@@ -2,7 +2,7 @@
 import Base from '../layouts/Base.astro';
 import TeamGrid from '../components/TeamGrid.astro';
 import CtaBand from '../components/CtaBand.astro';
-import Icon from '../components/Icon.astro';
+import Logo from '../components/Logo.astro';
 import { site } from '../data/site';
 
 // Textos basados en «Nuestra esencia» de la web actual de Aljumar.
@@ -24,93 +24,109 @@ const values = [
   ]}
 >
   <section class="about-hero">
-    <div class="container container--narrow">
-      <p class="eyebrow">Nuestra esencia</p>
-      <h1>Desde {site.foundingYear}, la tranquilidad de vender bien</h1>
-      <p class="lead">
-        Somos una agencia inmobiliaria dedicada a la compraventa de inmuebles en exclusiva. Desde nuestros inicios en
-        {site.foundingYear} ofrecemos un servicio profesional y de calidad basado en el conocimiento exhaustivo de la
-        zona, y ponemos a disposición de cada propietario todas nuestras herramientas técnicas y humanas para lograr un
-        acuerdo rentable, ágil y conveniente.
-      </p>
+    <div class="container about-hero__grid">
+      <div>
+        <p class="label" data-hero style="--i:0">Nuestra esencia</p>
+        <h1 data-hero style="--i:1">Desde {site.foundingYear}, <em>la tranquilidad de vender bien</em></h1>
+        <p class="lead" data-hero style="--i:2">
+          Somos una agencia inmobiliaria dedicada a la compraventa de inmuebles en exclusiva. Desde nuestros inicios en
+          {site.foundingYear} ofrecemos un servicio profesional basado en el conocimiento exhaustivo de la zona, y ponemos a
+          disposición de cada propietario todas nuestras herramientas técnicas y humanas para lograr un acuerdo rentable, ágil
+          y conveniente.
+        </p>
+      </div>
+      <figure class="about-hero__brand" data-hero="photo" style="--i:1">
+        <Logo variant="vertical" height={150} />
+        <figcaption>{site.address.street} · {site.address.district}, {site.address.city}</figcaption>
+      </figure>
     </div>
   </section>
 
-  <section class="section section--tint" aria-labelledby="moratalaz">
-    <div class="container about-split">
-      <div>
-        <p class="eyebrow">Dónde estamos</p>
-        <h2 id="moratalaz">Estamos en Moratalaz, Madrid</h2>
-        <p>
-          Moratalaz es una de las zonas de Madrid más idóneas para vivir: a unos 30 minutos a pie del Retiro y del
-          barrio de Salamanca, con todos los servicios y una tipología de vivienda relativamente uniforme, de entre 50 y
-          100 metros cuadrados.
-        </p>
-        <p>
-          Está muy bien comunicada: carril bici hacia el centro, línea 9 de metro, numerosas líneas de autobús y acceso
-          rápido a la M-30, M-40, M-45, M-50 y R-3.
-        </p>
+  <section class="section" aria-labelledby="moratalaz">
+    <div class="container split">
+      <div data-motion="up">
+        <p class="label">Dónde estamos</p>
+        <h2 id="moratalaz">Estamos en <em>Moratalaz</em>, Madrid</h2>
       </div>
-      <div class="office">
-        <h3>Nuestra oficina</h3>
-        <p class="office__addr">
-          <Icon name="pin" />
-          <span>{site.address.street}<br />{site.address.postalCode} {site.address.city} ({site.address.note})</span>
+      <div class="split__body" data-motion="up">
+        <p class="lead">
+          Moratalaz es una de las zonas de Madrid más idóneas para vivir: a unos 30 minutos a pie del Retiro y del barrio de
+          Salamanca, con todos los servicios y una tipología de vivienda relativamente uniforme, de entre 50 y 100 metros
+          cuadrados.
         </p>
-        <p><Icon name="phone" /> <a href={`tel:${site.phones.office.tel}`}>{site.phones.office.display}</a> · <a href={`tel:${site.phones.mobile.tel}`}>{site.phones.mobile.display}</a></p>
-        <p><Icon name="mail" /> <a href={`mailto:${site.email}`}>{site.email}</a></p>
-        <a class="btn btn--ghost btn--sm" href={site.mapUrl} target="_blank" rel="noopener">
-          Cómo llegar <span class="visually-hidden">(abre un mapa en una pestaña nueva)</span>
-        </a>
+        <p>
+          Está muy bien comunicada: carril bici hacia el centro, línea 9 de metro, numerosas líneas de autobús y acceso rápido a
+          la M-30, M-40, M-45, M-50 y R-3.
+        </p>
+        <dl class="office">
+          <div>
+            <dt>Oficina</dt>
+            <dd>
+              {site.address.street}, {site.address.postalCode} {site.address.city} ({site.address.note}) ·
+              <a class="link" href={site.mapUrl} target="_blank" rel="noopener">
+                Cómo llegar<span class="visually-hidden"> (abre un mapa en una pestaña nueva)</span>
+              </a>
+            </dd>
+          </div>
+          <div>
+            <dt>Teléfonos</dt>
+            <dd>
+              <a class="link" href={`tel:${site.phones.office.tel}`}>{site.phones.office.display}</a> ·
+              <a class="link" href={`tel:${site.phones.mobile.tel}`}>{site.phones.mobile.display}</a>
+            </dd>
+          </div>
+          <div>
+            <dt>Correo</dt>
+            <dd><a class="link" href={`mailto:${site.email}`}>{site.email}</a></dd>
+          </div>
+        </dl>
       </div>
     </div>
   </section>
 
-  <section class="section" aria-labelledby="mision">
-    <div class="container about-split">
-      <div>
-        <p class="eyebrow">Misión y visión</p>
-        <h2 id="mision">Que vender o comprar sea una experiencia agradable</h2>
+  <section class="section section--paper" aria-labelledby="mision">
+    <div class="container split">
+      <div data-motion="up">
+        <p class="label">Misión y visión</p>
+        <h2 id="mision">Que vender o comprar sea <em>una experiencia agradable</em></h2>
         <p>
-          Nuestro objetivo es que la compraventa de un inmueble sea una experiencia agradable, y que el trabajo bien
-          hecho se traduzca en recomendaciones. Queremos ser, en la zona, la inmobiliaria experta y transparente a la que
-          se recurre con confianza.
+          Nuestro objetivo es que la compraventa de un inmueble sea una experiencia agradable, y que el trabajo bien hecho se
+          traduzca en recomendaciones. Queremos ser, en la zona, la inmobiliaria experta y transparente a la que se recurre con
+          confianza.
         </p>
-        <p>
+        <p class="muted">
           Contamos con un equipo de profesionales cuyo trato cercano está orientado a comprender las necesidades y
           peculiaridades de cada cliente.
         </p>
       </div>
-      <ul class="values">
+      <dl class="values">
         {
-          values.map((v) => (
-            <li>
-              <Icon name="check" />
-              <div>
-                <strong>{v.t}</strong>
-                <span>{v.d}</span>
-              </div>
-            </li>
+          values.map((v, i) => (
+            <div data-motion="up">
+              <dt>
+                <span aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+                {v.t}
+              </dt>
+              <dd>{v.d}</dd>
+            </div>
           ))
         }
-      </ul>
+      </dl>
     </div>
   </section>
 
-  <section class="section section--tint" id="equipo" aria-labelledby="equipo-title">
-    <div class="container">
-      <div class="section-head">
-        <div>
-          <p class="eyebrow">Equipo</p>
-          <h2 id="equipo-title">Quién te va a atender</h2>
-        </div>
+  <section class="section" id="equipo" aria-labelledby="equipo-title">
+    <div class="container split">
+      <div data-motion="up">
+        <p class="label">Equipo</p>
+        <h2 id="equipo-title">Quién te va <em>a atender</em></h2>
       </div>
       <TeamGrid />
     </div>
   </section>
 
-  <section class="section" aria-labelledby="datos">
-    <div class="container container--narrow">
+  <section class="section section--paper" aria-labelledby="datos">
+    <div class="container split">
       <h2 id="datos" class="datos__title">Datos de la empresa</h2>
       <dl class="datos">
         <div><dt>Razón social</dt><dd>{site.legalName}</dd></div>
@@ -130,90 +146,120 @@ const values = [
 
 <style>
   .about-hero {
-    padding-block: var(--s-6) var(--s-8);
+    padding-block: var(--s-6) var(--section);
+    background: var(--paper);
   }
-  .about-hero h1 {
-    font-size: var(--fs-2xl);
-  }
-  .about-split {
+  .about-hero__grid {
     display: grid;
     gap: var(--s-7);
-    align-items: start;
+    align-items: end;
+  }
+  .about-hero h1 {
+    font-size: var(--fs-3xl);
+    max-width: 15ch;
+  }
+  .about-hero__brand {
+    display: grid;
+    place-items: center;
+    gap: var(--s-5);
+    margin: 0;
+    padding: var(--s-8) var(--s-5) var(--s-5);
+    background: var(--navy-900);
+    aspect-ratio: 4 / 3;
+  }
+  .about-hero__brand figcaption {
+    align-self: end;
+    font-size: var(--fs-xs);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--navy-200);
+  }
+  .split {
+    display: grid;
+    gap: var(--s-6);
+  }
+  .split h2 {
+    font-size: var(--fs-2xl);
+    max-width: 16ch;
   }
   .office {
-    padding: var(--s-6);
-    border-radius: var(--r-lg);
-    background: var(--white);
-    border: 1px solid var(--line);
+    margin: var(--s-6) 0 0;
+    border-top: 1px solid var(--line-strong);
   }
-  .office p {
-    display: flex;
-    gap: var(--s-3);
-    align-items: flex-start;
-  }
-  .office :global(svg) {
-    flex: none;
-    margin-top: 3px;
-    color: var(--navy-500);
-  }
-  .values {
+  .office div,
+  .datos div {
     display: grid;
-    gap: var(--s-3);
-    margin: 0;
-    padding: 0;
-    list-style: none;
+    gap: var(--s-1) var(--s-5);
+    padding-block: var(--s-3);
+    border-bottom: 1px solid var(--line-strong);
   }
-  .values li {
-    display: flex;
-    gap: var(--s-3);
-    padding: var(--s-4);
-    border-radius: var(--r-md);
-    background: var(--bg);
-  }
-  .values :global(svg) {
-    flex: none;
-    color: var(--success);
-    margin-top: 2px;
-  }
-  .values div {
-    display: grid;
-  }
-  .values strong {
-    color: var(--navy-900);
-  }
-  .values span {
-    font-size: var(--fs-sm);
+  .office dt,
+  .datos dt {
+    font-size: var(--fs-label);
+    font-weight: 650;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
     color: var(--ink-2);
   }
+  .office dd,
+  .datos dd {
+    margin: 0;
+    color: var(--navy-900);
+  }
+  .values {
+    margin: 0;
+    border-top: 1px solid var(--line-strong);
+  }
+  .values div {
+    padding-block: var(--s-5);
+    border-bottom: 1px solid var(--line-strong);
+  }
+  .values dt {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s-4);
+    margin-bottom: var(--s-1);
+    font-family: var(--font-display);
+    font-size: var(--fs-lg);
+    font-weight: 380;
+    font-variation-settings: 'opsz' 72;
+    color: var(--navy-900);
+  }
+  .values dt span {
+    font-style: italic;
+    font-size: var(--fs-sm);
+    color: var(--navy-500);
+    font-variant-numeric: lining-nums;
+  }
+  .values dd {
+    margin: 0 0 0 calc(var(--s-4) + 1.4rem);
+    color: var(--ink-2);
+    font-size: var(--fs-sm);
+  }
   .datos__title {
-    font-size: var(--fs-xl);
+    font-size: var(--fs-xl) !important;
   }
   .datos {
     margin: 0;
-  }
-  .datos div {
-    display: grid;
-    gap: var(--s-1);
-    padding: var(--s-3) 0;
-    border-bottom: 1px solid var(--line);
-  }
-  .datos dt {
-    font-size: var(--fs-sm);
-    color: var(--ink-2);
-  }
-  .datos dd {
-    margin: 0;
-    font-weight: 600;
-    color: var(--navy-900);
+    border-top: 1px solid var(--line-strong);
   }
   @media (min-width: 720px) {
+    .office div,
     .datos div {
-      grid-template-columns: 220px 1fr;
+      grid-template-columns: 10rem 1fr;
+      align-items: baseline;
     }
   }
-  @media (min-width: 900px) {
-    .about-split {
-      grid-template-columns: 1.2fr 1fr;
+  @media (min-width: 1024px) {
+    .about-hero__grid {
+      grid-template-columns: 7fr 5fr;
+      gap: var(--s-9);
+    }
+    .split {
+      grid-template-columns: 5fr 1fr 6fr;
+    }
+    .split > :last-child {
+      grid-column: 3;
     }
   }
 </style>

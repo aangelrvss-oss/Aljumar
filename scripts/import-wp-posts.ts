@@ -215,12 +215,24 @@ export function htmlToMarkdown(html: string, slugs: Set<string>): string {
     // Marca anterior: solo en el texto visible, nunca dentro de atributos (URL).
     .replace(/>([^<]+)</g, (_, text: string) => `>${text.replace(LEGACY_BRAND, 'Aljumar Inmuebles')}<`)
     .replace(/&nbsp;|\u00a0/g, ' ')
+    // Un salto de línea dentro de una negrita la rompe en Markdown: se cierra
+    // la negrita antes del <br> y se vuelve a abrir después.
+    .replace(/<(strong|b|em|i)>((?:(?!<\/?\1>)[\s\S])*?)<\/\1>/g, (m, tag: string, inner: string) =>
+      /<br\s*\/?>/i.test(inner) ? inner.split(/<br\s*\/?>/i).map((part) => `<${tag}>${part}</${tag}>`).join('<br>') : m,
+    )
     // Negritas y cursivas vacías o solo con espacios (frecuentes en el editor)
     .replace(/<(strong|b|em|i)>(\s*)<\/\1>/g, '$2')
     // Los espacios dentro de <strong> impiden que Markdown reconozca la negrita:
     // se sacan fuera de la etiqueta.
     .replace(/<(strong|b|em|i)>(\s+)/g, '$2<$1>')
-    .replace(/(\s+)<\/(strong|b|em|i)>/g, '</$2>$1');
+    .replace(/(\s+)<\/(strong|b|em|i)>/g, '</$2>$1')
+    // Tampoco reconoce una negrita que empieza por puntuación pegada a una
+    // palabra («papeles<strong>, pero…») ni la que termina en puntuación
+    // seguida de letra: la puntuación se saca fuera de la etiqueta.
+    .replace(/([\p{L}\p{N}])<(strong|b|em|i)>([\p{P}]+\s*)/gu, '$1$3<$2>')
+    .replace(/(\s*[\p{P}]+)<\/(strong|b|em|i)>([\p{L}\p{N}])/gu, '</$2>$1$3')
+    // Etiquetas que se han quedado vacías tras mover la puntuación
+    .replace(/<(strong|b|em|i)>(\s*)<\/\1>/g, '$2');
   return (
     td
       .turndown(cleaned)

@@ -13,49 +13,55 @@ const others = featured(3);
 ---
 
 <Base title="Este inmueble ya no está disponible" description="El inmueble que buscabas ya no está publicado." noindex>
-  <section class="gone container">
-    <p class="eyebrow">Inmueble no disponible</p>
-    <h1>Este inmueble ya no está disponible</h1>
-    <p class="lead">
-      Se ha vendido, alquilado o retirado del mercado. Te dejamos otras viviendas de nuestra cartera; si buscabas algo
-      parecido, cuéntanoslo y te avisaremos cuando entre.
-    </p>
-    <p class="gone__actions">
-      <a class="btn btn--accent" href="/contacto/?motivo=comprar#formulario">Avisadme de inmuebles parecidos</a>
-      <a class="btn btn--ghost" href="/comprar/">Ver viviendas en venta</a>
-      <a class="btn btn--ghost" href="/alquilar/">Ver viviendas en alquiler</a>
-    </p>
-    {
-      others.length > 0 && (
-        <ul class="grid-cards">
-          {others.map((p) => (
-            <li>
-              <PropertyCard property={p} headingLevel="h2" />
-            </li>
-          ))}
-        </ul>
-      )
-    }
+  <section class="page-head">
+    <div class="container">
+      <p class="label" data-hero style="--i:0">Inmueble no disponible</p>
+      <h1 data-hero style="--i:1">Este inmueble <em>ya no está disponible</em></h1>
+      <p class="lead" data-hero style="--i:2">
+        Se ha vendido, alquilado o retirado del mercado. Te dejamos otras viviendas de nuestra cartera; si buscabas algo
+        parecido, cuéntanoslo y te avisaremos cuando entre.
+      </p>
+      <p class="gone__actions" data-hero style="--i:3">
+        <a class="btn btn--accent" href="/contacto/?motivo=comprar#formulario">Avisadme de inmuebles parecidos</a>
+        <a class="link-arrow" href="/comprar/">Viviendas en venta</a>
+        <a class="link-arrow" href="/alquilar/">Viviendas en alquiler</a>
+      </p>
+    </div>
   </section>
+  {
+    others.length > 0 && (
+      <section class="section">
+        <div class="container">
+          <h2 class="gone__title">Otros inmuebles de nuestra cartera</h2>
+          <ul class="gone__list">
+            {others.map((p) => (
+              <li>
+                <PropertyCard property={p} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
 </Base>
 
 <style>
-  .gone {
-    padding-block: var(--s-7) var(--section);
-  }
-  .gone h1 {
-    font-size: var(--fs-2xl);
-  }
   .gone__actions {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--s-3);
-    margin-bottom: var(--s-7);
+    align-items: center;
+    gap: var(--s-4) var(--s-6);
+    margin: var(--s-6) 0 0;
   }
-  .grid-cards {
+  .gone__title {
+    font-size: var(--fs-xl);
+    margin-bottom: var(--s-6);
+  }
+  .gone__list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
-    gap: var(--s-5);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+    gap: var(--s-6) var(--s-5);
     margin: 0;
     padding: 0;
     list-style: none;

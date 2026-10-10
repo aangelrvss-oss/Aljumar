@@ -8,7 +8,7 @@ image: "/wp-content/uploads/2023/01/IMAGEN-look-and-find.jpg"
 wpId: 37314
 legacyBrandReplaced: true
 ---
-**El 2022 fue un gran año para la compraventa de viviendas**, a pesar de los altibajos en materia económica; se estima que las cifras superaron las 600.000 operaciones, un récord desde el 2007; sin embargo**, las previsiones para este año hablan de una caída, en torno al 12 %,** por la incertidumbre producida por la subida de los tipos de intereses, el encarecimiento de la deuda y la inflación que sigue en escala.
+**El 2022 fue un gran año para la compraventa de viviendas**, a pesar de los altibajos en materia económica; se estima que las cifras superaron las 600.000 operaciones, un récord desde el 2007; sin embargo, **las previsiones para este año hablan de una caída, en torno al 12 %,** por la incertidumbre producida por la subida de los tipos de intereses, el encarecimiento de la deuda y la inflación que sigue en escala.
 
 Los diferentes portales inmobiliarios detectaron las principales causas del buen inicio del año pasado, **los compradores venían con la necesidad de cambiar sus viviendas**, por unas con más aprovechamiento de la luz natural, espacios amplios, zonas exteriores como terrazas, jardines y piscinas.
 

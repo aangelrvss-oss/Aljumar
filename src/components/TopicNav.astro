@@ -1,0 +1,47 @@
+---
+import { topics, type TopicKey } from '../data/topics';
+
+interface Props {
+  current?: TopicKey | 'todos';
+}
+const { current = 'todos' } = Astro.props;
+---
+
+<nav class="topics" aria-label="Temas">
+  <a href="/consejos-inmobiliarios/" aria-current={current === 'todos' ? 'page' : undefined}>Todos</a>
+  {
+    (Object.keys(topics) as TopicKey[]).map((k) => (
+      <a href={`/consejos-inmobiliarios/tema/${k}/`} aria-current={k === current ? 'page' : undefined}>
+        {topics[k].label}
+      </a>
+    ))
+  }
+</nav>
+
+<style>
+  .topics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-5);
+    margin-top: var(--s-6);
+  }
+  .topics a {
+    padding-bottom: 6px;
+    font-size: var(--fs-sm);
+    font-weight: 650;
+    color: var(--ink-2);
+    text-decoration: none;
+    background: linear-gradient(var(--lime-500), var(--lime-500)) 0 100% / 0 2px no-repeat;
+    transition:
+      background-size 380ms var(--ease-out),
+      color var(--dur) var(--ease);
+  }
+  .topics a:hover {
+    color: var(--navy-900);
+    background-size: 100% 2px;
+  }
+  .topics a[aria-current='page'] {
+    color: var(--navy-900);
+    background-size: 100% 2px;
+  }
+</style>

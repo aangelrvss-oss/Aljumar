@@ -60,12 +60,15 @@ const cta =
   ]}
 >
   <article class="article">
-    <header class="container container--narrow article__head">
-      <p class="article__meta">
-        <a class="badge" href={`/consejos-inmobiliarios/tema/${topic}/`}>{topics[topic].label}</a>
-        <time datetime={pubDate.toISOString().slice(0, 10)}>{fmt(pubDate)}</time>
-      </p>
-      <h1>{title}</h1>
+    <header class="page-head article__head">
+      <div class="container container--narrow">
+        <p class="article__meta" data-hero style="--i:0">
+          <a href={`/consejos-inmobiliarios/tema/${topic}/`}>{topics[topic].label}</a>
+          <span aria-hidden="true">·</span>
+          <time datetime={pubDate.toISOString().slice(0, 10)}>{fmt(pubDate)}</time>
+        </p>
+        <h1 data-hero style="--i:1">{title}</h1>
+      </div>
     </header>
     {
       hasImage && (
@@ -74,7 +77,7 @@ const cta =
         </div>
       )
     }
-    <div class="container container--narrow">
+    <div class="container container--narrow article__body">
       {
         mayBeOutdated && (
           <p class="alert alert--warning" role="note">
@@ -95,17 +98,19 @@ const cta =
           <p class="article__cta-title">{cta.title}</p>
           <p>{cta.text}</p>
         </div>
-        <a class="btn btn--accent" href={cta.href}>{cta.label}</a>
+        <a class="btn" href={cta.href}>{cta.label}</a>
       </aside>
     </div>
   </article>
 
   {
     related.length > 0 && (
-      <section class="section section--tint" aria-labelledby="relacionados">
+      <section class="section section--paper" aria-labelledby="relacionados">
         <div class="container">
-          <h2 id="relacionados">Sigue leyendo</h2>
-          <ul class="grid-cards">
+          <h2 id="relacionados" class="related__title">
+            Sigue <em>leyendo</em>
+          </h2>
+          <ul class="posts">
             {related.map((p) => (
               <li>
                 <PostCard post={p} />
@@ -119,62 +124,69 @@ const cta =
 </Base>
 
 <style>
-  .article {
-    padding-bottom: var(--section);
-  }
   .article__head {
-    padding-top: var(--s-5);
+    padding-bottom: var(--s-7);
   }
   .article__meta {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--s-3);
-    font-size: var(--fs-sm);
+    gap: var(--s-2);
+    margin-bottom: var(--s-4);
+    font-size: var(--fs-label);
+    font-weight: 650;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
     color: var(--ink-2);
   }
-  .article__meta .badge {
+  .article__meta a {
+    color: var(--navy-900);
     text-decoration: none;
+    background: linear-gradient(var(--lime-500), var(--lime-500)) 0 100% / 100% 2px no-repeat;
+    padding-bottom: 2px;
   }
   .article h1 {
     font-size: var(--fs-2xl);
+    max-width: 22ch;
+    margin: 0;
   }
   .article__image img {
     width: 100%;
-    max-height: 520px;
+    max-height: 560px;
     object-fit: cover;
-    border-radius: var(--r-lg);
-    margin-bottom: var(--s-6);
+  }
+  .article__body {
+    padding-block: var(--s-7) var(--section);
   }
   .article__cta {
     display: grid;
     gap: var(--s-4);
     align-items: center;
-    margin-top: var(--s-7);
-    padding: var(--s-5) var(--s-6);
-    border-radius: var(--r-lg);
-    background: var(--navy-900);
-    color: var(--navy-100);
+    margin-top: var(--s-8);
+    padding: var(--s-5) 0 0;
+    border-top: 1px solid var(--navy-900);
   }
   .article__cta p {
     margin: 0;
+    color: var(--ink-2);
   }
   .article__cta-title {
     font-family: var(--font-display);
     font-size: var(--fs-lg);
-    color: var(--white);
+    color: var(--navy-900) !important;
   }
-  .grid-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
-    gap: var(--s-5);
-    margin: 0;
-    padding: 0;
-    list-style: none;
+  .related__title {
+    font-size: var(--fs-2xl);
+    margin-bottom: var(--s-6);
   }
   @media (min-width: 720px) {
     .article__cta {
       grid-template-columns: 1fr auto;
+    }
+  }
+  @media (min-width: 1024px) {
+    .article h1 {
+      font-size: var(--fs-3xl);
     }
   }
 </style>

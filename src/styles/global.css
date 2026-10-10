@@ -679,3 +679,117 @@ hr {
     transform: scale(1.1);
   }
 }
+
+/* ---------- Preguntas frecuentes (details nativo) ---------- */
+.faq {
+  border-top: 1px solid var(--line-strong);
+}
+.faq details {
+  border-bottom: 1px solid var(--line-strong);
+}
+.faq summary {
+  position: relative;
+  display: block;
+  padding: var(--s-5) 3rem var(--s-5) 0;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--navy-900);
+  cursor: pointer;
+  list-style: none;
+}
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+/* Signo + que se convierte en − al abrir */
+.faq summary::before,
+.faq summary::after {
+  content: '';
+  position: absolute;
+  right: 0.4rem;
+  top: 50%;
+  width: 16px;
+  height: 1.5px;
+  background: currentColor;
+  transition: transform 320ms var(--ease-out);
+}
+.faq summary::after {
+  transform: rotate(90deg);
+}
+.faq details[open] summary::after {
+  transform: rotate(0deg);
+}
+.faq summary:hover {
+  color: var(--navy-700);
+}
+.faq__a {
+  padding-bottom: var(--s-5);
+  max-width: 60ch;
+  color: var(--ink-2);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .faq details[open] .faq__a {
+    animation: faq-in 360ms var(--ease-out);
+  }
+}
+@keyframes faq-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+/* ---------- Páginas sencillas (404, 410, envío, legales) ---------- */
+.page-head {
+  padding-block: var(--s-6) var(--s-8);
+  background: var(--paper);
+}
+.page-head h1 {
+  font-size: var(--fs-3xl);
+  max-width: 16ch;
+}
+.page-head .lead {
+  margin: 0;
+}
+/* Lista de salidas: filas con filete y flecha */
+.exits {
+  margin: var(--s-7) 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line-strong);
+  max-width: 40rem;
+}
+.exits a {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s-4);
+  padding-block: var(--s-4);
+  border-bottom: 1px solid var(--line-strong);
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 380;
+  font-variation-settings: 'opsz' 72;
+  color: var(--navy-900);
+  text-decoration: none;
+}
+.exits a::after {
+  content: '';
+  width: 20px;
+  height: 1px;
+  background: currentColor;
+  transition: width 420ms var(--ease-out);
+}
+.exits a:hover::after,
+.exits a:focus-visible::after {
+  width: 40px;
+}
+
+/* ---------- Listado de artículos ---------- */
+.posts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: var(--s-7) var(--s-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

@@ -1,32 +1,20 @@
 ---
 import Base from '../layouts/Base.astro';
-import Icon from '../components/Icon.astro';
 ---
 
 <Base title="Página no encontrada" description="La página que buscas no existe o ha cambiado de dirección." noindex>
-  <section class="nf container container--narrow">
-    <p class="eyebrow">Error 404</p>
-    <h1>No encontramos esta página</h1>
-    <p class="lead">Puede que la dirección haya cambiado con la nueva web o que el contenido ya no exista.</p>
-    <ul class="nf__links">
-      <li><a class="btn" href="/comprar/"><Icon name="home" /> Viviendas en venta</a></li>
-      <li><a class="btn btn--ghost" href="/alquilar/">Viviendas en alquiler</a></li>
-      <li><a class="btn btn--ghost" href="/consejos-inmobiliarios/">Consejos inmobiliarios</a></li>
-      <li><a class="btn btn--ghost" href="/contacto/">Contacto</a></li>
-    </ul>
+  <section class="page-head">
+    <div class="container">
+      <p class="label" data-hero style="--i:0">Error 404</p>
+      <h1 data-hero style="--i:1">No encontramos esta página</h1>
+      <p class="lead" data-hero style="--i:2">Puede que la dirección haya cambiado con la nueva web o que el contenido ya no exista.</p>
+      <ul class="exits" data-hero style="--i:3">
+        <li><a href="/comprar/">Viviendas en venta</a></li>
+        <li><a href="/alquilar/">Viviendas en alquiler</a></li>
+        <li><a href="/vender-mi-vivienda/">Vender mi vivienda</a></li>
+        <li><a href="/consejos-inmobiliarios/">Consejos inmobiliarios</a></li>
+        <li><a href="/contacto/">Contacto</a></li>
+      </ul>
+    </div>
   </section>
 </Base>
-
-<style>
-  .nf {
-    padding-block: var(--s-8) var(--section);
-  }
-  .nf__links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--s-3);
-    margin: var(--s-6) 0 0;
-    padding: 0;
-    list-style: none;
-  }
-</style>

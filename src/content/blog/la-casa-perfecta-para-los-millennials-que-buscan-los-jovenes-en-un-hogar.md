@@ -24,7 +24,7 @@ Otra tendencia que ha ganado fuerza entre los millennials es **la preferencia po
 
 ## Tecnología y sostenibilidad
 
-**La tecnología es otro factor importante en la elección de un hogar para los millennials.** Buscan un hogar en el que puedan integrar sus dispositivos electrónicos y que tenga una infraestructura tecnológica avanzada para poder trabajar y conectarse a internet sin problemas. Además**, la sostenibilidad es una preocupación cada vez más presente entre los jóvenes,** por lo que buscan hogares que les permitan reducir su huella ecológica, como ventanas de doble cristal, sistemas de energía solar, entre otros.
+**La tecnología es otro factor importante en la elección de un hogar para los millennials.** Buscan un hogar en el que puedan integrar sus dispositivos electrónicos y que tenga una infraestructura tecnológica avanzada para poder trabajar y conectarse a internet sin problemas. Además, **la sostenibilidad es una preocupación cada vez más presente entre los jóvenes,** por lo que buscan hogares que les permitan reducir su huella ecológica, como ventanas de doble cristal, sistemas de energía solar, entre otros.
 
 ## Decoración y personalización
 

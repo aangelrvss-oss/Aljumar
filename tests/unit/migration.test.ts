@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { parseCsv } from '../../scripts/gen-redirects.ts';
-import { wpToMarkdown } from '../../scripts/import-wp-posts.ts';
+import { htmlToMarkdown, rewriteHref, wpToMarkdown } from '../../scripts/import-wp-posts.ts';
 
 const csv = readFileSync(new URL('../../docs/migration/redirect-map.csv', import.meta.url), 'utf8');
 const rules = parseCsv(csv);
@@ -54,5 +54,38 @@ describe('Importación del blog', () => {
       const body = readFileSync(new URL(`../../src/content/blog/${slug}.md`, import.meta.url), 'utf8').replace(/^image:.*$/m, '');
       expect(body, slug).not.toMatch(/look\s*(and|&|y)\s*find/i);
     }
+  });
+});
+
+describe('Importación del blog desde el HTML completo', () => {
+  const slugs = new Set(['consejos-para-vender-una-vivienda-mas-rapido']);
+  const md = (html: string) => htmlToMarkdown(html, slugs).trim();
+
+  it('conserva negritas, títulos y listas', () => {
+    const out = md('<h2>Documentos</h2><p>Lleva la <strong>nota simple</strong>.</p><ul><li>IBI</li><li>Escritura</li></ul>');
+    expect(out).toMatch(/^## Documentos\n\nLleva la \*\*nota simple\*\*\./);
+    expect(out).toMatch(/^-\s+IBI$/m);
+    expect(out).toMatch(/^-\s+Escritura$/m);
+  });
+
+  it('saca fuera de la negrita la puntuación pegada a una palabra', () => {
+    expect(md('<p>todo este jaleo de papeles<strong>, pero con la asesoría correcta</strong> será fácil</p>')).toBe(
+      'todo este jaleo de papeles, **pero con la asesoría correcta** será fácil',
+    );
+  });
+
+  it('parte la negrita en los saltos de línea', () => {
+    const out = md('<p><strong>NOVENO PUNTO<br />El okupante</strong> no sabe</p>');
+    expect(out).toMatch(/^\*\*NOVENO PUNTO\*\*/);
+    expect(out).toMatch(/\*\*El okupante\*\* no sabe$/);
+  });
+
+  it('sustituye la marca anterior solo en el texto, nunca en las URL', () => {
+    const out = md('<p>En <a href="https://lookandfind.es/x/">Look &amp; Find Moratalaz</a> te ayudamos</p>');
+    expect(out).not.toMatch(/look\s*(&|and)\s*find/i);
+  });
+
+  it('reescribe los enlaces internos a las nuevas URL', () => {
+    expect(rewriteHref('https://aljumar.es/consejos-para-vender-una-vivienda-mas-rapido/', slugs)).toBe('/consejos-para-vender-una-vivienda-mas-rapido/');
   });
 });

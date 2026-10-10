@@ -1,7 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
 import ContactForm from '../../components/ContactForm.astro';
-import Icon from '../../components/Icon.astro';
 import { site } from '../../data/site';
 ---
 
@@ -14,119 +13,125 @@ import { site } from '../../data/site';
   ]}
   contactFormHref="#formulario"
 >
-  <section class="contact container">
-    <div class="contact__info">
-      <p class="eyebrow">Contacto</p>
-      <h1>¿En qué podemos ayudarte?</h1>
-      <p class="lead">Llámanos, escríbenos o ven a vernos. Te atendemos personalmente.</p>
+  <section class="contact">
+    <div class="container contact__grid">
+      <div class="contact__info">
+        <p class="label" data-hero style="--i:0">Contacto</p>
+        <h1 data-hero style="--i:1">¿En qué podemos <em>ayudarte?</em></h1>
+        <p class="lead" data-hero style="--i:2">Llámanos, escríbenos o ven a vernos. Te atendemos personalmente.</p>
 
-      <ul class="channels">
-        <li>
-          <span class="channels__icon"><Icon name="phone" /></span>
+        <a class="contact__phone" href={`tel:${site.phones.office.tel}`} data-hero style="--i:3">{site.phones.office.display}</a>
+
+        <dl class="channels" data-hero style="--i:4">
           <div>
-            <p class="channels__label">Teléfono</p>
-            <a href={`tel:${site.phones.office.tel}`}>{site.phones.office.display}</a>
-            <a href={`tel:${site.phones.mobile.tel}`}>{site.phones.mobile.display} <span class="muted">(móvil)</span></a>
+            <dt>Móvil</dt>
+            <dd><a class="link" href={`tel:${site.phones.mobile.tel}`}>{site.phones.mobile.display}</a></dd>
           </div>
-        </li>
-        <li>
-          <span class="channels__icon"><Icon name="mail" /></span>
           <div>
-            <p class="channels__label">Correo electrónico</p>
-            <a href={`mailto:${site.email}`}>{site.email}</a>
+            <dt>Correo</dt>
+            <dd><a class="link" href={`mailto:${site.email}`}>{site.email}</a></dd>
           </div>
-        </li>
-        {
-          site.openingHours && (
-            <li>
-              <span class="channels__icon"><Icon name="clock" /></span>
+          {
+            site.openingHours && (
               <div>
-                <p class="channels__label">Horario</p>
-                <p>{site.openingHours}</p>
+                <dt>Horario</dt>
+                <dd>{site.openingHours}</dd>
               </div>
-            </li>
-          )
-        }
-        <li>
-          <span class="channels__icon"><Icon name="pin" /></span>
+            )
+          }
           <div>
-            <p class="channels__label">Oficina</p>
-            <p>{site.address.street}<br />{site.address.postalCode} {site.address.city} ({site.address.note})</p>
-            <a class="link-arrow" href={site.mapUrl} target="_blank" rel="noopener">
-              Ver en el mapa<span class="visually-hidden"> (abre una pestaña nueva)</span>
-            </a>
+            <dt>Oficina</dt>
+            <dd>
+              {site.address.street}, {site.address.postalCode} {site.address.city} ({site.address.note})<br />
+              <a class="link" href={site.mapUrl} target="_blank" rel="noopener">
+                Ver en el mapa<span class="visually-hidden"> (abre una pestaña nueva)</span>
+              </a>
+            </dd>
           </div>
-        </li>
-      </ul>
-    </div>
+        </dl>
+      </div>
 
-    <div class="contact__form">
-      <ContactForm
-        variant="general"
-        id="formulario"
-        heading="Escríbenos"
-        intro="Cuéntanos qué necesitas y te responderemos lo antes posible."
-      />
+      <div class="contact__form" data-hero style="--i:2">
+        <ContactForm variant="general" id="formulario" heading="Escríbenos" intro="Cuéntanos qué necesitas y te responderemos lo antes posible." />
+      </div>
     </div>
   </section>
 </Base>
 
 <style>
   .contact {
+    padding-block: var(--s-6) var(--section);
+    background: var(--paper);
+  }
+  .contact__grid {
     display: grid;
     gap: var(--s-7);
-    padding-block: var(--s-6) var(--section);
   }
   .contact h1 {
+    font-size: var(--fs-3xl);
+    max-width: 12ch;
+  }
+  .contact__phone {
+    display: inline-block;
+    margin: var(--s-6) 0 var(--s-5);
+    font-family: var(--font-display);
     font-size: var(--fs-2xl);
+    font-weight: 360;
+    font-variation-settings: 'opsz' 144;
+    font-variant-numeric: lining-nums;
+    letter-spacing: -0.02em;
+    color: var(--navy-900);
+    text-decoration: none;
+    background: linear-gradient(var(--lime-500), var(--lime-500)) 0 100% / 0 2px no-repeat;
+    transition: background-size 500ms var(--ease-out);
+  }
+  .contact__phone:hover {
+    background-size: 100% 2px;
   }
   .channels {
-    display: grid;
-    gap: var(--s-5);
-    margin: var(--s-6) 0 0;
-    padding: 0;
-    list-style: none;
-  }
-  .channels li {
-    display: flex;
-    gap: var(--s-4);
-  }
-  .channels__icon {
-    display: inline-grid;
-    flex: none;
-    place-items: center;
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
-    background: var(--navy-900);
-    color: var(--lime-500);
+    margin: 0;
+    border-top: 1px solid var(--line-strong);
+    max-width: 34rem;
   }
   .channels div {
     display: grid;
-    gap: 2px;
+    gap: var(--s-1) var(--s-5);
+    padding-block: var(--s-3);
+    border-bottom: 1px solid var(--line-strong);
   }
-  .channels p {
-    margin: 0;
-  }
-  .channels__label {
-    font-size: var(--fs-xs);
-    font-weight: 700;
-    letter-spacing: 0.1em;
+  .channels dt {
+    font-size: var(--fs-label);
+    font-weight: 650;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--ink-2);
   }
-  .channels a {
-    font-weight: 700;
+  .channels dd {
+    margin: 0;
+    color: var(--navy-900);
   }
   .contact__form {
-    padding: var(--s-6);
-    border-radius: var(--r-xl);
-    background: var(--bg);
+    padding: var(--s-6) var(--s-5);
+    background: var(--white);
+    border-top: 3px solid var(--navy-900);
+    box-shadow: var(--shadow-float);
   }
-  @media (min-width: 960px) {
-    .contact {
-      grid-template-columns: 0.9fr 1.1fr;
+  @media (min-width: 720px) {
+    .channels div {
+      grid-template-columns: 7rem 1fr;
+      align-items: baseline;
+    }
+  }
+  @media (min-width: 1024px) {
+    .contact__grid {
+      grid-template-columns: 5fr 6fr;
+      gap: var(--s-9);
       align-items: start;
+    }
+    .contact__info {
+      position: sticky;
+      top: calc(var(--header-h) + var(--s-6));
+      padding-top: var(--s-5);
     }
   }
 </style>

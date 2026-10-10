@@ -45,8 +45,13 @@ export function featured(limit = 6, exclude: string | null = null): Property[] {
  * para eso está la elección manual del punto 1.
  */
 export function heroProperty(): Property | null {
-  const withPhotos = inventory.properties.filter((p) => p.photos.length > 0 && p.status === 'disponible');
-  const chosen = (settings as { heroPropertyId?: string }).heroPropertyId?.trim();
+  return pickHero(inventory.properties, (settings as { heroPropertyId?: string }).heroPropertyId);
+}
+
+/** Regla de heroProperty() sin depender de los datos compilados (para las pruebas). */
+export function pickHero(list: Property[], chosenId?: string | null): Property | null {
+  const withPhotos = list.filter((p) => p.photos.length > 0 && p.status === 'disponible');
+  const chosen = chosenId?.trim();
   if (chosen) {
     const p = withPhotos.find((x) => x.id === chosen || x.ref === chosen);
     if (p) return p;

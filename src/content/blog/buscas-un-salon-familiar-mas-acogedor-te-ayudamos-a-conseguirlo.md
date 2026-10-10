@@ -12,8 +12,8 @@ El salón desempeña un papel importante en cualquier hogar. Es el lugar al que 
 
 Sigue leyendo para conocer las mejores ideas de salones familiares directamente de los diseñadores y aprende a recrearlos en tu propia casa.
 
-**  
-Construir un rincón de lectura**
+  
+**Construir un rincón de lectura**
 
 Una sala de estar diseñada por David Mann lo tiene todo, desde el escritorio hasta el rincón de lectura incorporado: la definición de acogedor. Si tu salón hace las veces de sala de estar, un rincón de lectura lo hará más acogedor sin contrarrestar la sensación de formalidad.
 

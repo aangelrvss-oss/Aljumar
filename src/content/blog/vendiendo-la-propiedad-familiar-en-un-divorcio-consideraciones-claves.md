@@ -18,11 +18,11 @@ La primera cuestión que se debe analizar es **el régimen que regula el matrimo
 
 **El régimen de separación de bienes** es un sistema en el que cada miembro de la pareja **mantiene su propio patrimonio individual y no existe un patrimonio común.** En este régimen, cada cónyuge administra sus propios bienes y, en caso de adquirir bienes juntos, **ambos aparecen como propietarios.** Sin embargo, aunque no existe un patrimonio común, **ambos cónyuges están obligados a contribuir a las cargas matrimoniales.** Este régimen está regulado por el artículo 1437 del Código Civil español.
 
-**El régimen de participación** es un sistema que permite a cada cónyuge **mantener su autonomía patrimonial durante el matrimonio,** pero en caso de divorcio o separación**, se considera como una sociedad de gananciales.** Este régimen está regulado por los artículos 1411 a 1434 del Código Civil español.
+**El régimen de participación** es un sistema que permite a cada cónyuge **mantener su autonomía patrimonial durante el matrimonio,** pero en caso de divorcio o separación, **se considera como una sociedad de gananciales.** Este régimen está regulado por los artículos 1411 a 1434 del Código Civil español.
 
 ## Otras consideraciones para valorar en el divorcio
 
-Al tener en cuenta cuál es el régimen del matrimonio**, también hay que valorar otros dos aspectos importantes antes de vender la propiedad.** En este caso serían: los hijos en común y si la vivienda se encuentra hipotecada.
+Al tener en cuenta cuál es el régimen del matrimonio, **también hay que valorar otros dos aspectos importantes antes de vender la propiedad.** En este caso serían: los hijos en común y si la vivienda se encuentra hipotecada.
 
 **Considerando si hay hijos en común**, aunque sean menores de edad, **la venta de la vivienda familiar estará sujeta a una previa autorización del juez que lleve el caso,** pues siempre se impondrá el bienestar de los niños.
 
@@ -40,6 +40,6 @@ Para la venta de la vivienda familiar después del trámite de divorcio, **hay q
 
 ## ¿Qué pasa si no hay un acuerdo de venta después del divorcio?
 
-Si no es posible alcanzar un acuerdo amistoso entre las partes para vender la vivienda, tras el divorcio, **es necesario recurrir a la intervención de un juez.** En casos donde no existen hijos en el matrimonio**, la venta de la vivienda suele ser llevada a cabo a través de una subasta pública.** Esta opción puede tener como resultado **una reducción del precio de la propiedad,** que puede ir desde un 20% hasta un 30%. La subasta permite a cualquier persona interesada adquirir la vivienda, y su objetivo **es asegurar que las condiciones de la venta sean justas para ambas partes involucradas.**
+Si no es posible alcanzar un acuerdo amistoso entre las partes para vender la vivienda, tras el divorcio, **es necesario recurrir a la intervención de un juez.** En casos donde no existen hijos en el matrimonio, **la venta de la vivienda suele ser llevada a cabo a través de una subasta pública.** Esta opción puede tener como resultado **una reducción del precio de la propiedad,** que puede ir desde un 20% hasta un 30%. La subasta permite a cualquier persona interesada adquirir la vivienda, y su objetivo **es asegurar que las condiciones de la venta sean justas para ambas partes involucradas.**
 
 La mayoría de las veces, el desacuerdo proviene por el precio y los trámites que conlleva la venta. En este caso u otro, **en [Aljumar Inmuebles](/),** como expertos inmobiliarios podemos ayudarte, tanto en el precio como la venta. **Consúltanos, podemos hacer la diferencia.**

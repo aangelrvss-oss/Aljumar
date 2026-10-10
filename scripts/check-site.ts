@@ -94,6 +94,10 @@ for (const f of htmlFiles) {
   const text = html.replace(/<[^>]+>/g, ' ');
   if (/look\s*(and|&amp;|&|y)\s*find/i.test(text)) errors.push(`${route}: menciona la marca anterior «Look & Find»`);
   if (/mialias\.net|lookandfind\.es/i.test(html)) errors.push(`${route}: enlace al dominio temporal o a la marca anterior`);
+  // Formato del blog: ni marcas de Markdown sin convertir ni etiquetas HTML escapadas.
+  const body = text.replace(/\s+/g, ' ');
+  if (/\*\*\S|\S\*\*/.test(body)) errors.push(`${route}: asteriscos de Markdown sin convertir («**»)`);
+  if (/&lt;\/?(p|strong|em|h[1-6]|a|ul|li)\b/i.test(html)) errors.push(`${route}: etiquetas HTML escapadas en el contenido`);
   if (route === '/' && html.includes('data-logo-pending')) warnings.push('Logotipo oficial pendiente: falta public/brand/logo-*.{svg,png,jpg} (npm run media:fetch).');
 }
 

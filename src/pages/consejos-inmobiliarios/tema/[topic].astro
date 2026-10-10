@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import Base from '../../../layouts/Base.astro';
 import PostCard from '../../../components/PostCard.astro';
+import TopicNav from '../../../components/TopicNav.astro';
 import { topics, type TopicKey } from '../../../data/topics';
 
 export function getStaticPaths() {
@@ -23,66 +24,25 @@ const t = topics[topic];
     { name: t.label, href: `/consejos-inmobiliarios/tema/${topic}/` },
   ]}
 >
-  <section class="container topic">
-    <p class="eyebrow">Consejos inmobiliarios</p>
-    <h1>{t.label}</h1>
-    <p class="lead">{t.intro}</p>
-    <nav class="topics" aria-label="Temas">
-      <a href="/consejos-inmobiliarios/">Todos</a>
-      {
-        (Object.keys(topics) as TopicKey[]).map((k) => (
-          <a href={`/consejos-inmobiliarios/tema/${k}/`} aria-current={k === topic ? 'page' : undefined}>
-            {topics[k].label}
-          </a>
-        ))
-      }
-    </nav>
-    <ul class="grid-cards">
-      {
-        posts.map((post) => (
-          <li>
-            <PostCard post={post} headingLevel="h2" />
-          </li>
-        ))
-      }
-    </ul>
+  <section class="page-head">
+    <div class="container">
+      <p class="label" data-hero style="--i:0">Consejos inmobiliarios</p>
+      <h1 data-hero style="--i:1">{t.label}</h1>
+      <p class="lead" data-hero style="--i:2">{t.intro}</p>
+      <TopicNav current={topic} />
+    </div>
+  </section>
+  <section class="section">
+    <div class="container">
+      <ul class="posts">
+        {
+          posts.map((post) => (
+            <li>
+              <PostCard post={post} headingLevel="h2" />
+            </li>
+          ))
+        }
+      </ul>
+    </div>
   </section>
 </Base>
-
-<style>
-  .topic {
-    padding-block: var(--s-6) var(--section);
-  }
-  .topic h1 {
-    font-size: var(--fs-2xl);
-  }
-  .topics {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--s-2);
-    margin: var(--s-5) 0 var(--s-6);
-  }
-  .topics a {
-    padding: 0.45rem 1rem;
-    border: 1.5px solid var(--line-strong);
-    border-radius: var(--r-pill);
-    font-size: var(--fs-sm);
-    font-weight: 650;
-    color: var(--navy-900);
-    text-decoration: none;
-  }
-  .topics a[aria-current='page'],
-  .topics a:hover {
-    background: var(--navy-900);
-    border-color: var(--navy-900);
-    color: var(--white);
-  }
-  .grid-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
-    gap: var(--s-5);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-</style>
