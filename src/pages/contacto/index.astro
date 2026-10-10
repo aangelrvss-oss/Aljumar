@@ -1,0 +1,132 @@
+---
+import Base from '../../layouts/Base.astro';
+import ContactForm from '../../components/ContactForm.astro';
+import Icon from '../../components/Icon.astro';
+import { site } from '../../data/site';
+---
+
+<Base
+  title="Contacto: oficina en Moratalaz, teléfono y correo"
+  description={`Contacta con Aljumar Inmuebles: ${site.phones.office.display}, ${site.email} o en nuestra oficina de ${site.address.street}, ${site.address.postalCode} Madrid (Moratalaz).`}
+  breadcrumbs={[
+    { name: 'Inicio', href: '/' },
+    { name: 'Contacto', href: '/contacto/' },
+  ]}
+  contactFormHref="#formulario"
+>
+  <section class="contact container">
+    <div class="contact__info">
+      <p class="eyebrow">Contacto</p>
+      <h1>¿En qué podemos ayudarte?</h1>
+      <p class="lead">Llámanos, escríbenos o ven a vernos. Te atendemos personalmente.</p>
+
+      <ul class="channels">
+        <li>
+          <span class="channels__icon"><Icon name="phone" /></span>
+          <div>
+            <p class="channels__label">Teléfono</p>
+            <a href={`tel:${site.phones.office.tel}`}>{site.phones.office.display}</a>
+            <a href={`tel:${site.phones.mobile.tel}`}>{site.phones.mobile.display} <span class="muted">(móvil)</span></a>
+          </div>
+        </li>
+        <li>
+          <span class="channels__icon"><Icon name="mail" /></span>
+          <div>
+            <p class="channels__label">Correo electrónico</p>
+            <a href={`mailto:${site.email}`}>{site.email}</a>
+          </div>
+        </li>
+        {
+          site.openingHours && (
+            <li>
+              <span class="channels__icon"><Icon name="clock" /></span>
+              <div>
+                <p class="channels__label">Horario</p>
+                <p>{site.openingHours}</p>
+              </div>
+            </li>
+          )
+        }
+        <li>
+          <span class="channels__icon"><Icon name="pin" /></span>
+          <div>
+            <p class="channels__label">Oficina</p>
+            <p>{site.address.street}<br />{site.address.postalCode} {site.address.city} ({site.address.note})</p>
+            <a class="link-arrow" href={site.mapUrl} target="_blank" rel="noopener">
+              Ver en el mapa<span class="visually-hidden"> (abre una pestaña nueva)</span>
+            </a>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="contact__form">
+      <ContactForm
+        variant="general"
+        id="formulario"
+        heading="Escríbenos"
+        intro="Cuéntanos qué necesitas y te responderemos lo antes posible."
+      />
+    </div>
+  </section>
+</Base>
+
+<style>
+  .contact {
+    display: grid;
+    gap: var(--s-7);
+    padding-block: var(--s-6) var(--section);
+  }
+  .contact h1 {
+    font-size: var(--fs-2xl);
+  }
+  .channels {
+    display: grid;
+    gap: var(--s-5);
+    margin: var(--s-6) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .channels li {
+    display: flex;
+    gap: var(--s-4);
+  }
+  .channels__icon {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: var(--navy-900);
+    color: var(--lime-500);
+  }
+  .channels div {
+    display: grid;
+    gap: 2px;
+  }
+  .channels p {
+    margin: 0;
+  }
+  .channels__label {
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+  }
+  .channels a {
+    font-weight: 700;
+  }
+  .contact__form {
+    padding: var(--s-6);
+    border-radius: var(--r-xl);
+    background: var(--bg);
+  }
+  @media (min-width: 960px) {
+    .contact {
+      grid-template-columns: 0.9fr 1.1fr;
+      align-items: start;
+    }
+  }
+</style>

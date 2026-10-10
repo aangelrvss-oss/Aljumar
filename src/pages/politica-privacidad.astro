@@ -1,0 +1,93 @@
+---
+/**
+ * Basada en la política de privacidad publicada en aljumar.es (29/06/2021),
+ * adaptada a los tratamientos que realiza la nueva web: formularios de
+ * contacto, de interés en un inmueble y de captación, enviados por correo y,
+ * si se activa, registrados en el CRM Inmovilla. Requiere revisión jurídica
+ * antes del lanzamiento (ver docs/FINAL-REPORT.md).
+ */
+import LegalPage from '../components/LegalPage.astro';
+import { site } from '../data/site';
+---
+
+<LegalPage
+  title="Política de privacidad"
+  description={`Cómo trata ${site.legalName} los datos personales que recibe a través de aljumar.es.`}
+  path="/politica-privacidad/"
+  updated="10 de octubre de 2026"
+>
+  <p>En {site.legalName} nos preocupamos por la privacidad y la transparencia. A continuación te explicamos qué datos tratamos, con qué finalidad y cuáles son tus derechos.</p>
+
+  <h2>Información básica</h2>
+  <table>
+    <tbody>
+      <tr><th scope="row">Responsable</th><td>{site.legalName}</td></tr>
+      <tr><th scope="row">Finalidad</th><td>Atender tu solicitud (información, visitas, valoración o venta de tu inmueble) y, si lo consientes, enviarte información de inmuebles de tu interés.</td></tr>
+      <tr><th scope="row">Legitimación</th><td>Aplicación de medidas precontractuales a petición tuya, consentimiento e interés legítimo.</td></tr>
+      <tr><th scope="row">Destinatarios</th><td>No se cederán datos a terceros, salvo obligación legal. Proveedores que prestan servicios al responsable (alojamiento web, correo y gestión de clientes) pueden acceder a ellos como encargados del tratamiento.</td></tr>
+      <tr><th scope="row">Derechos</th><td>Acceso, rectificación, supresión, oposición, limitación y portabilidad, como se explica más abajo.</td></tr>
+      <tr><th scope="row">Procedencia</th><td>El propio interesado.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>1. ¿Quién es el responsable del tratamiento?</h2>
+  <ul>
+    <li>{site.legalName} — CIF {site.taxId}</li>
+    <li>{site.address.street}, {site.address.postalCode} {site.address.city}</li>
+    <li>Teléfono: {site.phones.office.display} / {site.phones.mobile.display}</li>
+    <li>Correo electrónico: <a href={`mailto:${site.email}`}>{site.email}</a></li>
+  </ul>
+  <p>Delegado de protección de datos: Juan José Jareño, {site.address.street}, {site.address.postalCode} {site.address.city}.</p>
+
+  <h2>2. ¿Qué datos tratamos y con qué finalidad?</h2>
+  <p>A través de los formularios de la web tratamos los datos que nos facilitas:</p>
+  <ul>
+    <li><strong>Formulario de contacto:</strong> nombre, correo electrónico, teléfono (opcional), motivo y mensaje, para responder a tu consulta.</li>
+    <li><strong>Solicitud sobre un inmueble:</strong> nombre, teléfono, correo, el inmueble que te interesa y tu mensaje, para darte información y organizar la visita.</li>
+    <li><strong>Venta o alquiler de tu inmueble:</strong> nombre, teléfono, correo, tipo de inmueble, zona o calle y mensaje, para contactarte y preparar la valoración.</li>
+  </ul>
+  <p>
+    Si marcas la casilla correspondiente, usaremos tus datos de contacto para enviarte información sobre inmuebles que
+    encajen con lo que buscas. Puedes retirar este consentimiento en cualquier momento.
+  </p>
+  <p>
+    Por seguridad, el servidor registra datos técnicos mínimos de cada envío (fecha, tipo de formulario y un
+    identificador cifrado de la dirección IP) para prevenir el abuso y el envío masivo de spam. Ese registro no
+    contiene tu nombre, correo, teléfono ni mensaje.
+  </p>
+  <p>No se toman decisiones automatizadas a partir de tus datos.</p>
+
+  <h2>3. ¿Durante cuánto tiempo conservamos los datos?</h2>
+  <p>
+    Mientras sean necesarios para atender tu solicitud y la relación comercial que se derive de ella, y después durante
+    los plazos de prescripción de las responsabilidades legales. Los datos para comunicaciones comerciales se
+    conservan hasta que retires tu consentimiento.
+  </p>
+
+  <h2>4. ¿Cuál es la base legal del tratamiento?</h2>
+  <ul>
+    <li>Aplicación de medidas precontractuales a petición del interesado: gestionar tu solicitud de información, visita o valoración (RGPD, art. 6.1.b).</li>
+    <li>Consentimiento: envío de comunicaciones comerciales, incluso por vía electrónica (RGPD, art. 6.1.a; LSSICE, art. 21).</li>
+    <li>Interés legítimo: seguridad del sitio web y prevención del fraude (RGPD, art. 6.1.f).</li>
+  </ul>
+
+  <h2>5. ¿A quién se comunican los datos?</h2>
+  <p>
+    No se cederán datos a terceros, salvo obligación legal. Para prestar el servicio, el responsable se apoya en
+    proveedores que actúan como encargados del tratamiento: el proveedor de alojamiento de la web, el de correo
+    electrónico y el programa de gestión inmobiliaria en el que se registran los contactos. No están previstas
+    transferencias internacionales de datos.
+  </p>
+
+  <h2>6. ¿Cuáles son tus derechos?</h2>
+  <p>
+    Puedes acceder a tus datos, solicitar su rectificación o supresión, oponerte a su tratamiento, pedir su limitación o
+    su portabilidad, y retirar el consentimiento en cualquier momento sin que ello afecte a la licitud del tratamiento
+    previo. Para ejercerlos, escribe a <a href={`mailto:${site.email}`}>{site.email}</a> o por correo postal a
+    {site.address.street}, {site.address.postalCode} {site.address.city}, indicando el derecho que deseas ejercer.
+  </p>
+  <p>
+    Si consideras que no se han atendido correctamente tus derechos, puedes presentar una reclamación ante la Agencia
+    Española de Protección de Datos (<a href="https://www.aepd.es" rel="noopener">www.aepd.es</a>).
+  </p>
+</LegalPage>

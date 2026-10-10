@@ -1,0 +1,41 @@
+---
+/**
+ * La nueva web no instala cookies: no hay analítica, publicidad ni mapas o
+ * vídeos incrustados de terceros, y las fuentes se sirven desde el propio
+ * dominio. Si en el futuro se añade analítica (p. ej. Google Analytics), hay
+ * que actualizar esta política y añadir un panel de consentimiento ANTES de
+ * activarla (ver docs/decisions/architecture-decisions.md, ADR-009).
+ */
+import LegalPage from '../components/LegalPage.astro';
+import { site } from '../data/site';
+---
+
+<LegalPage
+  title="Política de cookies"
+  description="Información sobre el uso de cookies en aljumar.es."
+  path="/politica-cookies/"
+  updated="10 de octubre de 2026"
+>
+  <h2>¿Qué son las cookies?</h2>
+  <p>
+    Las cookies son pequeños archivos que algunos sitios web guardan en tu navegador para recordar información sobre
+    tu visita, como tus preferencias o tu comportamiento de navegación.
+  </p>
+
+  <h2>¿Qué cookies utiliza esta web?</h2>
+  <p>
+    <strong>Ninguna.</strong> Esta web no instala cookies propias ni de terceros: no utilizamos herramientas de
+    analítica, publicidad ni redes sociales que te rastreen, y por eso no te mostramos ningún aviso para aceptarlas.
+  </p>
+  <p>
+    Las fotografías de los inmuebles se cargan desde el servidor de nuestro programa de gestión inmobiliaria
+    (Inmovilla), que recibe técnicamente la petición de tu navegador para poder mostrarlas.
+  </p>
+
+  <h2>Cambios en esta política</h2>
+  <p>
+    Si en el futuro incorporamos alguna herramienta que utilice cookies no necesarias, actualizaremos esta política y
+    te pediremos tu consentimiento antes de instalarlas. Para cualquier duda, escríbenos a
+    <a href={`mailto:${site.email}`}>{site.email}</a>.
+  </p>
+</LegalPage>

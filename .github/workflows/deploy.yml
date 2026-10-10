@@ -1,0 +1,86 @@
+# Sincronización con Inmovilla y publicación.
+#
+# DESACTIVADO POR DEFECTO. Para activarlo (decisión de Aljumar):
+#   1. Variables del repositorio: DEPLOY_ENABLED=true
+#   2. Secretos: INMOVILLA_XML_URL, DEPLOY_HOST, DEPLOY_USER, DEPLOY_PATH, DEPLOY_SSH_KEY
+#   3. Entorno «production» con revisores obligatorios (aprobación manual).
+#   DEPLOY_PATH debe ser una carpeta NUEVA (p. ej. /www-nueva), nunca la de
+#   WordPress: el cambio de web se hace apuntando el dominio a esa carpeta, y
+#   la reversión, volviendo a apuntarlo a la de WordPress.
+# Ver docs/operations/deploy.md (incluye la reversión).
+name: Sincronizar y publicar
+
+on:
+  schedule:
+    - cron: '17 */3 * * *' # cada 3 horas: refleja altas, bajas y cambios de precio de Inmovilla
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    if: vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: production
+    env:
+      SITE_ENV: production
+      SITE_URL: https://aljumar.es
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Sincronizar inventario con Inmovilla
+        env:
+          INMOVILLA_XML_URL: ${{ secrets.INMOVILLA_XML_URL }}
+        run: npm run sync
+
+      - name: Guardar el inventario sincronizado (historial y reversión)
+        run: |
+          if ! git diff --quiet -- src/data; then
+            git config user.name "aljumar-bot"
+            git config user.email "aljumar-bot@users.noreply.github.com"
+            git add src/data/inventory.json src/data/retired.json
+            git commit -m "Inventario: sincronización automática con Inmovilla"
+            git push
+          fi
+
+      - run: npm run build
+      - run: npm run check
+
+      - name: Publicar por SSH (rsync) con copia de lo reemplazado
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+          STAMP=$(date -u +%Y%m%d-%H%M%S)
+          # --backup guarda en ../web-backups/<fecha> todo archivo sustituido o borrado.
+          # config.php (formulario) vive solo en el servidor y nunca se toca.
+          rsync -az --delete --backup --backup-dir="../web-backups/$STAMP" \
+            --exclude 'api/config.php' \
+            -e "ssh -i ~/.ssh/id_deploy" dist/ "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/"
+          rm -f ~/.ssh/id_deploy
+
+      - name: Comprobación tras publicar
+        run: |
+          for p in / /comprar/ /contacto/ /sitemap-index.xml /robots.txt; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "https://aljumar.es$p")
+            echo "$p → $code"; test "$code" = 200
+          done
+          curl -sI https://aljumar.es/quieres-vender/ | grep -iE '^(HTTP|location)'

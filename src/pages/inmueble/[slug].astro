@@ -1,0 +1,412 @@
+---
+import Base from '../../layouts/Base.astro';
+import Gallery from '../../components/Gallery.astro';
+import EnergyRating from '../../components/EnergyRating.astro';
+import ContactForm from '../../components/ContactForm.astro';
+import PropertyCard from '../../components/PropertyCard.astro';
+import Icon from '../../components/Icon.astro';
+import { allProperties, related } from '../../lib/inventory';
+import type { Property } from '../../lib/inventory/types';
+import { excerpt } from '../../lib/inventory/text';
+import {
+  formatArea,
+  formatPrice,
+  headline,
+  OPERATION_LABEL,
+  placeLabel,
+  priceFor,
+  primaryOperation,
+} from '../../lib/inventory/format';
+import { propertySchema } from '../../lib/schema';
+import { site } from '../../data/site';
+
+export function getStaticPaths() {
+  return allProperties().map((p) => ({ params: { slug: p.slug }, props: { property: p } }));
+}
+
+interface Props {
+  property: Property;
+}
+const { property: p } = Astro.props;
+const op = primaryOperation(p);
+const listing = op === 'alquiler' ? { name: 'Alquilar', href: '/alquilar/' } : op === 'traspaso' ? { name: 'Traspasos', href: '/traspasos/' } : { name: 'Comprar', href: '/comprar/' };
+const h1 = headline(p);
+const url = new URL(Astro.url.pathname, Astro.site).href;
+const ref = p.ref ?? p.id;
+
+// La descripción del CRM incluye a menudo un bloque fijo sobre gastos de
+// compraventa: se separa para que la descripción del inmueble se lea mejor.
+const COSTS_MARK = /El precio anunciado NO incluye/i;
+let description = p.description ?? '';
+let costsNote: string | null = null;
+const idx = description.search(COSTS_MARK);
+if (idx > 0) {
+  costsNote = description.slice(idx).trim();
+  description = description.slice(0, idx).trim();
+}
+const paragraphs = description
+  .split(/\n{2,}|\n/)
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+const specs: { label: string; value: string }[] = [];
+specs.push({ label: 'Tipo', value: p.type });
+specs.push({ label: 'Operación', value: p.operations.map((o) => OPERATION_LABEL[o]).join(' y ') });
+if (p.builtArea !== null) specs.push({ label: 'Superficie construida', value: formatArea(p.builtArea)! });
+if (p.usableArea !== null) specs.push({ label: 'Superficie útil', value: formatArea(p.usableArea)! });
+if (p.plotArea !== null) specs.push({ label: 'Parcela', value: formatArea(p.plotArea)! });
+if (p.bedrooms !== null) specs.push({ label: 'Dormitorios', value: String(p.bedrooms) });
+if (p.bathrooms !== null) specs.push({ label: 'Baños', value: String(p.bathrooms) });
+if (p.toilets !== null) specs.push({ label: 'Aseos', value: String(p.toilets) });
+if (p.yearBuilt !== null) specs.push({ label: 'Año de construcción', value: String(p.yearBuilt) });
+if (p.condition) specs.push({ label: 'Estado', value: p.condition });
+if (p.communityFee !== null) specs.push({ label: 'Gastos de comunidad', value: `${p.communityFee} €/mes` });
+specs.push({ label: 'Referencia', value: ref });
+
+const allPrices = p.operations
+  .map((o) => ({ o, v: priceFor(p, o) }))
+  .filter((x) => x.v !== null || p.operations.length === 1);
+const similar = related(p, 3);
+const seoDescription = excerpt(
+  `${h1}${p.city ? ` (${placeLabel(p)})` : ''}: ${formatPrice(priceFor(p, op), op)}${p.bedrooms ? `, ${p.bedrooms} dormitorios` : ''}${p.builtArea ?? p.usableArea ? `, ${formatArea(p.builtArea ?? p.usableArea)}` : ''}. ${description}`,
+  158,
+);
+const mapLink = p.approxLocation
+  ? `https://www.openstreetmap.org/?mlat=${p.approxLocation.lat.toFixed(3)}&mlon=${p.approxLocation.lng.toFixed(3)}#map=15/${p.approxLocation.lat.toFixed(3)}/${p.approxLocation.lng.toFixed(3)}`
+  : null;
+---
+
+<Base
+  title={`${h1}${p.city && p.zone ? `, ${p.city}` : ''} · ref. ${ref}`}
+  description={seoDescription}
+  ogImage={p.photos[0]?.url}
+  breadcrumbs={[
+    { name: 'Inicio', href: '/' },
+    listing,
+    { name: h1, href: Astro.url.pathname },
+  ]}
+  jsonLd={[propertySchema(p, url)]}
+  contactSubject={`Interés en ${h1} (ref. ${ref})`}
+  contactFormHref="#solicitar"
+>
+  <article class="property container">
+    <header class="property__head">
+      <div>
+        <p class="property__badges">
+          {p.operations.map((o) => <span class="badge badge--dark">{OPERATION_LABEL[o]}</span>)}
+          {p.status !== 'disponible' && <span class="badge badge--accent">{p.status}</span>}
+          <span class="badge">Ref. {ref}</span>
+        </p>
+        <h1>{h1}</h1>
+        {p.title && <p class="property__subtitle">{p.title}</p>}
+        <p class="property__place"><Icon name="pin" size={18} /> {placeLabel(p)}</p>
+      </div>
+      <div class="property__price">
+        {
+          allPrices.map(({ o, v }) => (
+            <p>
+              {p.operations.length > 1 && <span class="property__price-label">{OPERATION_LABEL[o]}</span>}
+              <strong>{formatPrice(v, o)}</strong>
+            </p>
+          ))
+        }
+      </div>
+    </header>
+
+    <Gallery photos={p.photos} title={h1} />
+
+    <ul class="property__keys" aria-label="Datos principales">
+      {p.bedrooms !== null && <li><Icon name="bed" /><span><strong>{p.bedrooms}</strong> {p.bedrooms === 1 ? 'dormitorio' : 'dormitorios'}</span></li>}
+      {p.bathrooms !== null && <li><Icon name="bath" /><span><strong>{p.bathrooms}</strong> {p.bathrooms === 1 ? 'baño' : 'baños'}</span></li>}
+      {p.builtArea !== null && <li><Icon name="area" /><span><strong>{formatArea(p.builtArea)}</strong> construidos</span></li>}
+      {p.usableArea !== null && <li><Icon name="area" /><span><strong>{formatArea(p.usableArea)}</strong> útiles</span></li>}
+      {p.energy.letter && <li><Icon name="leaf" /><span>Energía <strong>{p.energy.letter}</strong></span></li>}
+    </ul>
+
+    <div class="property__layout">
+      <div class="property__main">
+        {
+          paragraphs.length > 0 && (
+            <section aria-labelledby="desc">
+              <h2 id="desc">Descripción</h2>
+              <div class="prose property__desc">
+                {paragraphs.map((t) => (
+                  <p>{t}</p>
+                ))}
+              </div>
+            </section>
+          )
+        }
+
+        <section aria-labelledby="carac">
+          <h2 id="carac">Características</h2>
+          <dl class="specs">
+            {
+              specs.map((s) => (
+                <div>
+                  <dt>{s.label}</dt>
+                  <dd>{s.value}</dd>
+                </div>
+              ))
+            }
+          </dl>
+          {
+            p.features.length > 0 && (
+              <>
+                <h3>Equipamiento</h3>
+                <ul class="features">
+                  {p.features.map((f) => (
+                    <li>
+                      <Icon name="check" size={18} /> {f}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )
+          }
+        </section>
+
+        <section aria-labelledby="energia">
+          <h2 id="energia">Certificado energético</h2>
+          <EnergyRating energy={p.energy} emissions={p.emissions} />
+        </section>
+
+        <section aria-labelledby="ubicacion">
+          <h2 id="ubicacion">Ubicación</h2>
+          <p>
+            {placeLabel(p)}{p.postalCode && ` (${p.postalCode})`}. Por privacidad de los propietarios no publicamos la
+            dirección exacta: te la facilitamos al concertar la visita.
+          </p>
+          {
+            mapLink && (
+              <a class="link-arrow" href={mapLink} rel="noopener" target="_blank">
+                Ver la zona en el mapa<span class="visually-hidden"> (se abre en una pestaña nueva)</span>
+              </a>
+            )
+          }
+        </section>
+
+        {
+          costsNote && (
+            <aside class="alert alert--info property__costs" aria-label="Gastos de compraventa">
+              <Icon name="info" />
+              <div>
+                <strong>Gastos de la compraventa</strong>
+                <p>{costsNote}</p>
+              </div>
+            </aside>
+          )
+        }
+      </div>
+
+      <aside class="property__aside" aria-label="Solicitar información">
+        <div class="contact-box" id="solicitar">
+          <p class="contact-box__title">¿Te interesa este inmueble?</p>
+          <p class="muted">Te contamos todos los detalles y organizamos la visita cuando te venga bien.</p>
+          <a class="btn btn--block" href={`tel:${site.phones.office.tel}`}>
+            <Icon name="phone" /> Llamar al {site.phones.office.display}
+          </a>
+          <hr />
+          <ContactForm variant="inmueble" id="form-inmueble" propertyRef={ref} propertyTitle={h1} propertyUrl={url} />
+        </div>
+      </aside>
+    </div>
+  </article>
+
+  {
+    similar.length > 0 && (
+      <section class="section section--tint" aria-labelledby="similares">
+        <div class="container">
+          <div class="section-head">
+            <div>
+              <h2 id="similares">Inmuebles parecidos</h2>
+            </div>
+            <a class="link-arrow" href={listing.href}>Ver todos</a>
+          </div>
+          <ul class="grid-cards">
+            {similar.map((s) => (
+              <li>
+                <PropertyCard property={s} operation={op} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+</Base>
+
+<style>
+  .property {
+    padding-top: var(--s-5);
+    padding-bottom: var(--section);
+  }
+  .property__head {
+    display: grid;
+    gap: var(--s-4);
+    margin-bottom: var(--s-5);
+  }
+  .property__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+    margin-bottom: var(--s-3);
+  }
+  .property h1 {
+    font-size: var(--fs-2xl);
+    margin-bottom: var(--s-2);
+  }
+  .property__subtitle {
+    margin-bottom: var(--s-2);
+    font-size: var(--fs-md);
+    color: var(--ink);
+  }
+  .property__place {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    margin: 0;
+    color: var(--ink-2);
+  }
+  .property__price p {
+    margin: 0;
+  }
+  .property__price strong {
+    font-family: var(--font-display);
+    font-size: var(--fs-2xl);
+    font-weight: 600;
+    color: var(--navy-900);
+    letter-spacing: -0.02em;
+  }
+  .property__price-label {
+    display: block;
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-2);
+  }
+  .property__keys {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-3);
+    margin: var(--s-5) 0 var(--s-6);
+    padding: 0;
+    list-style: none;
+  }
+  .property__keys li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    padding: var(--s-3) var(--s-4);
+    border-radius: var(--r-md);
+    background: var(--bg);
+    color: var(--navy-900);
+  }
+  .property__keys :global(svg) {
+    color: var(--navy-500);
+  }
+  .property__layout {
+    display: grid;
+    gap: var(--s-7);
+  }
+  .property__main {
+    display: grid;
+    gap: var(--s-7);
+    min-width: 0;
+  }
+  .property__main h2 {
+    font-size: var(--fs-xl);
+  }
+  .property__desc {
+    font-size: var(--fs-base);
+  }
+  .specs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0 var(--s-5);
+    margin: 0 0 var(--s-5);
+  }
+  .specs div {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--s-3);
+    padding: var(--s-3) 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .specs dt {
+    color: var(--ink-2);
+  }
+  .specs dd {
+    margin: 0;
+    font-weight: 700;
+    color: var(--navy-900);
+    text-align: right;
+  }
+  .features {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: var(--s-2) var(--s-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .features li {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+  }
+  .features :global(svg) {
+    color: var(--success);
+    flex: none;
+  }
+  .property__costs {
+    font-size: var(--fs-xs);
+  }
+  .contact-box {
+    padding: var(--s-5);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    background: var(--white);
+    box-shadow: var(--shadow-md);
+  }
+  .contact-box__title {
+    margin-bottom: var(--s-1);
+    font-family: var(--font-display);
+    font-size: var(--fs-lg);
+    color: var(--navy-900);
+  }
+  .contact-box hr {
+    margin: var(--s-5) 0;
+  }
+  .contact-box :global(.cform__grid) {
+    grid-template-columns: 1fr;
+  }
+  .grid-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr));
+    gap: var(--s-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 900px) {
+    .property__head {
+      grid-template-columns: 1fr auto;
+      align-items: end;
+    }
+    .property__price {
+      text-align: right;
+    }
+  }
+  @media (min-width: 1080px) {
+    .property__layout {
+      grid-template-columns: 1fr 390px;
+      align-items: start;
+    }
+    .property__aside {
+      position: sticky;
+      top: calc(var(--header-h) + var(--s-4));
+    }
+  }
+</style>

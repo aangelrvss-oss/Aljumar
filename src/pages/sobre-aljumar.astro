@@ -1,0 +1,219 @@
+---
+import Base from '../layouts/Base.astro';
+import TeamGrid from '../components/TeamGrid.astro';
+import CtaBand from '../components/CtaBand.astro';
+import Icon from '../components/Icon.astro';
+import { site } from '../data/site';
+
+// Textos basados en «Nuestra esencia» de la web actual de Aljumar.
+const values = [
+  { t: 'Transparencia', d: 'Somos claros y honestos al informarte de cualquier aspecto de la compraventa de tu inmueble.' },
+  { t: 'Generosidad', d: 'Invertimos nuestro tiempo y esfuerzo en ofrecer un servicio de calidad, velando siempre por tus intereses.' },
+  { t: 'Compromiso', d: 'Nos volcamos al máximo y cumplimos con lo acordado, por compleja que sea la operación.' },
+  { t: 'Atención al cliente', d: 'No trabajamos con inmuebles, sino con personas. Para nosotros, el cliente es lo primero.' },
+  { t: 'Empatía', d: 'Escuchamos y comprendemos tus objetivos para situarlos en el centro de nuestro trabajo.' },
+];
+---
+
+<Base
+  title="Sobre Aljumar: inmobiliaria en Moratalaz desde 1998"
+  description="Agencia inmobiliaria de Moratalaz (Madrid) dedicada a la compraventa en exclusiva desde 1998. Conoce nuestra forma de trabajar, valores y equipo."
+  breadcrumbs={[
+    { name: 'Inicio', href: '/' },
+    { name: 'Sobre Aljumar', href: '/sobre-aljumar/' },
+  ]}
+>
+  <section class="about-hero">
+    <div class="container container--narrow">
+      <p class="eyebrow">Nuestra esencia</p>
+      <h1>Desde {site.foundingYear}, la tranquilidad de vender bien</h1>
+      <p class="lead">
+        Somos una agencia inmobiliaria dedicada a la compraventa de inmuebles en exclusiva. Desde nuestros inicios en
+        {site.foundingYear} ofrecemos un servicio profesional y de calidad basado en el conocimiento exhaustivo de la
+        zona, y ponemos a disposición de cada propietario todas nuestras herramientas técnicas y humanas para lograr un
+        acuerdo rentable, ágil y conveniente.
+      </p>
+    </div>
+  </section>
+
+  <section class="section section--tint" aria-labelledby="moratalaz">
+    <div class="container about-split">
+      <div>
+        <p class="eyebrow">Dónde estamos</p>
+        <h2 id="moratalaz">Estamos en Moratalaz, Madrid</h2>
+        <p>
+          Moratalaz es una de las zonas de Madrid más idóneas para vivir: a unos 30 minutos a pie del Retiro y del
+          barrio de Salamanca, con todos los servicios y una tipología de vivienda relativamente uniforme, de entre 50 y
+          100 metros cuadrados.
+        </p>
+        <p>
+          Está muy bien comunicada: carril bici hacia el centro, línea 9 de metro, numerosas líneas de autobús y acceso
+          rápido a la M-30, M-40, M-45, M-50 y R-3.
+        </p>
+      </div>
+      <div class="office">
+        <h3>Nuestra oficina</h3>
+        <p class="office__addr">
+          <Icon name="pin" />
+          <span>{site.address.street}<br />{site.address.postalCode} {site.address.city} ({site.address.note})</span>
+        </p>
+        <p><Icon name="phone" /> <a href={`tel:${site.phones.office.tel}`}>{site.phones.office.display}</a> · <a href={`tel:${site.phones.mobile.tel}`}>{site.phones.mobile.display}</a></p>
+        <p><Icon name="mail" /> <a href={`mailto:${site.email}`}>{site.email}</a></p>
+        <a class="btn btn--ghost btn--sm" href={site.mapUrl} target="_blank" rel="noopener">
+          Cómo llegar <span class="visually-hidden">(abre un mapa en una pestaña nueva)</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="mision">
+    <div class="container about-split">
+      <div>
+        <p class="eyebrow">Misión y visión</p>
+        <h2 id="mision">Que vender o comprar sea una experiencia agradable</h2>
+        <p>
+          Nuestro objetivo es que la compraventa de un inmueble sea una experiencia agradable, y que el trabajo bien
+          hecho se traduzca en recomendaciones. Queremos ser, en la zona, la inmobiliaria experta y transparente a la que
+          se recurre con confianza.
+        </p>
+        <p>
+          Contamos con un equipo de profesionales cuyo trato cercano está orientado a comprender las necesidades y
+          peculiaridades de cada cliente.
+        </p>
+      </div>
+      <ul class="values">
+        {
+          values.map((v) => (
+            <li>
+              <Icon name="check" />
+              <div>
+                <strong>{v.t}</strong>
+                <span>{v.d}</span>
+              </div>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="section section--tint" id="equipo" aria-labelledby="equipo-title">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Equipo</p>
+          <h2 id="equipo-title">Quién te va a atender</h2>
+        </div>
+      </div>
+      <TeamGrid />
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="datos">
+    <div class="container container--narrow">
+      <h2 id="datos" class="datos__title">Datos de la empresa</h2>
+      <dl class="datos">
+        <div><dt>Razón social</dt><dd>{site.legalName}</dd></div>
+        <div><dt>CIF</dt><dd>{site.taxId}</dd></div>
+        <div><dt>Domicilio</dt><dd>{site.address.street}, {site.address.postalCode} {site.address.city}</dd></div>
+        <div><dt>Actividad</dt><dd>Intermediación inmobiliaria: compraventa y alquiler</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <CtaBand
+    title="¿Hablamos de tu vivienda?"
+    text="Tanto si vendes como si buscas casa, cuéntanos tu caso. Te responderemos personalmente."
+    primary={{ label: 'Contactar', href: '/contacto/' }}
+  />
+</Base>
+
+<style>
+  .about-hero {
+    padding-block: var(--s-6) var(--s-8);
+  }
+  .about-hero h1 {
+    font-size: var(--fs-2xl);
+  }
+  .about-split {
+    display: grid;
+    gap: var(--s-7);
+    align-items: start;
+  }
+  .office {
+    padding: var(--s-6);
+    border-radius: var(--r-lg);
+    background: var(--white);
+    border: 1px solid var(--line);
+  }
+  .office p {
+    display: flex;
+    gap: var(--s-3);
+    align-items: flex-start;
+  }
+  .office :global(svg) {
+    flex: none;
+    margin-top: 3px;
+    color: var(--navy-500);
+  }
+  .values {
+    display: grid;
+    gap: var(--s-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .values li {
+    display: flex;
+    gap: var(--s-3);
+    padding: var(--s-4);
+    border-radius: var(--r-md);
+    background: var(--bg);
+  }
+  .values :global(svg) {
+    flex: none;
+    color: var(--success);
+    margin-top: 2px;
+  }
+  .values div {
+    display: grid;
+  }
+  .values strong {
+    color: var(--navy-900);
+  }
+  .values span {
+    font-size: var(--fs-sm);
+    color: var(--ink-2);
+  }
+  .datos__title {
+    font-size: var(--fs-xl);
+  }
+  .datos {
+    margin: 0;
+  }
+  .datos div {
+    display: grid;
+    gap: var(--s-1);
+    padding: var(--s-3) 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .datos dt {
+    font-size: var(--fs-sm);
+    color: var(--ink-2);
+  }
+  .datos dd {
+    margin: 0;
+    font-weight: 600;
+    color: var(--navy-900);
+  }
+  @media (min-width: 720px) {
+    .datos div {
+      grid-template-columns: 220px 1fr;
+    }
+  }
+  @media (min-width: 900px) {
+    .about-split {
+      grid-template-columns: 1.2fr 1fr;
+    }
+  }
+</style>

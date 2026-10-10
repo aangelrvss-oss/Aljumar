@@ -1,0 +1,8 @@
+# Solo contacto.php es accesible desde fuera.
+Options -Indexes
+<FilesMatch "^(config|config\.example)\.php$">
+  Require all denied
+</FilesMatch>
+<FilesMatch "\.(log|txt|md)$">
+  Require all denied
+</FilesMatch>

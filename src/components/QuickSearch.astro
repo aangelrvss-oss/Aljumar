@@ -1,0 +1,154 @@
+---
+/**
+ * Buscador rápido de la portada. Envía por GET a /comprar/ o /alquilar/ con
+ * los mismos parámetros que entiende el buscador completo.
+ */
+import Icon from './Icon.astro';
+import { byOperation } from '../lib/inventory';
+import { TYPE_GROUP_LABEL } from '../lib/inventory/format';
+
+const all = [...byOperation('venta'), ...byOperation('alquiler')];
+const cities = [...new Set(all.map((p) => p.city).filter((c): c is string => Boolean(c)))].sort((a, b) => a.localeCompare(b, 'es'));
+const groups = [...new Set(all.map((p) => p.typeGroup))];
+const sale = [100000, 150000, 200000, 250000, 300000, 400000, 500000, 750000, 1000000];
+const rent = [600, 800, 1000, 1200, 1500, 2000, 2500];
+const fmt = (n: number) => new Intl.NumberFormat('es-ES').format(n) + ' €';
+---
+
+<form class="qs" action="/comprar/" method="get" role="search" aria-label="Buscar inmuebles" data-quick-search>
+  <fieldset class="qs__ops">
+    <legend class="visually-hidden">Operación</legend>
+    <label><input type="radio" name="_op" value="/comprar/" checked /> <span>Comprar</span></label>
+    <label><input type="radio" name="_op" value="/alquilar/" /> <span>Alquilar</span></label>
+  </fieldset>
+  <div class="qs__fields">
+    {
+      cities.length > 1 && (
+        <div class="field">
+          <label for="qs-ciudad">Localidad</label>
+          <select class="select" id="qs-ciudad" name="ciudad">
+            <option value="">Todas</option>
+            {cities.map((c) => (
+              <option value={c}>{c}</option>
+            ))}
+          </select>
+        </div>
+      )
+    }
+    <div class="field">
+      <label for="qs-tipo">Tipo</label>
+      <select class="select" id="qs-tipo" name="tipo">
+        <option value="">Todos</option>
+        {groups.map((g) => <option value={g}>{TYPE_GROUP_LABEL[g]}</option>)}
+      </select>
+    </div>
+    <div class="field">
+      <label for="qs-precio">Precio máximo</label>
+      <select class="select" id="qs-precio" name="precio_max" data-price>
+        <option value="">Sin límite</option>
+        {sale.map((v) => <option value={v}>{fmt(v)}</option>)}
+      </select>
+    </div>
+    <div class="field">
+      <label for="qs-dorm">Dormitorios</label>
+      <select class="select" id="qs-dorm" name="dormitorios">
+        <option value="">Cualquiera</option>
+        {[1, 2, 3, 4].map((n) => <option value={n}>{n} o más</option>)}
+      </select>
+    </div>
+    <button class="btn btn--accent qs__submit" type="submit">
+      <Icon name="search" /> Buscar
+    </button>
+  </div>
+  <script type="application/json" data-prices set:html={JSON.stringify({ sale, rent })} />
+</form>
+
+<script>
+  document.querySelectorAll<HTMLFormElement>('[data-quick-search]').forEach((form) => {
+    const price = form.querySelector<HTMLSelectElement>('[data-price]')!;
+    const { sale, rent } = JSON.parse(form.querySelector('[data-prices]')!.textContent!) as { sale: number[]; rent: number[] };
+    const fmt = (n: number, r: boolean) => new Intl.NumberFormat('es-ES').format(n) + (r ? ' €/mes' : ' €');
+    const sync = () => {
+      const op = (form.querySelector<HTMLInputElement>('input[name="_op"]:checked')?.value) ?? '/comprar/';
+      form.action = op;
+      const isRent = op === '/alquilar/';
+      price.replaceChildren(new Option('Sin límite', ''), ...(isRent ? rent : sale).map((v) => new Option(fmt(v, isRent), String(v))));
+    };
+    form.addEventListener('change', (e) => {
+      if ((e.target as HTMLInputElement).name === '_op') sync();
+    });
+    form.addEventListener('submit', (e) => {
+      // URL limpia: sin campos vacíos ni el selector de operación.
+      e.preventDefault();
+      const params = new URLSearchParams();
+      new FormData(form).forEach((v, k) => {
+        if (k !== '_op' && typeof v === 'string' && v !== '') params.append(k, v);
+      });
+      const qs = params.toString();
+      location.assign(form.getAttribute('action') + (qs ? `?${qs}` : ''));
+    });
+    sync();
+  });
+</script>
+
+<style>
+  .qs {
+    padding: var(--s-5);
+    border-radius: var(--r-lg);
+    background: var(--white);
+    box-shadow: var(--shadow-lg);
+    color: var(--ink);
+  }
+  .qs__ops {
+    display: inline-flex;
+    gap: 4px;
+    margin: 0 0 var(--s-4);
+    padding: 4px;
+    border: 0;
+    border-radius: var(--r-pill);
+    background: var(--navy-50);
+  }
+  .qs__ops label {
+    position: relative;
+  }
+  .qs__ops input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    margin: 0;
+    cursor: pointer;
+  }
+  .qs__ops span {
+    display: inline-block;
+    padding: 0.5rem 1.2rem;
+    border-radius: var(--r-pill);
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    color: var(--navy-700);
+  }
+  .qs__ops input:checked + span {
+    background: var(--navy-900);
+    color: var(--white);
+  }
+  .qs__ops input:focus-visible + span {
+    outline: 3px solid var(--navy-700);
+    outline-offset: 2px;
+  }
+  .qs__fields {
+    display: grid;
+    gap: var(--s-3);
+  }
+  .qs__submit {
+    align-self: end;
+  }
+  @media (min-width: 560px) {
+    .qs__fields {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  @media (min-width: 1180px) {
+    .qs__fields {
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    }
+  }
+</style>

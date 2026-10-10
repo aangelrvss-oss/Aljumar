@@ -1,0 +1,95 @@
+---
+interface Props {
+  current: number;
+  last: number;
+  /** Ruta de la primera página, con barra final. Las siguientes son base + n + '/'. */
+  base: string;
+}
+const { current, last, base } = Astro.props;
+const href = (n: number) => (n === 1 ? base : `${base}${n}/`);
+const pages = Array.from({ length: last }, (_, i) => i + 1);
+---
+
+{
+  last > 1 && (
+    <nav class="pager" aria-label="Paginación">
+      {current > 1 ? (
+        <a class="pager__step" href={href(current - 1)} rel="prev">
+          ← Anterior
+        </a>
+      ) : (
+        <span class="pager__step" aria-hidden="true" />
+      )}
+      <ol>
+        {pages.map((n) => (
+          <li>
+            {n === current ? (
+              <span aria-current="page">
+                <span class="visually-hidden">Página </span>
+                {n}
+              </span>
+            ) : (
+              <a href={href(n)}>
+                <span class="visually-hidden">Página </span>
+                {n}
+              </a>
+            )}
+          </li>
+        ))}
+      </ol>
+      {current < last ? (
+        <a class="pager__step" href={href(current + 1)} rel="next">
+          Siguiente →
+        </a>
+      ) : (
+        <span class="pager__step" aria-hidden="true" />
+      )}
+    </nav>
+  )
+}
+
+<style>
+  .pager {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--s-3);
+    margin-top: var(--s-7);
+  }
+  ol {
+    display: flex;
+    gap: var(--s-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  ol a,
+  ol span[aria-current] {
+    display: inline-grid;
+    place-items: center;
+    min-width: 44px;
+    height: 44px;
+    border-radius: var(--r-md);
+    font-weight: 700;
+    text-decoration: none;
+  }
+  ol a {
+    color: var(--navy-900);
+    border: 1.5px solid var(--line);
+  }
+  ol a:hover {
+    border-color: var(--navy-700);
+  }
+  span[aria-current] {
+    background: var(--navy-900);
+    color: var(--white);
+  }
+  .pager__step {
+    min-width: 110px;
+    font-weight: 700;
+  }
+  .pager__step:last-child {
+    text-align: right;
+  }
+</style>

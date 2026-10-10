@@ -1,0 +1,72 @@
+# Configuración del panel de contenidos (Sveltia CMS, compatible con Decap CMS).
+# Acceso: https://aljumar.es/admin/ → «Iniciar sesión con token de acceso de GitHub»
+# (token de grano fino con permiso de lectura/escritura de contenidos SOLO en
+# este repositorio). Ver docs/operations/admin.md.
+backend:
+  name: github
+  repo: aangelrvss-oss/aljumar
+  branch: main
+  commit_messages:
+    create: 'Contenido: crear {{collection}} «{{slug}}»'
+    update: 'Contenido: actualizar {{collection}} «{{slug}}»'
+    delete: 'Contenido: eliminar {{collection}} «{{slug}}»'
+    uploadMedia: 'Medios: subir «{{path}}»'
+    deleteMedia: 'Medios: eliminar «{{path}}»'
+
+locale: es
+site_url: https://aljumar.es
+display_url: https://aljumar.es
+media_folder: public/media
+public_folder: /media
+
+collections:
+  - name: blog
+    label: Consejos inmobiliarios
+    label_singular: Artículo
+    description: Artículos del blog. La URL pública es aljumar.es/<identificador>/. No cambies el identificador de un artículo publicado.
+    folder: src/content/blog
+    create: true
+    slug: '{{slug}}'
+    extension: md
+    format: frontmatter
+    sortable_fields: [pubDate, title]
+    summary: '{{title}} · {{pubDate | date("DD/MM/YYYY")}}'
+    fields:
+      - { name: title, label: Título, widget: string, hint: 'Entre 40 y 65 caracteres funciona mejor en Google.' }
+      - { name: description, label: Resumen, widget: text, hint: 'Una o dos frases. Se usa en los listados y en Google (unos 150 caracteres).' }
+      - name: topic
+        label: Tema
+        widget: select
+        options:
+          - { label: Comprar y vender, value: comprar-y-vender }
+          - { label: Mercado y normativa, value: mercado-y-normativa }
+          - { label: Hogar y reformas, value: hogar-y-reformas }
+      - { name: pubDate, label: Fecha de publicación, widget: datetime, format: 'YYYY-MM-DD', time_format: false }
+      - { name: updatedDate, label: Fecha de actualización, widget: datetime, format: 'YYYY-MM-DD', time_format: false, required: false }
+      - { name: image, label: Imagen destacada, widget: image, required: false, hint: 'Usa fotos propias o con licencia. Nunca fotos de inmuebles que no sean de la cartera de Aljumar.' }
+      - { name: imageAlt, label: Descripción de la imagen, widget: string, required: false, hint: 'Qué se ve en la foto (accesibilidad).' }
+      - { name: draft, label: Borrador (no publicar), widget: boolean, default: false, required: false }
+      - { name: body, label: Contenido, widget: markdown }
+
+  - name: ajustes
+    label: Datos del negocio
+    editor:
+      preview: false
+    files:
+      - name: settings
+        label: Contacto y equipo
+        file: src/data/settings.json
+        format: json
+        fields:
+          - { name: email, label: Correo de contacto, widget: string }
+          - { name: phoneOffice, label: Teléfono de oficina, widget: string, hint: 'Formato: 91 333 90 83' }
+          - { name: phoneMobile, label: Teléfono móvil, widget: string }
+          - { name: whatsapp, label: WhatsApp, widget: string, required: false, hint: 'Déjalo vacío para no mostrar el botón de WhatsApp.' }
+          - { name: openingHours, label: Horario de atención, widget: string, required: false, hint: 'Ejemplo: Lunes a viernes, de 10:00 a 14:00 y de 17:00 a 20:00. Vacío = no se muestra.' }
+          - name: team
+            label: Equipo
+            widget: list
+            fields:
+              - { name: name, label: Nombre, widget: string }
+              - { name: role, label: Cargo, widget: string, required: false }
+              - { name: photo, label: Foto, widget: image, required: false }

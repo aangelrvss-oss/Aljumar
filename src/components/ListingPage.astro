@@ -1,0 +1,77 @@
+---
+import Base from '../layouts/Base.astro';
+import PropertySearch from './PropertySearch.astro';
+import CtaBand from './CtaBand.astro';
+import { byOperation } from '../lib/inventory';
+import type { Operation } from '../lib/inventory/types';
+
+interface Props {
+  operation: Operation;
+  title: string;
+  seoTitle: string;
+  description: string;
+  intro: string;
+  crumb: string;
+}
+const { operation, title, seoTitle, description, intro, crumb } = Astro.props;
+const count = byOperation(operation).length;
+const path = Astro.url.pathname;
+// Una página de resultados vacía no aporta nada en los buscadores.
+const noindex = count === 0;
+const itemList = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: title,
+  numberOfItems: count,
+  itemListElement: byOperation(operation)
+    .slice(0, 30)
+    .map((p, i) => ({ '@type': 'ListItem', position: i + 1, url: new URL(`/inmueble/${p.slug}/`, Astro.site).href })),
+};
+---
+
+<Base
+  title={seoTitle}
+  description={description}
+  noindex={noindex}
+  breadcrumbs={[
+    { name: 'Inicio', href: '/' },
+    { name: crumb, href: path },
+  ]}
+  jsonLd={count ? [itemList] : []}
+>
+  <section class="listing-hero">
+    <div class="container">
+      <p class="eyebrow">{crumb}</p>
+      <h1>{title}</h1>
+      <p class="lead">{intro}</p>
+    </div>
+  </section>
+
+  <section class="container listing-body">
+    <PropertySearch operation={operation} />
+  </section>
+
+  <slot />
+
+  <CtaBand
+    title="¿No encuentras lo que buscas?"
+    text="Muchas operaciones se cierran antes de publicarse. Cuéntanos qué necesitas y te avisamos en cuanto entre algo que encaje."
+    primary={{ label: 'Contarnos qué busco', href: `/contacto/?motivo=${operation === 'alquiler' ? 'alquilar' : 'comprar'}#formulario` }}
+  />
+</Base>
+
+<style>
+  .listing-hero {
+    padding-block: var(--s-6) var(--s-5);
+  }
+  .listing-hero h1 {
+    font-size: var(--fs-2xl);
+    margin-bottom: var(--s-3);
+  }
+  .listing-hero .lead {
+    margin: 0;
+  }
+  .listing-body {
+    padding-bottom: var(--section);
+  }
+</style>

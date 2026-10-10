@@ -1,0 +1,40 @@
+---
+import Base from '../layouts/Base.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  path: string;
+  updated: string;
+}
+const { title, description, path, updated } = Astro.props;
+---
+
+<Base
+  title={title}
+  description={description}
+  breadcrumbs={[
+    { name: 'Inicio', href: '/' },
+    { name: title, href: path },
+  ]}
+>
+  <article class="legal container container--narrow">
+    <h1>{title}</h1>
+    <p class="muted">Última actualización: {updated}</p>
+    <div class="prose">
+      <slot />
+    </div>
+  </article>
+</Base>
+
+<style>
+  .legal {
+    padding-block: var(--s-5) var(--section);
+  }
+  .legal h1 {
+    font-size: var(--fs-2xl);
+  }
+  .legal :global(.prose) {
+    font-size: var(--fs-base);
+  }
+</style>

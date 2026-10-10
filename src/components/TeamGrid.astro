@@ -1,0 +1,80 @@
+---
+/**
+ * Equipo. Las fotos son las publicadas en la web actual (wp-content). Si el
+ * archivo no está en public/ (aún no se han migrado los medios), se muestran
+ * las iniciales en lugar de una imagen rota.
+ */
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { team } from '../data/site';
+
+const members = team.map((m) => ({
+  ...m,
+  hasPhoto: existsSync(resolve(process.cwd(), 'public', '.' + m.photo)),
+  initials: m.name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join(''),
+}));
+---
+
+<ul class="team">
+  {
+    members.map((m) => (
+      <li class="team__member">
+        {m.hasPhoto ? (
+          <img src={m.photo} alt={`Retrato de ${m.name}`} width="320" height="320" loading="lazy" decoding="async" />
+        ) : (
+          <span class="team__initials" aria-hidden="true">
+            {m.initials}
+          </span>
+        )}
+        <p class="team__name">{m.name}</p>
+        {m.role && <p class="team__role">{m.role}</p>}
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .team {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+    gap: var(--s-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .team__member {
+    text-align: center;
+  }
+  .team__member img,
+  .team__initials {
+    width: 100%;
+    max-width: 220px;
+    aspect-ratio: 1;
+    margin: 0 auto var(--s-3);
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 0 0 6px var(--white), 0 0 0 8px var(--lime-500);
+  }
+  .team__initials {
+    display: grid;
+    place-items: center;
+    background: var(--navy-700);
+    color: var(--white);
+    font-family: var(--font-display);
+    font-size: 3rem;
+  }
+  .team__role {
+    margin: 0;
+    font-size: var(--fs-sm);
+    color: var(--ink-2);
+  }
+  .team__name {
+    margin: 0;
+    font-weight: 700;
+    color: var(--navy-900);
+  }
+</style>

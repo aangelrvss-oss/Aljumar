@@ -1,0 +1,86 @@
+---
+/**
+ * Logotipo corporativo. Se usa SIEMPRE el archivo original de Aljumar, sin
+ * redibujarlo. Busca, por orden, estos archivos en public/brand/:
+ *
+ *   logo-horizontal.svg | .png | .jpg   (cabecera)
+ *   logo-vertical.svg   | .png | .jpg   (pie, bloques cuadrados)
+ *
+ * Los originales están publicados en la web antigua y los descarga
+ * `npm run media:fetch` (ver docs/migration). Mientras no exista ningún
+ * archivo, se muestra el nombre comercial en texto, sin imitar el símbolo,
+ * y `npm run check` lo marca como pendiente.
+ */
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { site } from '../data/site';
+
+interface Props {
+  variant?: 'horizontal' | 'vertical';
+  /** Fondo sobre el que se coloca: ajusta el texto alternativo de reserva. */
+  tone?: 'light' | 'dark';
+  height?: number;
+}
+const { variant = 'horizontal', tone = 'light', height = 48 } = Astro.props;
+
+const publicDir = resolve(process.cwd(), 'public');
+const candidates = [variant, variant === 'horizontal' ? 'vertical' : 'horizontal'].flatMap((v) =>
+  ['svg', 'png', 'jpg', 'webp'].map((ext) => `/brand/logo-${v}.${ext}`),
+);
+const file = candidates.find((c) => existsSync(resolve(publicDir, '.' + c)));
+const isVerticalFile = file?.includes('vertical');
+---
+
+{
+  file ? (
+    <img
+      class:list={['logo', `logo--${isVerticalFile ? 'vertical' : 'horizontal'}`]}
+      src={file}
+      alt={site.name}
+      height={height}
+      style={`height:${height}px;width:auto`}
+      decoding="async"
+    />
+  ) : (
+    <span class:list={['logo-text', `logo-text--${tone}`]} data-logo-pending>
+      <span class="logo-text__name">Aljumar</span>
+      <span class="logo-text__sub">Inmuebles</span>
+    </span>
+  )
+}
+
+<style>
+  .logo {
+    display: block;
+    border-radius: 4px;
+  }
+  .logo-text {
+    display: inline-grid;
+    line-height: 1;
+    font-family: var(--font-sans);
+    text-transform: uppercase;
+  }
+  .logo-text__name {
+    font-weight: 800;
+    font-size: 1.45rem;
+    letter-spacing: 0.06em;
+  }
+  .logo-text__sub {
+    margin-top: 4px;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.42em;
+  }
+  .logo-text--light .logo-text__name {
+    color: var(--navy-900);
+  }
+  .logo-text--light .logo-text__sub {
+    color: var(--navy-700);
+  }
+  .logo-text--dark .logo-text__name {
+    color: var(--white);
+  }
+  .logo-text--dark .logo-text__sub {
+    color: var(--lime-500);
+  }
+</style>

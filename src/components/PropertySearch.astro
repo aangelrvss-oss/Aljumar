@@ -1,0 +1,703 @@
+---
+/**
+ * Buscador con filtros. Todas las tarjetas se generan en HTML (indexables y
+ * visibles sin JavaScript); el script filtra, ordena y pagina en el navegador
+ * con la misma lógica que las pruebas (src/lib/inventory/filters.ts) y guarda
+ * los criterios en la URL (?ciudad=…&dormitorios=…).
+ */
+import PropertyCard from './PropertyCard.astro';
+import Icon from './Icon.astro';
+import { byOperation, filterOptions } from '../lib/inventory';
+import { SORTS, toSearchItem } from '../lib/inventory/filters';
+import { TYPE_GROUP_LABEL } from '../lib/inventory/format';
+import type { Operation } from '../lib/inventory/types';
+
+interface Props {
+  operation: Operation;
+}
+const { operation } = Astro.props;
+const list = byOperation(operation);
+const opts = filterOptions(operation);
+const items = list.map((p, i) => toSearchItem(p, i));
+
+const priceSteps =
+  operation === 'alquiler'
+    ? [500, 700, 900, 1100, 1300, 1500, 1800, 2200, 2600, 3000, 4000]
+    : [60000, 100000, 150000, 200000, 250000, 300000, 350000, 400000, 500000, 600000, 750000, 1000000, 1500000, 2000000];
+const fmt = (n: number) => new Intl.NumberFormat('es-ES').format(n) + (operation === 'alquiler' ? ' €/mes' : ' €');
+const PAGE = 12;
+---
+
+<div class="search" data-search data-operation={operation} data-page-size={PAGE}>
+  <script type="application/json" data-search-items set:html={JSON.stringify(items)} />
+
+  <div class="search__toolbar">
+    <p class="search__count" aria-live="polite" aria-atomic="true" data-count>
+      <strong>{list.length}</strong>
+      {list.length === 1 ? 'inmueble' : 'inmuebles'}
+    </p>
+    <div class="search__tools">
+      <button
+        type="button"
+        class="btn btn--ghost btn--sm search__open"
+        aria-controls="filtros"
+        aria-expanded="false"
+        data-filters-open
+      >
+        <Icon name="sliders" size={18} /> Filtros <span class="search__badge" data-active-count hidden></span>
+      </button>
+      <label class="search__sort">
+        <span class="visually-hidden">Ordenar resultados</span>
+        <select class="select" name="orden" form="form-filtros" data-sort>
+          {SORTS.map((s) => <option value={s.value}>{s.label}</option>)}
+        </select>
+      </label>
+    </div>
+  </div>
+
+  <div class="search__layout">
+    <aside class="filters" id="filtros" aria-labelledby="filtros-titulo" data-filters>
+      <div class="filters__head">
+        <h2 id="filtros-titulo" class="filters__title">Filtrar</h2>
+        <button type="button" class="filters__close" data-filters-close>
+          <Icon name="close" />
+          <span class="visually-hidden">Cerrar filtros</span>
+        </button>
+      </div>
+
+      <form id="form-filtros" class="filters__form" method="get" data-form>
+        {
+          opts.cities.length > 1 && (
+            <div class="field">
+              <label for="f-ciudad">Localidad</label>
+              <select id="f-ciudad" name="ciudad" class="select">
+                <option value="">Todas</option>
+                {opts.cities.map((c) => (
+                  <option value={c.value}>
+                    {c.label} ({c.count})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )
+        }
+        {
+          opts.zones.length > 0 && (
+            <div class="field">
+              <label for="f-zona">Zona o barrio</label>
+              <select id="f-zona" name="zona" class="select">
+                <option value="">Todas</option>
+                {opts.zones.map((z) => (
+                  <option value={z.value}>
+                    {z.label} ({z.count})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )
+        }
+        {
+          opts.typeGroups.length > 1 && (
+            <div class="field">
+              <label for="f-tipo">Tipo de inmueble</label>
+              <select id="f-tipo" name="tipo" class="select">
+                <option value="">Todos</option>
+                {opts.typeGroups.map((t) => (
+                  <option value={t.value}>
+                    {TYPE_GROUP_LABEL[t.value as keyof typeof TYPE_GROUP_LABEL]} ({t.count})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )
+        }
+        <fieldset class="field filters__pair">
+          <legend>Precio</legend>
+          <label class="visually-hidden" for="f-pmin">Precio mínimo</label>
+          <select id="f-pmin" name="precio_min" class="select">
+            <option value="">Mín.</option>
+            {priceSteps.map((s) => <option value={s}>{fmt(s)}</option>)}
+          </select>
+          <label class="visually-hidden" for="f-pmax">Precio máximo</label>
+          <select id="f-pmax" name="precio_max" class="select">
+            <option value="">Máx.</option>
+            {priceSteps.map((s) => <option value={s}>{fmt(s)}</option>)}
+          </select>
+        </fieldset>
+        <div class="field">
+          <label for="f-sup">Superficie mínima</label>
+          <select id="f-sup" name="superficie_min" class="select">
+            <option value="">Cualquiera</option>
+            {[40, 60, 80, 100, 150, 200, 300].map((s) => <option value={s}>{s} m² o más</option>)}
+          </select>
+        </div>
+        <fieldset class="field">
+          <legend>Dormitorios</legend>
+          <div class="chips" role="radiogroup">
+            {
+              ['', '1', '2', '3', '4'].map((v) => (
+                <label class="chip">
+                  <input type="radio" name="dormitorios" value={v} checked={v === ''} />
+                  <span>{v === '' ? 'Todos' : `${v}+`}</span>
+                </label>
+              ))
+            }
+          </div>
+        </fieldset>
+        <fieldset class="field">
+          <legend>Baños</legend>
+          <div class="chips" role="radiogroup">
+            {
+              ['', '1', '2', '3'].map((v) => (
+                <label class="chip">
+                  <input type="radio" name="banos" value={v} checked={v === ''} />
+                  <span>{v === '' ? 'Todos' : `${v}+`}</span>
+                </label>
+              ))
+            }
+          </div>
+        </fieldset>
+        {
+          opts.features.length > 0 && (
+            <fieldset class="field">
+              <legend>Características</legend>
+              <div class="checks">
+                {opts.features
+                  .sort((a, b) => b.count - a.count)
+                  .slice(0, 10)
+                  .map((f) => (
+                    <label class="check">
+                      <input type="checkbox" name="extra" value={f.value} />
+                      <span>
+                        {f.label} <span class="muted">({f.count})</span>
+                      </span>
+                    </label>
+                  ))}
+              </div>
+            </fieldset>
+          )
+        }
+        <div class="filters__actions">
+          <button type="reset" class="btn btn--ghost" data-reset>Limpiar filtros</button>
+          <button type="submit" class="btn btn--accent filters__apply" data-apply>
+            Ver <span data-apply-count>{list.length}</span> resultados
+          </button>
+        </div>
+      </form>
+    </aside>
+
+    <div class="search__results">
+      <div class="search__chips" data-chips hidden></div>
+      <ul class="results" data-results>
+        {
+          list.map((p, i) => (
+            <li data-item={p.id}>
+              <PropertyCard property={p} operation={operation} eager={i < 3} headingLevel="h2" />
+            </li>
+          ))
+        }
+      </ul>
+
+      <div class="search__empty" data-empty hidden={list.length > 0 ? true : undefined}>
+        <Icon name="search" size={32} />
+        <h2>{list.length === 0 ? 'Ahora mismo no hay inmuebles publicados' : 'No hay inmuebles con estos filtros'}</h2>
+        <p>
+          {
+            list.length === 0
+              ? 'Nuestra cartera cambia cada semana. Cuéntanos qué buscas y te avisaremos en cuanto tengamos algo que encaje.'
+              : 'Prueba a ampliar el precio o quitar alguna característica. Si nos cuentas qué buscas, te avisamos cuando entre algo que encaje.'
+          }
+        </p>
+        <div class="search__empty-actions">
+          {list.length > 0 && (
+            <button type="button" class="btn btn--ghost" data-clear>
+              Quitar todos los filtros
+            </button>
+          )}
+          <a class="btn btn--accent" href={`/contacto/?motivo=${operation === 'alquiler' ? 'alquilar' : 'comprar'}#formulario`}>
+            Cuéntanos qué buscas
+          </a>
+        </div>
+      </div>
+
+      <div class="search__more" data-more-wrap hidden>
+        <button type="button" class="btn btn--ghost" data-more>Ver más inmuebles</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { activeCount, criteriaFromParams, criteriaToParams, search, type Criteria, type SearchItem } from '../lib/inventory/filters';
+  import type { Operation } from '../lib/inventory/types';
+
+  const root = document.querySelector<HTMLElement>('[data-search]');
+  if (root) init(root);
+
+  function init(root: HTMLElement) {
+    const operation = root.dataset.operation as Operation;
+    const pageSize = Number(root.dataset.pageSize) || 12;
+    const items = JSON.parse(root.querySelector('[data-search-items]')!.textContent || '[]') as SearchItem[];
+    const form = root.querySelector<HTMLFormElement>('[data-form]')!;
+    const sort = root.querySelector<HTMLSelectElement>('[data-sort]')!;
+    const list = root.querySelector<HTMLElement>('[data-results]')!;
+    const countEl = root.querySelector<HTMLElement>('[data-count]')!;
+    const applyCount = root.querySelector<HTMLElement>('[data-apply-count]');
+    const activeBadge = root.querySelector<HTMLElement>('[data-active-count]')!;
+    const empty = root.querySelector<HTMLElement>('[data-empty]')!;
+    const moreWrap = root.querySelector<HTMLElement>('[data-more-wrap]')!;
+    const more = root.querySelector<HTMLButtonElement>('[data-more]')!;
+    const chips = root.querySelector<HTMLElement>('[data-chips]')!;
+    const panel = root.querySelector<HTMLElement>('[data-filters]')!;
+    const openBtn = root.querySelector<HTMLButtonElement>('[data-filters-open]')!;
+    const closeBtn = root.querySelector<HTMLButtonElement>('[data-filters-close]')!;
+    const rows = new Map<string, HTMLElement>();
+    list.querySelectorAll<HTMLElement>('[data-item]').forEach((li) => rows.set(li.dataset.item!, li));
+    let shown = pageSize;
+    const mobile = window.matchMedia('(max-width: 959px)');
+
+    // --- Estado ⇄ formulario ⇄ URL ---
+    function readForm(): Criteria {
+      const params = new URLSearchParams();
+      new FormData(form).forEach((v, k) => {
+        if (typeof v === 'string' && v !== '') params.append(k, v);
+      });
+      params.set('orden', sort.value);
+      return criteriaFromParams(params, operation);
+    }
+
+    function writeForm(c: Criteria) {
+      const set = (name: string, value: string) => {
+        const el = form.elements.namedItem(name);
+        if (el instanceof HTMLSelectElement) {
+          el.value = [...el.options].some((o) => o.value === value) ? value : '';
+        } else if (el instanceof RadioNodeList) {
+          for (const r of el) if (r instanceof HTMLInputElement) r.checked = r.value === value;
+        }
+      };
+      set('ciudad', c.city ?? '');
+      set('zona', c.zone ?? '');
+      set('tipo', c.typeGroup ?? '');
+      set('precio_min', c.priceMin?.toString() ?? '');
+      set('precio_max', c.priceMax?.toString() ?? '');
+      set('superficie_min', c.areaMin?.toString() ?? '');
+      set('dormitorios', c.bedroomsMin?.toString() ?? '');
+      set('banos', c.bathroomsMin?.toString() ?? '');
+      form.querySelectorAll<HTMLInputElement>('input[name="extra"]').forEach((cb) => (cb.checked = c.features.includes(cb.value)));
+      sort.value = c.sort;
+    }
+
+    function labelFor(name: string, value: string): string {
+      const el = form.elements.namedItem(name);
+      if (el instanceof HTMLSelectElement) return el.selectedOptions[0]?.textContent?.replace(/\s*\(\d+\)$/, '') ?? value;
+      if (name === 'dormitorios') return `${value}+ dormitorios`;
+      if (name === 'banos') return `${value}+ baños`;
+      return value;
+    }
+
+    function renderChips(c: Criteria) {
+      const params = criteriaToParams(c);
+      params.delete('orden');
+      chips.replaceChildren();
+      const entries = [...params.entries()];
+      chips.hidden = entries.length === 0;
+      for (const [k, v] of entries) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'filter-chip';
+        const prefix = k === 'precio_min' ? 'Desde ' : k === 'precio_max' ? 'Hasta ' : '';
+        b.textContent = prefix + labelFor(k, v);
+        b.setAttribute('aria-label', `Quitar filtro: ${b.textContent}`);
+        b.addEventListener('click', () => {
+          const next = criteriaToParams(readForm());
+          const all = next.getAll(k).filter((x) => x !== v);
+          next.delete(k);
+          all.forEach((x) => next.append(k, x));
+          writeForm(criteriaFromParams(next, operation));
+          update(true);
+        });
+        chips.append(b);
+      }
+      if (entries.length > 1) {
+        const clear = document.createElement('button');
+        clear.type = 'button';
+        clear.className = 'filter-chip filter-chip--clear';
+        clear.textContent = 'Quitar todos';
+        clear.addEventListener('click', clearAll);
+        chips.append(clear);
+      }
+    }
+
+    function update(resetPage = false, pushUrl = true) {
+      const c = readForm();
+      const result = search(items, c);
+      if (resetPage) shown = pageSize;
+      // Reordena y muestra solo los resultados (y la página actual).
+      const visible = new Set(result.slice(0, shown).map((i) => i.id));
+      for (const r of result) {
+        const li = rows.get(r.id);
+        if (li) list.append(li);
+      }
+      rows.forEach((li, id) => (li.hidden = !visible.has(id)));
+      const n = result.length;
+      countEl.innerHTML = `<strong>${n}</strong> ${n === 1 ? 'inmueble' : 'inmuebles'}`;
+      if (applyCount) applyCount.textContent = String(n);
+      empty.hidden = n > 0;
+      moreWrap.hidden = n <= shown;
+      const active = activeCount(c);
+      activeBadge.hidden = active === 0;
+      activeBadge.textContent = String(active);
+      renderChips(c);
+      if (pushUrl) {
+        const qs = criteriaToParams(c).toString();
+        history.replaceState(null, '', qs ? `?${qs}` : location.pathname);
+      }
+    }
+
+    function clearAll() {
+      form.reset();
+      sort.value = 'recientes';
+      update(true);
+    }
+
+    // --- Panel de filtros en móvil (diálogo accesible) ---
+    function openPanel() {
+      panel.classList.add('is-open');
+      panel.setAttribute('role', 'dialog');
+      panel.setAttribute('aria-modal', 'true');
+      openBtn.setAttribute('aria-expanded', 'true');
+      document.documentElement.classList.add('filters-open');
+      closeBtn.focus();
+    }
+    function closePanel(focus = true) {
+      panel.classList.remove('is-open');
+      panel.removeAttribute('role');
+      panel.removeAttribute('aria-modal');
+      openBtn.setAttribute('aria-expanded', 'false');
+      document.documentElement.classList.remove('filters-open');
+      if (focus) openBtn.focus();
+    }
+    openBtn.addEventListener('click', openPanel);
+    closeBtn.addEventListener('click', () => closePanel());
+    panel.addEventListener('keydown', (e) => {
+      if (!panel.classList.contains('is-open')) return;
+      if (e.key === 'Escape') closePanel();
+      if (e.key === 'Tab') {
+        const f = [...panel.querySelectorAll<HTMLElement>('button, select, input, a[href]')].filter((el) => !el.hasAttribute('disabled') && el.offsetParent !== null);
+        const first = f[0];
+        const last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last?.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first?.focus();
+        }
+      }
+    });
+    mobile.addEventListener('change', (e) => {
+      if (!e.matches) closePanel(false);
+    });
+
+    // --- Eventos ---
+    form.addEventListener('change', () => update(true));
+    sort.addEventListener('change', () => update(true));
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      update(true);
+      if (mobile.matches) closePanel();
+      countEl.scrollIntoView({ block: 'start' });
+    });
+    form.addEventListener('reset', () => setTimeout(() => update(true)));
+    root.querySelector('[data-clear]')?.addEventListener('click', clearAll);
+    more.addEventListener('click', () => {
+      const firstHidden = [...list.querySelectorAll<HTMLElement>('[data-item][hidden]')][0];
+      shown += pageSize;
+      update(false);
+      firstHidden?.querySelector<HTMLAnchorElement>('a')?.focus();
+    });
+
+    // Estado inicial desde la URL (búsqueda compartida o recargada).
+    writeForm(criteriaFromParams(new URLSearchParams(location.search), operation));
+    update(true, false);
+    root.classList.add('is-ready');
+  }
+</script>
+
+<style>
+  .search__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-3);
+    margin-bottom: var(--s-5);
+  }
+  .search__count {
+    margin: 0;
+    font-size: var(--fs-md);
+    color: var(--ink-2);
+  }
+  .search__count :global(strong) {
+    color: var(--navy-900);
+    font-family: var(--font-display);
+    font-size: var(--fs-lg);
+  }
+  .search__tools {
+    display: flex;
+    gap: var(--s-2);
+    align-items: center;
+  }
+  .search__sort .select {
+    min-height: 40px;
+    padding-block: 0.4rem;
+    font-size: var(--fs-sm);
+    width: auto;
+  }
+  .search__badge {
+    display: inline-grid;
+    place-items: center;
+    min-width: 22px;
+    height: 22px;
+    border-radius: 11px;
+    background: var(--lime-500);
+    color: var(--navy-950);
+    font-size: var(--fs-xs);
+  }
+  .search__layout {
+    display: grid;
+    gap: var(--s-6);
+  }
+  .results {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr));
+    gap: var(--s-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .results > li[hidden] {
+    display: none;
+  }
+  .search__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+    margin-bottom: var(--s-4);
+  }
+  .search__chips[hidden] {
+    display: none;
+  }
+  .search__chips :global(.filter-chip) {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 0.3rem 0.8rem;
+    border: 1.5px solid var(--navy-200);
+    border-radius: var(--r-pill);
+    background: var(--navy-50);
+    color: var(--navy-900);
+    font: inherit;
+    font-size: var(--fs-xs);
+    font-weight: 650;
+    cursor: pointer;
+  }
+  .search__chips :global(.filter-chip)::after {
+    content: '×';
+    font-size: 1.1em;
+  }
+  .search__chips :global(.filter-chip--clear) {
+    background: transparent;
+    border-style: dashed;
+  }
+  .search__chips :global(.filter-chip--clear)::after {
+    content: none;
+  }
+  .search__empty {
+    display: grid;
+    justify-items: center;
+    gap: var(--s-2);
+    padding: var(--s-7) var(--s-5);
+    border: 1.5px dashed var(--line-strong);
+    border-radius: var(--r-lg);
+    background: var(--bg);
+    text-align: center;
+    color: var(--navy-700);
+  }
+  .search__empty[hidden] {
+    display: none;
+  }
+  .search__empty h2 {
+    margin: var(--s-2) 0 0;
+    font-size: var(--fs-xl);
+  }
+  .search__empty p {
+    max-width: 52ch;
+    color: var(--ink-2);
+  }
+  .search__empty-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--s-3);
+  }
+  .search__more {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--s-6);
+  }
+  .search__more[hidden] {
+    display: none;
+  }
+
+  /* Filtros */
+  .filters__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--s-4);
+  }
+  .filters__title {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: var(--fs-md);
+  }
+  .filters__close {
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: var(--r-md);
+    background: var(--navy-50);
+    color: var(--navy-900);
+    cursor: pointer;
+  }
+  .filters__form {
+    display: grid;
+    gap: var(--s-5);
+  }
+  .filters fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .filters legend {
+    margin-bottom: var(--s-2);
+  }
+  .filters__pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--s-2);
+  }
+  .filters__pair legend {
+    grid-column: 1 / -1;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+  }
+  .chip {
+    position: relative;
+  }
+  .chip input {
+    position: absolute;
+    opacity: 0;
+    inset: 0;
+    margin: 0;
+    cursor: pointer;
+  }
+  .chip span {
+    display: inline-grid;
+    place-items: center;
+    min-width: 52px;
+    min-height: 44px;
+    padding: 0 var(--s-3);
+    border: 1.5px solid var(--line-strong);
+    border-radius: var(--r-pill);
+    font-size: var(--fs-sm);
+    font-weight: 650;
+    color: var(--navy-900);
+    background: var(--white);
+  }
+  .chip input:checked + span {
+    background: var(--navy-900);
+    border-color: var(--navy-900);
+    color: var(--white);
+  }
+  .chip input:focus-visible + span {
+    outline: 3px solid var(--navy-700);
+    outline-offset: 2px;
+  }
+  .checks {
+    display: grid;
+    gap: var(--s-2);
+  }
+  .filters__actions {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: var(--s-2);
+    position: sticky;
+    bottom: 0;
+    padding-top: var(--s-3);
+    background: inherit;
+  }
+
+  @media (max-width: 959px) {
+    .filters {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      overflow-y: auto;
+      padding: var(--s-5) var(--gutter) 0;
+      background: var(--white);
+      transform: translateY(100%);
+      visibility: hidden;
+      transition:
+        transform 260ms var(--ease),
+        visibility 0s linear 260ms;
+    }
+    .filters.is-open {
+      transform: none;
+      visibility: visible;
+      transition: transform 260ms var(--ease);
+    }
+    .filters__actions {
+      padding-bottom: calc(var(--s-4) + env(safe-area-inset-bottom));
+      background: var(--white);
+      border-top: 1px solid var(--line);
+      margin-inline: calc(-1 * var(--gutter));
+      padding-inline: var(--gutter);
+    }
+    :global(html.filters-open) {
+      overflow: hidden;
+    }
+  }
+
+  @media (min-width: 960px) {
+    .search__layout {
+      grid-template-columns: 290px 1fr;
+      align-items: start;
+    }
+    .filters {
+      padding: var(--s-5);
+      border: 1px solid var(--line);
+      border-radius: var(--r-lg);
+      background: var(--white);
+    }
+    .search__open,
+    .filters__close,
+    .filters__apply {
+      display: none;
+    }
+    .filters__actions {
+      position: static;
+      grid-template-columns: 1fr;
+    }
+    .search__toolbar {
+      margin-left: calc(290px + var(--s-6));
+    }
+  }
+</style>

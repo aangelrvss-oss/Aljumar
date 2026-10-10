@@ -1,0 +1,90 @@
+/*
+ * Tokens de diseño de Aljumar Inmuebles.
+ * Paleta derivada del logotipo (azul marino + verde lima). Contrastes WCAG
+ * verificados en tests/unit/contrast.test.ts:
+ *   --ink sobre --white ........ 14,9:1   --ink-2 sobre --white ...... 4,9:1
+ *   --navy-700 sobre --white ... 8,9:1    --lime-500 sobre --navy-900 . 7,5:1
+ *   --navy-900 sobre --lime-500  7,5:1    --white sobre --navy-700 .... 8,9:1
+ * El lima NO se usa como color de texto sobre fondos claros (1,6:1).
+ */
+:root {
+  /* Color */
+  --navy-950: #0f2537;
+  --navy-900: #17354f;
+  --navy-700: #284b6a;
+  --navy-500: #4a6d8c;
+  --navy-200: #c9d6e2;
+  --navy-100: #e8eef4;
+  --navy-50: #f3f6f9;
+  --lime-500: #bfd600;
+  --lime-600: #a9be00;
+  --lime-200: #e6f09a;
+  --lime-100: #f5f9dc;
+  --white: #ffffff;
+  --bg: #f5f7f9;
+  --ink: #202a35;
+  --ink-2: #5b6876;
+  --line: #dbe2e8;
+  --line-strong: #b9c4ce;
+  --danger: #b42318;
+  --danger-bg: #fdf0ef;
+  --success: #1d6b3a;
+  --success-bg: #ecf7f0;
+  --warning-bg: #fff7e0;
+  --warning: #7a5200;
+
+  /* Tipografía */
+  --font-display: 'Fraunces Variable', 'Iowan Old Style', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --fs-xs: 0.8125rem;
+  --fs-sm: 0.9375rem;
+  --fs-base: 1.0625rem;
+  --fs-md: 1.1875rem;
+  --fs-lg: clamp(1.3rem, 1.15rem + 0.6vw, 1.55rem);
+  --fs-xl: clamp(1.6rem, 1.3rem + 1.2vw, 2.15rem);
+  --fs-2xl: clamp(2rem, 1.45rem + 2.2vw, 2.9rem);
+  --fs-3xl: clamp(2.35rem, 1.6rem + 3.2vw, 3.75rem);
+  --lh-tight: 1.12;
+  --lh-snug: 1.3;
+  --lh-body: 1.65;
+
+  /* Espaciado (escala de 4 px) */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-5: 1.5rem;
+  --s-6: 2rem;
+  --s-7: 3rem;
+  --s-8: 4rem;
+  --s-9: 5.5rem;
+  --s-10: 7rem;
+  --section: clamp(3.5rem, 2.5rem + 4vw, 6.5rem);
+
+  /* Forma */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 18px;
+  --r-xl: 28px;
+  --r-pill: 999px;
+  --shadow-sm: 0 1px 2px rgb(23 53 79 / 0.06), 0 1px 1px rgb(23 53 79 / 0.04);
+  --shadow-md: 0 6px 18px -6px rgb(23 53 79 / 0.16), 0 2px 6px rgb(23 53 79 / 0.06);
+  --shadow-lg: 0 24px 48px -18px rgb(23 53 79 / 0.28), 0 6px 14px rgb(23 53 79 / 0.08);
+
+  /* Retícula */
+  --max: 1240px;
+  --max-narrow: 880px;
+  --max-text: 68ch;
+  --gutter: clamp(1rem, 0.6rem + 1.8vw, 2rem);
+  --header-h: 72px;
+
+  /* Movimiento */
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dur: 180ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur: 0ms;
+  }
+}

@@ -1,0 +1,541 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import QuickSearch from '../components/QuickSearch.astro';
+import PropertyCard from '../components/PropertyCard.astro';
+import PostCard from '../components/PostCard.astro';
+import TeamGrid from '../components/TeamGrid.astro';
+import ContactForm from '../components/ContactForm.astro';
+import Icon from '../components/Icon.astro';
+import { allProperties, byOperation, featured } from '../lib/inventory';
+import { formatPrice, placeLabel, priceFor, primaryOperation } from '../lib/inventory/format';
+import { site } from '../data/site';
+
+const highlights = featured(6);
+const heroPhotos = allProperties()
+  .filter((p) => p.photos.length > 0)
+  .slice(0, 2);
+const posts = (await getCollection('blog', (e) => !e.data.draft))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .filter((p) => p.data.topic !== 'hogar-y-reformas')
+  .slice(0, 3);
+const years = new Date().getFullYear() - site.foundingYear;
+const counts = { venta: byOperation('venta').length, alquiler: byOperation('alquiler').length };
+
+// Zonas: Moratalaz (oficina y especialidad declarada) y localidades/zonas con
+// inmuebles publicados ahora mismo en Inmovilla.
+const places = [...new Set(allProperties().map((p) => p.zone ?? p.city).filter((x): x is string => Boolean(x)))];
+
+const services = [
+  { icon: 'home', title: 'Compraventa', text: 'Vendemos tu vivienda o te ayudamos a encontrar la tuya, y te acompañamos a ver los inmuebles que te interesan.' },
+  { icon: 'key', title: 'Alquiler', text: 'Analizamos el mercado, te asesoramos sobre el precio de alquiler y llegamos a más inquilinos en menos tiempo.' },
+  { icon: 'chart', title: 'Valoración sin compromiso', text: 'Analizamos tu vivienda y el mercado de la zona para fijar un precio de salida realista.' },
+  { icon: 'camera', title: 'Preparación para la venta', text: 'Preparamos tu vivienda para sacarle el máximo partido y que llame la atención de los compradores.' },
+  { icon: 'shield', title: 'Compradores filtrados', text: 'Analizamos a los candidatos y filtramos a quienes no cumplen los requisitos de solvencia y fiabilidad.' },
+  { icon: 'doc', title: 'Trámites resueltos', text: 'Te ayudamos con la documentación legal y financiera necesaria para vender o comprar con los papeles en orden.' },
+] as const;
+---
+
+<Base
+  title="Inmobiliaria en Moratalaz, Madrid | Aljumar Inmuebles desde 1998"
+  rawTitle
+  description="Aljumar Inmuebles: inmobiliaria en Moratalaz (Madrid) desde 1998. Pisos en venta y alquiler, valoración de tu vivienda sin compromiso y acompañamiento en todo el proceso."
+>
+  <!-- 1. Propuesta de valor + buscador -->
+  <section class="hero on-dark" aria-labelledby="hero-title">
+    <div class="container hero__grid">
+      <div class="hero__copy">
+        <p class="eyebrow">Inmobiliaria en Moratalaz desde {site.foundingYear}</p>
+        <h1 id="hero-title">Tu casa en Madrid, en manos de quien conoce el barrio</h1>
+        <p class="lead">
+          Vendemos y alquilamos viviendas, y te ayudamos a encontrar la tuya, con trato cercano y {years} años de
+          experiencia. Te acompañamos en cada paso del proceso.
+        </p>
+        <div class="hero__shortcuts">
+          <a class="btn btn--on-dark btn--sm" href="/comprar/">Comprar <span class="hero__n">{counts.venta}</span></a>
+          <a class="btn btn--on-dark btn--sm" href="/alquilar/">Alquilar <span class="hero__n">{counts.alquiler}</span></a>
+          <a class="btn btn--accent btn--sm" href="/vender-mi-vivienda/">Vender mi vivienda</a>
+        </div>
+      </div>
+      <div class="hero__visual" aria-hidden="true">
+        {
+          heroPhotos.map((p, i) => (
+            <figure class:list={['hero__photo', `hero__photo--${i + 1}`]}>
+              <img src={p.photos[0]!.url} alt="" width="560" height="420" loading={i === 0 ? 'eager' : 'lazy'} decoding="async" data-fallback />
+              <figcaption>
+                <strong>{formatPrice(priceFor(p, primaryOperation(p)), primaryOperation(p))}</strong>
+                <span>{placeLabel(p)}</span>
+              </figcaption>
+            </figure>
+          ))
+        }
+      </div>
+      <div class="hero__search">
+        <QuickSearch />
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Inmuebles destacados -->
+  <section class="section" aria-labelledby="destacados">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Cartera actual</p>
+          <h2 id="destacados">Inmuebles disponibles</h2>
+          <p>Viviendas que gestionamos directamente. Pide información o una visita sin compromiso.</p>
+        </div>
+        <a class="link-arrow" href="/comprar/">Ver todos los inmuebles</a>
+      </div>
+      {
+        highlights.length > 0 ? (
+          <ul class="grid-cards">
+            {highlights.map((p, i) => (
+              <li data-reveal>
+                <PropertyCard property={p} eager={i === 0} />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="alert alert--info">
+            Estamos actualizando nuestra cartera. Llámanos al {site.phones.office.display} y te contamos qué tenemos
+            disponible.
+          </p>
+        )
+      }
+    </div>
+  </section>
+
+  <!-- 3. Propietarios -->
+  <section class="section section--tint owners" aria-labelledby="propietarios">
+    <div class="container owners__grid">
+      <div data-reveal>
+        <p class="eyebrow">Propietarios</p>
+        <h2 id="propietarios">¿Estás pensando en vender tu vivienda?</h2>
+        <p class="lead">
+          Te decimos cuánto vale de verdad, la preparamos para salir al mercado y filtramos a los compradores. Tú
+          decides; nosotros nos ocupamos del resto.
+        </p>
+        <div class="owners__actions">
+          <a class="btn btn--accent" href="/vender-mi-vivienda/#formulario">Solicitar valoración sin compromiso</a>
+          <a class="btn btn--ghost" href="/vender-mi-vivienda/">Cómo trabajamos</a>
+        </div>
+      </div>
+      <ol class="steps" data-reveal>
+        <li><strong>Hablamos</strong><span>Nos cuentas tu situación y tus plazos, sin compromiso.</span></li>
+        <li><strong>Valoramos</strong><span>Informe del valor de mercado según tu vivienda y la zona.</span></li>
+        <li><strong>Preparamos y difundimos</strong><span>Presentamos la vivienda y la damos a conocer a más compradores.</span></li>
+        <li><strong>Te acompañamos</strong><span>Visitas, negociación y trámites legales y financieros.</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 4. Servicios -->
+  <section class="section" aria-labelledby="servicios">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Qué hacemos</p>
+          <h2 id="servicios">Un servicio completo, sin sorpresas</h2>
+        </div>
+      </div>
+      <ul class="services">
+        {
+          services.map((s) => (
+            <li data-reveal>
+              <span class="services__icon">
+                <Icon name={s.icon} size={26} />
+              </span>
+              <h3>{s.title}</h3>
+              <p>{s.text}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <!-- 5. Zonas -->
+  <section class="section section--navy zones" aria-labelledby="zonas">
+    <div class="container zones__grid">
+      <div>
+        <p class="eyebrow">Dónde trabajamos</p>
+        <h2 id="zonas">Especialistas en Moratalaz</h2>
+        <p class="lead">
+          Nuestra oficina está en {site.address.street}, en Moratalaz. Conocemos sus calles, sus tipologías de
+          vivienda, colegios y servicios, y lo ponemos a tu favor tanto si compras como si vendes.
+        </p>
+      </div>
+      <div>
+        <h3 class="zones__title">También gestionamos inmuebles en</h3>
+        <ul class="zones__list">
+          {places.map((z) => <li>{z}</li>)}
+        </ul>
+        <p class="zones__note">Zonas con inmuebles publicados ahora mismo en nuestra cartera.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Equipo y confianza -->
+  <section class="section" aria-labelledby="equipo">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Equipo</p>
+          <h2 id="equipo">Personas, no intermediarios anónimos</h2>
+          <p>Un equipo cercano que conoce el barrio y te atiende personalmente.</p>
+        </div>
+        <a class="link-arrow" href="/sobre-aljumar/">Conócenos</a>
+      </div>
+      <TeamGrid />
+      <ul class="facts">
+        <li><strong>{site.foundingYear}</strong><span>año en que empezamos a trabajar en Madrid</span></li>
+        <li><strong>{years}</strong><span>años de experiencia en compraventa y alquiler</span></li>
+        <li><strong>1</strong><span>oficina en Moratalaz, abierta a tus consultas</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 7. Consejos -->
+  {
+    posts.length > 0 && (
+      <section class="section section--tint" aria-labelledby="consejos">
+        <div class="container">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Consejos inmobiliarios</p>
+              <h2 id="consejos">Antes de comprar o vender, infórmate</h2>
+            </div>
+            <a class="link-arrow" href="/consejos-inmobiliarios/">Todos los consejos</a>
+          </div>
+          <ul class="grid-cards">
+            {posts.map((post) => (
+              <li data-reveal>
+                <PostCard post={post} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- 8. Contacto -->
+  <section class="section contact-home" aria-labelledby="contacto-home">
+    <div class="container contact-home__grid">
+      <div>
+        <p class="eyebrow">Contacto</p>
+        <h2 id="contacto-home">Hablemos de tu próxima casa</h2>
+        <p class="lead">Escríbenos o pásate por la oficina. Te respondemos personalmente.</p>
+        <ul class="contact-list">
+          <li><Icon name="phone" /><a href={`tel:${site.phones.office.tel}`}>{site.phones.office.display}</a> · <a href={`tel:${site.phones.mobile.tel}`}>{site.phones.mobile.display}</a></li>
+          <li><Icon name="mail" /><a href={`mailto:${site.email}`}>{site.email}</a></li>
+          <li><Icon name="pin" /><a href={site.mapUrl} target="_blank" rel="noopener">{site.address.street}, {site.address.postalCode} {site.address.city}<span class="visually-hidden"> (abre un mapa)</span></a></li>
+        </ul>
+      </div>
+      <div class="contact-home__form">
+        <ContactForm variant="general" id="formulario-portada" />
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero {
+    position: relative;
+    overflow: hidden;
+    background:
+      linear-gradient(120deg, rgb(15 37 55 / 0.96) 0%, rgb(23 53 79 / 0.92) 55%, rgb(40 75 106 / 0.9) 100%),
+      repeating-linear-gradient(90deg, transparent 0 79px, rgb(255 255 255 / 0.04) 79px 80px),
+      var(--navy-900);
+    color: var(--navy-100);
+    padding-block: var(--s-7) var(--s-7);
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    left: -8%;
+    bottom: -38%;
+    width: 46vw;
+    max-width: 640px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 90px solid rgb(191 214 0 / 0.07);
+    pointer-events: none;
+  }
+  .hero__grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: var(--s-6);
+  }
+  .hero h1 {
+    color: var(--white);
+    font-size: var(--fs-3xl);
+    max-width: 16ch;
+  }
+  .hero__shortcuts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+    margin-top: var(--s-5);
+  }
+  .hero__n {
+    display: inline-grid;
+    place-items: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 6px;
+    border-radius: 12px;
+    background: rgb(255 255 255 / 0.16);
+    font-size: var(--fs-xs);
+  }
+  .hero__visual {
+    display: none;
+  }
+  .hero__photo {
+    position: relative;
+    margin: 0;
+    overflow: hidden;
+    border-radius: var(--r-lg);
+    background: var(--navy-700);
+    box-shadow: var(--shadow-lg);
+  }
+  .hero__photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .hero__photo figcaption {
+    position: absolute;
+    left: var(--s-3);
+    bottom: var(--s-3);
+    display: grid;
+    padding: var(--s-2) var(--s-3);
+    border-radius: var(--r-md);
+    background: rgb(255 255 255 / 0.95);
+    color: var(--ink-2);
+    font-size: var(--fs-xs);
+    line-height: 1.35;
+  }
+  .hero__photo figcaption strong {
+    color: var(--navy-900);
+    font-size: var(--fs-sm);
+  }
+  .grid-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+    gap: var(--s-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .owners__grid {
+    display: grid;
+    gap: var(--s-7);
+    align-items: center;
+  }
+  .owners__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-3);
+    margin-top: var(--s-5);
+  }
+  .steps {
+    display: grid;
+    gap: var(--s-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: step;
+  }
+  .steps li {
+    position: relative;
+    display: grid;
+    gap: 2px;
+    padding: var(--s-4) var(--s-5) var(--s-4) 4.2rem;
+    border-radius: var(--r-md);
+    background: var(--white);
+    border: 1px solid var(--line);
+    counter-increment: step;
+  }
+  .steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: var(--s-4);
+    top: 50%;
+    transform: translateY(-50%);
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--lime-500);
+    color: var(--navy-950);
+    font-weight: 800;
+  }
+  .steps strong {
+    color: var(--navy-900);
+  }
+  .steps span {
+    font-size: var(--fs-sm);
+    color: var(--ink-2);
+  }
+  .services {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+    gap: var(--s-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .services li {
+    padding: var(--s-5);
+    border-radius: var(--r-lg);
+    border: 1px solid var(--line);
+    background: var(--white);
+  }
+  .services__icon {
+    display: inline-grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    margin-bottom: var(--s-4);
+    border-radius: 14px;
+    background: var(--navy-900);
+    color: var(--lime-500);
+  }
+  .services h3 {
+    margin-bottom: var(--s-2);
+  }
+  .services p {
+    margin: 0;
+    color: var(--ink-2);
+    font-size: var(--fs-sm);
+  }
+  .zones__grid {
+    display: grid;
+    gap: var(--s-6);
+  }
+  .zones__title {
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--lime-500) !important;
+  }
+  .zones__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+    margin: 0 0 var(--s-3);
+    padding: 0;
+    list-style: none;
+  }
+  .zones__list li {
+    padding: 0.4rem 0.9rem;
+    border: 1px solid rgb(255 255 255 / 0.25);
+    border-radius: var(--r-pill);
+    color: var(--white);
+    font-weight: 600;
+    font-size: var(--fs-sm);
+  }
+  .zones__note {
+    font-size: var(--fs-xs);
+    color: var(--navy-200);
+  }
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--s-4);
+    margin: var(--s-7) 0 0;
+    padding: var(--s-5) 0 0;
+    border-top: 1px solid var(--line);
+    list-style: none;
+  }
+  .facts li {
+    display: grid;
+  }
+  .facts strong {
+    font-family: var(--font-display);
+    font-size: var(--fs-2xl);
+    color: var(--navy-900);
+    line-height: 1.1;
+  }
+  .facts span {
+    color: var(--ink-2);
+    font-size: var(--fs-sm);
+  }
+  .contact-home__grid {
+    display: grid;
+    gap: var(--s-7);
+  }
+  .contact-list {
+    display: grid;
+    gap: var(--s-3);
+    margin: var(--s-5) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .contact-list li {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    flex-wrap: wrap;
+  }
+  .contact-list :global(svg) {
+    color: var(--navy-500);
+  }
+  .contact-home__form {
+    padding: var(--s-6);
+    border-radius: var(--r-xl);
+    background: var(--bg);
+  }
+
+  @media (min-width: 900px) {
+    .owners__grid,
+    .zones__grid,
+    .contact-home__grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  @media (min-width: 1080px) {
+    .hero {
+      padding-block: var(--s-8) var(--s-7);
+    }
+    .hero__grid {
+      grid-template-columns: 1.1fr 1fr;
+      grid-template-areas:
+        'copy visual'
+        'search search';
+      align-items: center;
+    }
+    .hero__copy {
+      grid-area: copy;
+    }
+    .hero__search {
+      grid-area: search;
+    }
+    .hero__visual {
+      grid-area: visual;
+      position: relative;
+      display: block;
+      min-height: 360px;
+    }
+    .hero__photo--1 {
+      position: absolute;
+      inset: 0 18% 14% 0;
+    }
+    .hero__photo--2 {
+      position: absolute;
+      width: 46%;
+      aspect-ratio: 4 / 3;
+      right: 0;
+      bottom: 0;
+      border: 5px solid var(--navy-900);
+    }
+    .hero__photo--2 figcaption {
+      display: none;
+    }
+  }
+</style>

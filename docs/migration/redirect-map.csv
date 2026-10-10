@@ -1,0 +1,43 @@
+tipo,origen,destino,motivo
+exacta,/quieres-vender/,/vender-mi-vivienda/,Página de captación renombrada
+exacta,/nuestra-esencia/,/sobre-aljumar/,Página corporativa renombrada
+exacta,/formulario-cliente/,/contacto/,Formulario integrado en Contacto
+exacta,/blog/,/consejos-inmobiliarios/,Blog renombrado (los artículos conservan su URL)
+patron,^/blog/page/\d+/?$,/consejos-inmobiliarios/,Paginación del blog antiguo
+exacta,/buscador/,/comprar/,Buscador antiguo
+exacta,/resultados/,/comprar/,Resultados del buscador antiguo
+exacta,/buscador-mapa/,/comprar/,Buscador con mapa antiguo
+exacta,/inmueble/,/comprar/,Plantilla de ficha del plugin irdinmo (sin código)
+exacta,/property/,/comprar/,Archivo de inmuebles de Houzez
+patron,^/property/page/\d+/?$,/comprar/,Paginación del archivo de Houzez
+exacta,/property/local-comercial-en-arganda/,/comprar/,Ficha Houzez (pendiente de confirmar si sigue activa en Inmovilla)
+exacta,/property/ponemos-en-venta-esta-vivienda-con-una-inmejorable-ubicacion/,/comprar/,Ficha Houzez (pendiente de confirmar)
+exacta,/property/venta-de-piso-con-excelente-ubicacion/,/comprar/,Ficha Houzez (pendiente de confirmar)
+exacta,/property/precioso-piso-en-alquiler/,/alquilar/,Ficha Houzez de alquiler (pendiente de confirmar)
+exacta,/property/plaza-de-garaje-en-venta-2/,/comprar/,Ficha Houzez (pendiente de confirmar)
+exacta,/property/precioso-chalet-disponible-a-la-venta/,/comprar/,Ficha Houzez (pendiente de confirmar)
+exacta,/property/oportunidad-a-la-venta/,/comprar/,Ficha Houzez (pendiente de confirmar)
+exacta,/property/plaza-de-garaje-en-vinateros/,/comprar/,Ficha Houzez (pendiente de confirmar)
+exacta,/property/piso-en-venta-tipologia-l-4/,/comprar/,Ficha Houzez (pendiente de confirmar)
+exacta,/property/enorme-plaza-de-garaje-a-la-venta/,/comprar/,Ficha Houzez (pendiente de confirmar)
+exacta,/property/piso-disponible-en-pueblo-nuevo/,/comprar/,Ficha Houzez (pendiente de confirmar)
+exacta,/property/fantastica-vivienda-exterior-en-lavapies/,/comprar/,Ficha Houzez (pendiente de confirmar)
+exacta,/property/plaza-de-garaje-en-rivas-pueblo/,/comprar/,Ficha Houzez (pendiente de confirmar)
+patron,^/property/.+,/comprar/,Cualquier otra ficha Houzez
+patron,^/status/alquilar/?$,/alquilar/,Taxonomía «estado» de Houzez
+patron,^/status/.*,/comprar/,Taxonomía «estado» de Houzez
+patron,^/(label|property-label|property_label|property-type|property_type|property-city|property_city|city|property-area|property_area|area|property-feature|property_feature|feature)/.*,/comprar/,Taxonomías de Houzez
+patron,^/agent/.*,/sobre-aljumar/,Perfiles de agentes (el equipo está en Sobre Aljumar)
+patron,^/author/.*,/sobre-aljumar/,Archivos de autor de WordPress
+exacta,/35450-2/,/sobre-aljumar/,Página antigua sin título (foto de equipo y testimonios)
+exacta,/guia-comprador/,/consejos-inmobiliarios/tema/comprar-y-vender/,Guía del comprador
+exacta,/guia-vendedor/,/vender-mi-vivienda/,Guía del vendedor
+exacta,/category/sin-categoria/,/consejos-inmobiliarios/,Categoría «Noticias Aljumar»
+exacta,/category/blog-inmobiliario/,/consejos-inmobiliarios/tema/comprar-y-vender/,Categoría del blog
+exacta,/category/consejos-hogar/,/consejos-inmobiliarios/tema/hogar-y-reformas/,Categoría del blog
+exacta,/category/noticias-inmobiliarias/,/consejos-inmobiliarios/tema/mercado-y-normativa/,Categoría del blog
+patron,^/category/.*,/consejos-inmobiliarios/,Otras categorías
+patron,^/tag/.*,/consejos-inmobiliarios/,Etiquetas del blog
+patron,^/(comments/)?feed/?$,/consejos-inmobiliarios/,Feeds RSS de WordPress
+patron,^/sitemap_index\.xml$,/sitemap-index.xml,Sitemap de Yoast
+patron,^/[a-z_]+-sitemap\d*\.xml$,/sitemap-index.xml,Sitemaps parciales de Yoast

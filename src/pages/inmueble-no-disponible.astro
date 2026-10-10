@@ -1,0 +1,63 @@
+---
+/**
+ * Página que se sirve (con estado 410 Gone, ver .htaccess) cuando un inmueble
+ * deja de publicarse en Inmovilla: vendido, alquilado o retirado. Así el
+ * visitante que llega desde un portal o un buscador encuentra alternativas, y
+ * los buscadores retiran la ficha del índice.
+ */
+import Base from '../layouts/Base.astro';
+import PropertyCard from '../components/PropertyCard.astro';
+import { featured } from '../lib/inventory';
+
+const others = featured(3);
+---
+
+<Base title="Este inmueble ya no está disponible" description="El inmueble que buscabas ya no está publicado." noindex>
+  <section class="gone container">
+    <p class="eyebrow">Inmueble no disponible</p>
+    <h1>Este inmueble ya no está disponible</h1>
+    <p class="lead">
+      Se ha vendido, alquilado o retirado del mercado. Te dejamos otras viviendas de nuestra cartera; si buscabas algo
+      parecido, cuéntanoslo y te avisaremos cuando entre.
+    </p>
+    <p class="gone__actions">
+      <a class="btn btn--accent" href="/contacto/?motivo=comprar#formulario">Avisadme de inmuebles parecidos</a>
+      <a class="btn btn--ghost" href="/comprar/">Ver viviendas en venta</a>
+      <a class="btn btn--ghost" href="/alquilar/">Ver viviendas en alquiler</a>
+    </p>
+    {
+      others.length > 0 && (
+        <ul class="grid-cards">
+          {others.map((p) => (
+            <li>
+              <PropertyCard property={p} headingLevel="h2" />
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </section>
+</Base>
+
+<style>
+  .gone {
+    padding-block: var(--s-7) var(--section);
+  }
+  .gone h1 {
+    font-size: var(--fs-2xl);
+  }
+  .gone__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-3);
+    margin-bottom: var(--s-7);
+  }
+  .grid-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+    gap: var(--s-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+</style>

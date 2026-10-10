@@ -1,0 +1,180 @@
+---
+/**
+ * Artículos del blog en la raíz (/slug/), igual que en WordPress, para
+ * conservar las URL posicionadas.
+ */
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import PostCard from '../components/PostCard.astro';
+import Icon from '../components/Icon.astro';
+import { topics } from '../data/topics';
+import { site } from '../data/site';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', (e) => !e.data.draft);
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+}
+
+const { post } = Astro.props as { post: CollectionEntry<'blog'> };
+const { Content } = await render(post);
+const { title, description, pubDate, updatedDate, topic, image, imageAlt } = post.data;
+const hasImage = image ? existsSync(resolve(process.cwd(), 'public', '.' + image)) : false;
+const fmt = (d: Date) => d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+const ageYears = (Date.now() - pubDate.valueOf()) / (365.25 * 24 * 3600 * 1000);
+const mayBeOutdated = topic === 'mercado-y-normativa' && ageYears > 1.5;
+const related = (await getCollection('blog', (e) => !e.data.draft && e.data.topic === topic && e.id !== post.id))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 3);
+const url = new URL(Astro.url.pathname, Astro.site).href;
+const cta =
+  topic === 'hogar-y-reformas'
+    ? { title: '¿Piensas en cambiar de casa?', text: 'Mira las viviendas que tenemos disponibles o cuéntanos qué buscas.', href: '/comprar/', label: 'Ver inmuebles' }
+    : { title: '¿Vas a vender tu vivienda?', text: 'Te preparamos un informe de valoración sin compromiso y te acompañamos en todo el proceso.', href: '/vender-mi-vivienda/', label: 'Solicitar valoración' };
+---
+
+<Base
+  title={title}
+  description={description.length > 160 ? description.slice(0, 157).replace(/\s+\S*$/, '') + '…' : description}
+  ogType="article"
+  ogImage={hasImage ? image : undefined}
+  breadcrumbs={[
+    { name: 'Inicio', href: '/' },
+    { name: 'Consejos inmobiliarios', href: '/consejos-inmobiliarios/' },
+    { name: title, href: Astro.url.pathname },
+  ]}
+  jsonLd={[
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BlogPosting',
+      headline: title,
+      description,
+      datePublished: pubDate.toISOString(),
+      dateModified: (updatedDate ?? pubDate).toISOString(),
+      mainEntityOfPage: url,
+      ...(hasImage ? { image: new URL(image!, Astro.site).href } : {}),
+      author: { '@type': 'Organization', name: site.name },
+      publisher: { '@id': new URL('/#organizacion', Astro.site).href },
+    },
+  ]}
+>
+  <article class="article">
+    <header class="container container--narrow article__head">
+      <p class="article__meta">
+        <a class="badge" href={`/consejos-inmobiliarios/tema/${topic}/`}>{topics[topic].label}</a>
+        <time datetime={pubDate.toISOString().slice(0, 10)}>{fmt(pubDate)}</time>
+      </p>
+      <h1>{title}</h1>
+    </header>
+    {
+      hasImage && (
+        <div class="container article__image">
+          <img src={image} alt={imageAlt ?? ''} width="1200" height="630" decoding="async" />
+        </div>
+      )
+    }
+    <div class="container container--narrow">
+      {
+        mayBeOutdated && (
+          <p class="alert alert--warning" role="note">
+            <Icon name="info" />
+            <span>
+              Artículo publicado el {fmt(pubDate)}. La normativa y los datos de mercado pueden haber cambiado desde
+              entonces: consúltanos antes de tomar una decisión.
+            </span>
+          </p>
+        )
+      }
+      <div class="prose">
+        <Content />
+      </div>
+
+      <aside class="article__cta" aria-label="Siguiente paso">
+        <div>
+          <p class="article__cta-title">{cta.title}</p>
+          <p>{cta.text}</p>
+        </div>
+        <a class="btn btn--accent" href={cta.href}>{cta.label}</a>
+      </aside>
+    </div>
+  </article>
+
+  {
+    related.length > 0 && (
+      <section class="section section--tint" aria-labelledby="relacionados">
+        <div class="container">
+          <h2 id="relacionados">Sigue leyendo</h2>
+          <ul class="grid-cards">
+            {related.map((p) => (
+              <li>
+                <PostCard post={p} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+</Base>
+
+<style>
+  .article {
+    padding-bottom: var(--section);
+  }
+  .article__head {
+    padding-top: var(--s-5);
+  }
+  .article__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-3);
+    font-size: var(--fs-sm);
+    color: var(--ink-2);
+  }
+  .article__meta .badge {
+    text-decoration: none;
+  }
+  .article h1 {
+    font-size: var(--fs-2xl);
+  }
+  .article__image img {
+    width: 100%;
+    max-height: 520px;
+    object-fit: cover;
+    border-radius: var(--r-lg);
+    margin-bottom: var(--s-6);
+  }
+  .article__cta {
+    display: grid;
+    gap: var(--s-4);
+    align-items: center;
+    margin-top: var(--s-7);
+    padding: var(--s-5) var(--s-6);
+    border-radius: var(--r-lg);
+    background: var(--navy-900);
+    color: var(--navy-100);
+  }
+  .article__cta p {
+    margin: 0;
+  }
+  .article__cta-title {
+    font-family: var(--font-display);
+    font-size: var(--fs-lg);
+    color: var(--white);
+  }
+  .grid-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+    gap: var(--s-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 720px) {
+    .article__cta {
+      grid-template-columns: 1fr auto;
+    }
+  }
+</style>

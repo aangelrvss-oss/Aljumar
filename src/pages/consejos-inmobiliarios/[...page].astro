@@ -1,0 +1,96 @@
+---
+import type { GetStaticPaths, PaginateFunction } from 'astro';
+import { getCollection, type CollectionEntry } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import PostCard from '../../components/PostCard.astro';
+import Pagination from '../../components/Pagination.astro';
+import { topics, type TopicKey } from '../../data/topics';
+
+export const getStaticPaths = (async ({ paginate }: { paginate: PaginateFunction }) => {
+  const posts = (await getCollection('blog', (e) => !e.data.draft)).sort(
+    (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+  );
+  return paginate(posts, { pageSize: 12 });
+}) satisfies GetStaticPaths;
+
+const { page } = Astro.props as { page: { data: CollectionEntry<'blog'>[]; currentPage: number; lastPage: number; url: { prev?: string; next?: string } } };
+const first = page.currentPage === 1;
+---
+
+<Base
+  title={first ? 'Consejos inmobiliarios para comprar, vender y alquilar' : `Consejos inmobiliarios — página ${page.currentPage}`}
+  description={first ? 'Guías y consejos de Aljumar Inmuebles sobre compraventa, alquiler, hipotecas, normativa y reformas del hogar, explicados con claridad.' : `Página ${page.currentPage} de ${page.lastPage} de los consejos inmobiliarios de Aljumar: compraventa, alquiler, hipotecas, normativa y hogar.`}
+  breadcrumbs={[
+    { name: 'Inicio', href: '/' },
+    { name: 'Consejos inmobiliarios', href: '/consejos-inmobiliarios/' },
+  ]}
+>
+  <section class="blog-hero">
+    <div class="container">
+      <p class="eyebrow">Consejos inmobiliarios</p>
+      <h1>{first ? 'Lo que conviene saber antes de comprar, vender o alquilar' : `Consejos inmobiliarios · página ${page.currentPage}`}</h1>
+      <nav class="topics" aria-label="Temas">
+        <a href="/consejos-inmobiliarios/" aria-current="page">Todos</a>
+        {
+          (Object.keys(topics) as TopicKey[]).map((k) => (
+            <a href={`/consejos-inmobiliarios/tema/${k}/`}>{topics[k].label}</a>
+          ))
+        }
+      </nav>
+    </div>
+  </section>
+
+  <section class="container blog-list">
+    <ul class="grid-cards">
+      {
+        page.data.map((post) => (
+          <li>
+            <PostCard post={post} headingLevel="h2" />
+          </li>
+        ))
+      }
+    </ul>
+    <Pagination current={page.currentPage} last={page.lastPage} base="/consejos-inmobiliarios/" />
+  </section>
+</Base>
+
+<style>
+  .blog-hero {
+    padding-block: var(--s-6) var(--s-6);
+  }
+  .blog-hero h1 {
+    font-size: var(--fs-2xl);
+    max-width: 24ch;
+  }
+  .topics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+  }
+  .topics a {
+    padding: 0.45rem 1rem;
+    border: 1.5px solid var(--line-strong);
+    border-radius: var(--r-pill);
+    font-size: var(--fs-sm);
+    font-weight: 650;
+    color: var(--navy-900);
+    text-decoration: none;
+  }
+  .topics a[aria-current='page'],
+  .topics a:hover {
+    background: var(--navy-900);
+    border-color: var(--navy-900);
+    color: var(--white);
+  }
+  .blog-list {
+    padding-bottom: var(--section);
+  }
+  .grid-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+    gap: var(--s-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+</style>

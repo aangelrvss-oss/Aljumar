@@ -1,0 +1,162 @@
+---
+import '@fontsource-variable/plus-jakarta-sans';
+import '@fontsource-variable/fraunces/opsz.css';
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import MobileContactBar from '../components/MobileContactBar.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { site } from '../data/site';
+import { organizationSchema } from '../lib/schema';
+import { inventoryNotice, inventorySource } from '../lib/inventory';
+
+export interface Crumb {
+  name: string;
+  href: string;
+}
+
+interface Props {
+  title: string;
+  description: string;
+  /** El título se usa tal cual (portada) en lugar de «Título | Aljumar Inmuebles». */
+  rawTitle?: boolean;
+  /** URL absoluta o ruta pública de la imagen para compartir. */
+  ogImage?: string;
+  ogType?: 'website' | 'article';
+  noindex?: boolean;
+  breadcrumbs?: Crumb[];
+  jsonLd?: Record<string, unknown>[];
+  /** Para la barra de contacto móvil de las fichas. */
+  contactSubject?: string;
+  contactFormHref?: string;
+}
+
+const {
+  title,
+  description,
+  rawTitle = false,
+  ogImage = '/og/aljumar.png',
+  ogType = 'website',
+  noindex = false,
+  breadcrumbs,
+  jsonLd = [],
+  contactSubject,
+  contactFormHref,
+} = Astro.props;
+
+const fullTitle = rawTitle ? title : `${title} | ${site.name}`;
+// STAGING=1: toda la web queda fuera de los buscadores (entornos de prueba).
+const staging = process.env.STAGING === '1';
+const robots = noindex || staging ? 'noindex, follow' : 'index, follow, max-image-preview:large';
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const ogUrl = new URL(ogImage, Astro.site).href;
+// Icono oficial (lo descarga `npm run media:fetch`); si no está, el SVG provisional.
+const hasOfficialIcon = existsSync(resolve(process.cwd(), 'public/favicon.png'));
+const showPreviewNotice = inventorySource === 'snapshot' && inventoryNotice;
+
+const structured: Record<string, unknown>[] = [organizationSchema(Astro.site!), ...jsonLd];
+if (breadcrumbs && breadcrumbs.length > 1) {
+  structured.push({
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: breadcrumbs.map((c, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: c.name,
+      item: new URL(c.href, Astro.site).href,
+    })),
+  });
+}
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script is:inline>
+      document.documentElement.classList.add('js');
+      // Si una foto no carga (p. ej. retirada del CDN de Inmovilla), se oculta y
+      // queda visible el marcador de posición que hay debajo.
+      document.addEventListener('error', function (e) {
+        var t = e.target;
+        if (t && t.tagName === 'IMG' && t.hasAttribute('data-fallback')) t.style.visibility = 'hidden';
+      }, true);
+    </script>
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta name="robots" content={robots} />
+    <meta name="theme-color" content="#17354f" />
+    {hasOfficialIcon ? <link rel="icon" href="/favicon.png" type="image/png" /> : <link rel="icon" href="/favicon.svg" type="image/svg+xml" />}
+    {hasOfficialIcon && <link rel="apple-touch-icon" href="/favicon.png" />}
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <link rel="preconnect" href="https://fotos15.apinmo.com" crossorigin />
+
+    <meta property="og:type" content={ogType} />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogUrl} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    {structured.map((data) => <script type="application/ld+json" set:html={JSON.stringify(data)} />)}
+  </head>
+  <body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+    {
+      showPreviewNotice && (
+        <div class="preview-notice" role="note">
+          <div class="container">
+            <strong>Vista previa.</strong> {inventoryNotice}
+          </div>
+        </div>
+      )
+    }
+    <Header />
+    <main id="contenido" tabindex="-1">
+      {breadcrumbs && breadcrumbs.length > 1 && <Breadcrumbs items={breadcrumbs} />}
+      <slot />
+    </main>
+    <Footer />
+    <MobileContactBar subject={contactSubject} formHref={contactFormHref} />
+    <script>
+      // Aparición progresiva de bloques [data-reveal]; sin JS o con movimiento
+      // reducido, el contenido se ve desde el principio (ver global.css).
+      const els = document.querySelectorAll<HTMLElement>('[data-reveal]');
+      if (!('IntersectionObserver' in window)) {
+        els.forEach((el) => el.classList.add('is-in'));
+      } else {
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const e of entries) {
+              if (e.isIntersecting) {
+                e.target.classList.add('is-in');
+                io.unobserve(e.target);
+              }
+            }
+          },
+          { rootMargin: '0px 0px -6% 0px' },
+        );
+        els.forEach((el) => io.observe(el));
+      }
+    </script>
+  </body>
+</html>
+
+<style>
+  main:focus {
+    outline: none;
+  }
+  .preview-notice {
+    background: var(--warning-bg);
+    color: var(--warning);
+    font-size: var(--fs-xs);
+    padding-block: var(--s-2);
+    border-bottom: 1px solid #f0dfa6;
+  }
+</style>

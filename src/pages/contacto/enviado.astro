@@ -1,0 +1,22 @@
+---
+import Base from '../../layouts/Base.astro';
+import { site } from '../../data/site';
+---
+
+<Base title="Mensaje enviado" description="Hemos recibido tu mensaje." noindex>
+  <section class="sent container container--narrow">
+    <p class="eyebrow">Gracias</p>
+    <h1>Hemos recibido tu mensaje</h1>
+    <p class="lead">
+      Te responderemos lo antes posible en horario de oficina. Si es urgente, llámanos al
+      <a href={`tel:${site.phones.office.tel}`}>{site.phones.office.display}</a>.
+    </p>
+    <p><a class="btn" href="/comprar/">Ver inmuebles</a> <a class="btn btn--ghost" href="/">Volver al inicio</a></p>
+  </section>
+</Base>
+
+<style>
+  .sent {
+    padding-block: var(--s-8) var(--section);
+  }
+</style>

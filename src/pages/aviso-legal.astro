@@ -1,0 +1,84 @@
+---
+/**
+ * Basado en el aviso legal publicado en aljumar.es (29/06/2021), con el
+ * dominio y el correo corregidos. PENDIENTE (bloqueante para publicar):
+ * datos de inscripción en el Registro Mercantil, que la web actual deja sin
+ * rellenar. Requiere revisión jurídica antes del lanzamiento.
+ */
+import LegalPage from '../components/LegalPage.astro';
+import { site } from '../data/site';
+---
+
+<LegalPage
+  title="Aviso legal"
+  description={`Aviso legal del sitio web aljumar.es, titularidad de ${site.legalName}.`}
+  path="/aviso-legal/"
+  updated="10 de octubre de 2026"
+>
+  <h2>1. Objeto</h2>
+  <p>
+    El presente aviso legal regula el uso del sitio web <strong>aljumar.es</strong> (en adelante, «el sitio web»), del
+    que es titular {site.legalName} (en adelante, «el titular»).
+  </p>
+  <p>
+    La navegación por el sitio web atribuye la condición de usuario e implica la aceptación de las condiciones
+    recogidas en este aviso legal, que pueden modificarse; en tal caso se publicará la nueva versión en esta misma
+    página.
+  </p>
+
+  <h2>2. Identificación</h2>
+  <p>En cumplimiento de la Ley 34/2002, de 11 de julio, de Servicios de la Sociedad de la Información y de Comercio Electrónico, se informa de que:</p>
+  <ul>
+    <li>Denominación social: {site.legalName}</li>
+    <li>CIF: {site.taxId}</li>
+    <li>Domicilio social: {site.address.street}, {site.address.postalCode} {site.address.city}</li>
+    <li>Teléfonos: {site.phones.office.display} / {site.phones.mobile.display}</li>
+    <li>Correo electrónico: <a href={`mailto:${site.email}`}>{site.email}</a></li>
+  </ul>
+
+  <h2>3. Condiciones de acceso y uso</h2>
+  <p>
+    El acceso al sitio web es libre y gratuito. Algunos servicios, como las solicitudes de información, requieren
+    cumplimentar un formulario. El usuario garantiza la veracidad de los datos que facilite y se compromete a hacer un
+    uso adecuado del sitio web y de sus contenidos, de conformidad con la ley, la buena fe y el orden público. Queda
+    prohibido, entre otros:
+  </p>
+  <ul>
+    <li>Difundir contenidos delictivos, violentos, discriminatorios o contrarios a la ley o al orden público.</li>
+    <li>Introducir virus o realizar actuaciones que puedan alterar o dañar los sistemas del titular o de terceros.</li>
+    <li>Intentar acceder a áreas restringidas de los sistemas del titular o de terceros.</li>
+    <li>Vulnerar derechos de propiedad intelectual o industrial o suplantar la identidad de otras personas.</li>
+    <li>Recabar datos con finalidad publicitaria o enviar comunicaciones comerciales no solicitadas.</li>
+  </ul>
+
+  <h2>4. Información sobre los inmuebles</h2>
+  <p>
+    La información de los inmuebles (precio, superficie, características, fotografías y certificado energético) se
+    publica con carácter informativo a partir de los datos de que dispone el titular y puede variar. No constituye una
+    oferta vinculante. Los precios no incluyen los gastos e impuestos de la operación salvo que se indique lo contrario.
+    Consulte con nosotros la disponibilidad y las condiciones de cada inmueble.
+  </p>
+
+  <h2>5. Propiedad intelectual e industrial</h2>
+  <p>
+    Los contenidos del sitio web (textos, fotografías, gráficos, logotipos, diseño y código) pertenecen al titular o a
+    terceros que han autorizado su uso. No se permite su reproducción, distribución o transformación sin autorización,
+    salvo para el uso personal y privado del sitio web.
+  </p>
+
+  <h2>6. Exclusión de responsabilidad</h2>
+  <p>
+    El titular no garantiza la disponibilidad continua del sitio web ni la ausencia de errores en sus contenidos, y no
+    se responsabiliza de los daños derivados de su uso indebido. Los enlaces a sitios de terceros se ofrecen solo con
+    fines informativos; el titular no controla ni se responsabiliza de su contenido.
+  </p>
+
+  <h2>7. Protección de datos</h2>
+  <p>
+    El tratamiento de los datos personales se rige por la <a href="/politica-privacidad/">política de privacidad</a>.
+    El uso de cookies se describe en la <a href="/politica-cookies/">política de cookies</a>.
+  </p>
+
+  <h2>8. Legislación aplicable</h2>
+  <p>Estas condiciones se rigen por la legislación española. La lengua utilizada es el castellano.</p>
+</LegalPage>

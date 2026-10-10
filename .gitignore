@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.astro/
+test-results/
+playwright-report/
+.env
+.env.*
+!.env.example
+*.log
+
+# Configuración del formulario en el servidor (contiene direcciones y token; no versionar)
+public/api/config.php
+# Inventario en bruto descargado de Inmovilla en cada sincronización
+.cache/

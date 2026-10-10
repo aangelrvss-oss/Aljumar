@@ -1,0 +1,278 @@
+---
+/**
+ * Galería de la ficha. Mosaico con la foto principal y miniaturas; el visor
+ * a pantalla completa usa <dialog> nativo (foco atrapado y Escape para
+ * cerrar), con botones anterior/siguiente, flechas del teclado y gesto de
+ * deslizar en móvil.
+ */
+import Icon from './Icon.astro';
+import type { Photo } from '../lib/inventory/types';
+
+interface Props {
+  photos: Photo[];
+  title: string;
+}
+const { photos, title } = Astro.props;
+const mosaic = photos.slice(0, 5);
+---
+
+{
+  photos.length === 0 ? (
+    <div class="gallery-empty">
+      <Icon name="camera" size={32} />
+      <p>Este inmueble todavía no tiene fotografías publicadas. Pídenos más información y te las enviamos.</p>
+    </div>
+  ) : (
+    <div class="gallery" data-gallery>
+      <div class:list={['gallery__mosaic', `gallery__mosaic--${Math.min(mosaic.length, 5)}`]}>
+        {mosaic.map((ph, i) => (
+          <button type="button" class="gallery__tile" data-open={i} aria-label={`Ampliar fotografía ${i + 1} de ${photos.length}`}>
+            <img
+              src={ph.url}
+              alt={ph.alt}
+              width={i === 0 ? 1200 : 600}
+              height={i === 0 ? 800 : 400}
+              loading={i === 0 ? 'eager' : 'lazy'}
+              fetchpriority={i === 0 ? 'high' : undefined}
+              decoding="async"
+              data-fallback
+            />
+          </button>
+        ))}
+      </div>
+      <button type="button" class="btn btn--ghost btn--sm gallery__all" data-open="0">
+        <Icon name="expand" size={18} /> Ver las {photos.length} fotografías
+      </button>
+
+      <dialog class="lightbox" aria-label={`Fotografías: ${title}`} data-lightbox>
+        <div class="lightbox__bar">
+          <p class="lightbox__count" aria-live="polite" data-counter>1 / {photos.length}</p>
+          <button type="button" class="lightbox__btn" data-close>
+            <Icon name="close" />
+            <span class="visually-hidden">Cerrar</span>
+          </button>
+        </div>
+        <figure class="lightbox__stage">
+          <img src="" alt="" data-stage />
+        </figure>
+        {photos.length > 1 && (
+          <>
+            <button type="button" class="lightbox__btn lightbox__nav lightbox__nav--prev" data-prev>
+              <Icon name="arrow-left" />
+              <span class="visually-hidden">Foto anterior</span>
+            </button>
+            <button type="button" class="lightbox__btn lightbox__nav lightbox__nav--next" data-next>
+              <Icon name="arrow-right" />
+              <span class="visually-hidden">Foto siguiente</span>
+            </button>
+          </>
+        )}
+        <script type="application/json" data-photos set:html={JSON.stringify(photos)} />
+      </dialog>
+    </div>
+  )
+}
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-gallery]').forEach((g) => {
+    const dialog = g.querySelector<HTMLDialogElement>('[data-lightbox]')!;
+    const stage = g.querySelector<HTMLImageElement>('[data-stage]')!;
+    const counter = g.querySelector<HTMLElement>('[data-counter]')!;
+    const photos = JSON.parse(g.querySelector('[data-photos]')!.textContent || '[]') as { url: string; alt: string }[];
+    let index = 0;
+    let opener: HTMLElement | null = null;
+
+    function show(i: number) {
+      index = (i + photos.length) % photos.length;
+      const p = photos[index]!;
+      stage.src = p.url;
+      stage.alt = p.alt;
+      counter.textContent = `${index + 1} / ${photos.length}`;
+      // Precarga la siguiente para que el paso sea inmediato.
+      const next = photos[(index + 1) % photos.length];
+      if (next) new Image().src = next.url;
+    }
+
+    g.querySelectorAll<HTMLElement>('[data-open]').forEach((b) =>
+      b.addEventListener('click', () => {
+        opener = b;
+        show(Number(b.dataset.open) || 0);
+        dialog.showModal();
+      }),
+    );
+    g.querySelector('[data-close]')?.addEventListener('click', () => dialog.close());
+    g.querySelector('[data-prev]')?.addEventListener('click', () => show(index - 1));
+    g.querySelector('[data-next]')?.addEventListener('click', () => show(index + 1));
+    dialog.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') show(index - 1);
+      if (e.key === 'ArrowRight') show(index + 1);
+    });
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) dialog.close();
+    });
+    dialog.addEventListener('close', () => opener?.focus());
+    let startX = 0;
+    stage.addEventListener('touchstart', (e) => (startX = e.touches[0]?.clientX ?? 0), { passive: true });
+    stage.addEventListener(
+      'touchend',
+      (e) => {
+        const dx = (e.changedTouches[0]?.clientX ?? 0) - startX;
+        if (Math.abs(dx) > 40) show(index + (dx < 0 ? 1 : -1));
+      },
+      { passive: true },
+    );
+  });
+</script>
+
+<style>
+  .gallery {
+    position: relative;
+  }
+  .gallery__mosaic {
+    display: grid;
+    gap: var(--s-2);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    aspect-ratio: 3 / 2;
+    background: var(--navy-50);
+  }
+  .gallery__tile {
+    position: relative;
+    display: block;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    background: linear-gradient(135deg, var(--navy-100), var(--navy-50));
+    cursor: zoom-in;
+    overflow: hidden;
+  }
+  .gallery__tile img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 500ms var(--ease);
+  }
+  .gallery__tile:hover img {
+    transform: scale(1.03);
+  }
+  .gallery__tile:focus-visible {
+    outline-offset: -4px;
+    outline-color: var(--lime-500);
+  }
+  .gallery__tile:nth-child(n + 2) {
+    display: none;
+  }
+  .gallery__all {
+    position: absolute;
+    right: var(--s-3);
+    bottom: var(--s-3);
+    background: var(--white);
+  }
+  @media (min-width: 768px) {
+    .gallery__mosaic {
+      aspect-ratio: 16 / 8;
+    }
+    .gallery__mosaic--3,
+    .gallery__mosaic--4,
+    .gallery__mosaic--5 {
+      grid-template-columns: 2fr 1fr;
+      grid-template-rows: 1fr 1fr;
+    }
+    .gallery__mosaic--5 {
+      grid-template-columns: 2fr 1fr 1fr;
+    }
+    .gallery__mosaic--2 {
+      grid-template-columns: 2fr 1fr;
+    }
+    .gallery__tile:nth-child(n + 2) {
+      display: block;
+    }
+    .gallery__mosaic--3 .gallery__tile:first-child,
+    .gallery__mosaic--4 .gallery__tile:first-child,
+    .gallery__mosaic--5 .gallery__tile:first-child {
+      grid-row: span 2;
+    }
+    .gallery__mosaic--4 .gallery__tile:nth-child(4) {
+      display: none;
+    }
+  }
+  .gallery-empty {
+    display: grid;
+    justify-items: center;
+    gap: var(--s-2);
+    padding: var(--s-8) var(--s-5);
+    border-radius: var(--r-lg);
+    background: var(--navy-50);
+    color: var(--navy-700);
+    text-align: center;
+  }
+
+  .lightbox {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: rgb(10 22 33 / 0.97);
+    color: var(--white);
+  }
+  .lightbox::backdrop {
+    background: rgb(10 22 33 / 0.9);
+  }
+  .lightbox__bar {
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--s-3) var(--s-4);
+  }
+  .lightbox__count {
+    margin: 0;
+    font-weight: 600;
+  }
+  .lightbox__stage {
+    display: grid;
+    place-items: center;
+    height: 100%;
+    margin: 0;
+    padding: var(--s-8) var(--s-2);
+  }
+  .lightbox__stage img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: var(--r-sm);
+  }
+  .lightbox__btn {
+    display: inline-grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border: 1px solid rgb(255 255 255 / 0.3);
+    border-radius: 50%;
+    background: rgb(255 255 255 / 0.08);
+    color: var(--white);
+    cursor: pointer;
+  }
+  .lightbox__btn:hover {
+    background: rgb(255 255 255 / 0.18);
+  }
+  .lightbox__btn:focus-visible {
+    outline-color: var(--lime-500);
+  }
+  .lightbox__nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .lightbox__nav--prev {
+    left: var(--s-3);
+  }
+  .lightbox__nav--next {
+    right: var(--s-3);
+  }
+</style>

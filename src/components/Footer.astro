@@ -1,0 +1,164 @@
+---
+import Logo from './Logo.astro';
+import Icon from './Icon.astro';
+import { site } from '../data/site';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer on-dark">
+  <div class="container site-footer__grid">
+    <div class="site-footer__brand">
+      <Logo variant="vertical" tone="dark" height={96} />
+      <p>
+        Inmobiliaria en Moratalaz (Madrid) desde {site.foundingYear}. Compraventa y alquiler de viviendas con trato
+        cercano y acompañamiento de principio a fin.
+      </p>
+    </div>
+
+    <div>
+      <h2 class="site-footer__title">Inmuebles</h2>
+      <ul>
+        <li><a href="/comprar/">Viviendas en venta</a></li>
+        <li><a href="/alquilar/">Viviendas en alquiler</a></li>
+        <li><a href="/traspasos/">Traspasos</a></li>
+        <li><a href="/vender-mi-vivienda/">Vender mi vivienda</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <h2 class="site-footer__title">Aljumar</h2>
+      <ul>
+        <li><a href="/sobre-aljumar/">Sobre nosotros</a></li>
+        <li><a href="/sobre-aljumar/#equipo">Equipo</a></li>
+        <li><a href="/consejos-inmobiliarios/">Consejos inmobiliarios</a></li>
+        <li><a href="/contacto/">Contacto</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <h2 class="site-footer__title">Oficina</h2>
+      <address>
+        <a class="site-footer__contact" href={site.mapUrl} rel="noopener" target="_blank">
+          <Icon name="pin" size={18} />
+          <span>
+            {site.address.street}<br />
+            {site.address.postalCode} {site.address.city} ({site.address.note})
+            <span class="visually-hidden"> (abre un mapa en una pestaña nueva)</span>
+          </span>
+        </a>
+        <a class="site-footer__contact" href={`tel:${site.phones.office.tel}`}>
+          <Icon name="phone" size={18} />
+          <span>{site.phones.office.display}</span>
+        </a>
+        <a class="site-footer__contact" href={`tel:${site.phones.mobile.tel}`}>
+          <Icon name="phone" size={18} />
+          <span>{site.phones.mobile.display} <span class="muted-dark">(móvil)</span></span>
+        </a>
+        <a class="site-footer__contact" href={`mailto:${site.email}`}>
+          <Icon name="mail" size={18} />
+          <span>{site.email}</span>
+        </a>
+      </address>
+    </div>
+  </div>
+
+  <div class="container site-footer__legal">
+    <p>© {year} {site.legalName} · CIF {site.taxId}</p>
+    <ul>
+      <li><a href="/aviso-legal/">Aviso legal</a></li>
+      <li><a href="/politica-privacidad/">Política de privacidad</a></li>
+      <li><a href="/politica-cookies/">Política de cookies</a></li>
+    </ul>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background: var(--navy-950);
+    color: var(--navy-200);
+    padding-top: var(--s-8);
+    font-size: var(--fs-sm);
+  }
+  .site-footer a {
+    color: var(--white);
+    text-decoration: none;
+  }
+  .site-footer a:hover {
+    color: var(--lime-500);
+    text-decoration: underline;
+  }
+  .site-footer__grid {
+    display: grid;
+    gap: var(--s-6);
+    grid-template-columns: 1fr;
+    padding-bottom: var(--s-7);
+  }
+  .site-footer__brand p {
+    max-width: 34ch;
+    margin-top: var(--s-4);
+  }
+  .site-footer__title {
+    margin-bottom: var(--s-3);
+    font-family: var(--font-sans);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--lime-500);
+  }
+  .site-footer ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: var(--s-2);
+  }
+  address {
+    display: grid;
+    gap: var(--s-3);
+    font-style: normal;
+  }
+  .site-footer__contact {
+    display: flex;
+    gap: var(--s-3);
+    align-items: flex-start;
+  }
+  .site-footer__contact :global(svg) {
+    margin-top: 3px;
+    flex: none;
+    color: var(--lime-500);
+  }
+  .muted-dark {
+    color: var(--navy-200);
+  }
+  .site-footer__legal {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-3) var(--s-6);
+    justify-content: space-between;
+    padding-block: var(--s-5) calc(var(--s-5) + 72px);
+    border-top: 1px solid rgb(255 255 255 / 0.12);
+  }
+  .site-footer__legal p {
+    margin: 0;
+  }
+  .site-footer__legal ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-5);
+  }
+  @media (min-width: 720px) {
+    .site-footer__grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  @media (min-width: 1024px) {
+    .site-footer__grid {
+      grid-template-columns: 1.4fr 1fr 1fr 1.3fr;
+    }
+    .site-footer__legal {
+      padding-bottom: var(--s-5);
+    }
+  }
+</style>

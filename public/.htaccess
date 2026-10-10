@@ -1,0 +1,99 @@
+# Generado por scripts/gen-redirects.ts. NO editar a mano.
+Options -Indexes
+DirectoryIndex index.html
+ErrorDocument 404 /404.html
+ErrorDocument 410 /inmueble-no-disponible/index.html
+AddDefaultCharset UTF-8
+AddType image/avif .avif
+AddType image/webp .webp
+AddType image/svg+xml .svg
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://fotos15.apinmo.com https://fotos15.inmovilla.com https://*.githubusercontent.com; font-src 'self'; connect-src 'self' https://api.github.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
+  <FilesMatch "\.(css|js|woff2|avif|webp|jpg|jpeg|png|svg)$">
+    Header set Cache-Control "public, max-age=2592000"
+  </FilesMatch>
+  <If "%{REQUEST_URI} =~ m#^/_astro/#">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </If>
+  <FilesMatch "\.html$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml text/plain application/xml
+</IfModule>
+
+RewriteEngine On
+
+# --- HTTPS (descomentar si el alojamiento no lo fuerza ya; probar antes) ---
+# RewriteCond %{HTTPS} off
+# RewriteRule ^ https://aljumar.es%{REQUEST_URI} [L,R=301]
+# --- www → sin www (la web antigua usa aljumar.es sin www) ---
+# RewriteCond %{HTTP_HOST} ^www\.aljumar\.es$ [NC]
+# RewriteRule ^ https://aljumar.es%{REQUEST_URI} [L,R=301]
+
+# --- Fichas antiguas del plugin irdinmo: /inmueble/?<código> → nueva ficha ---
+RewriteCond %{QUERY_STRING} (^|&)[a-z_]*=(30312733)(&|$) [NC]
+RewriteRule ^inmueble/?$ /inmueble/piso-venta-madrid-30312733/? [R=301,L]
+RewriteCond %{QUERY_STRING} (^|&)[a-z_]*=(30233535)(&|$) [NC]
+RewriteRule ^inmueble/?$ /inmueble/chalet-venta-rivas-vaciamadrid-30233535/? [R=301,L]
+RewriteCond %{QUERY_STRING} (^|&)[a-z_]*=(29821198)(&|$) [NC]
+RewriteRule ^inmueble/?$ /inmueble/piso-venta-madrid-vinateros-29821198/? [R=301,L]
+RewriteCond %{QUERY_STRING} (^|&)[a-z_]*=(29792167)(&|$) [NC]
+RewriteRule ^inmueble/?$ /inmueble/piso-venta-madrid-29792167/? [R=301,L]
+RewriteCond %{QUERY_STRING} (^|&)[a-z_]*=(29670372)(&|$) [NC]
+RewriteRule ^inmueble/?$ /inmueble/atico-venta-madrid-29670372/? [R=301,L]
+RewriteCond %{QUERY_STRING} (^|&)[a-z_]*=(29301614)(&|$) [NC]
+RewriteRule ^inmueble/?$ /inmueble/chalet-venta-sesena-29301614/? [R=301,L]
+
+# --- Inmuebles retirados (vendidos, alquilados o dados de baja): 410 Gone ---
+
+# --- Redirecciones permanentes de la web antigua (docs/migration/redirect-map.csv) ---
+RewriteRule ^quieres-vender/?$ /vender-mi-vivienda/? [R=301,L]
+RewriteRule ^nuestra-esencia/?$ /sobre-aljumar/? [R=301,L]
+RewriteRule ^formulario-cliente/?$ /contacto/? [R=301,L]
+RewriteRule ^blog/?$ /consejos-inmobiliarios/? [R=301,L]
+RewriteRule ^blog/page/\d+/?$ /consejos-inmobiliarios/? [R=301,L]
+RewriteRule ^buscador/?$ /comprar/? [R=301,L]
+RewriteRule ^resultados/?$ /comprar/? [R=301,L]
+RewriteRule ^buscador-mapa/?$ /comprar/? [R=301,L]
+RewriteRule ^inmueble/?$ /comprar/? [R=301,L]
+RewriteRule ^property/?$ /comprar/? [R=301,L]
+RewriteRule ^property/page/\d+/?$ /comprar/? [R=301,L]
+RewriteRule ^property/local-comercial-en-arganda/?$ /comprar/? [R=301,L]
+RewriteRule ^property/ponemos-en-venta-esta-vivienda-con-una-inmejorable-ubicacion/?$ /comprar/? [R=301,L]
+RewriteRule ^property/venta-de-piso-con-excelente-ubicacion/?$ /comprar/? [R=301,L]
+RewriteRule ^property/precioso-piso-en-alquiler/?$ /alquilar/? [R=301,L]
+RewriteRule ^property/plaza-de-garaje-en-venta-2/?$ /comprar/? [R=301,L]
+RewriteRule ^property/precioso-chalet-disponible-a-la-venta/?$ /comprar/? [R=301,L]
+RewriteRule ^property/oportunidad-a-la-venta/?$ /comprar/? [R=301,L]
+RewriteRule ^property/plaza-de-garaje-en-vinateros/?$ /comprar/? [R=301,L]
+RewriteRule ^property/piso-en-venta-tipologia-l-4/?$ /comprar/? [R=301,L]
+RewriteRule ^property/enorme-plaza-de-garaje-a-la-venta/?$ /comprar/? [R=301,L]
+RewriteRule ^property/piso-disponible-en-pueblo-nuevo/?$ /comprar/? [R=301,L]
+RewriteRule ^property/fantastica-vivienda-exterior-en-lavapies/?$ /comprar/? [R=301,L]
+RewriteRule ^property/plaza-de-garaje-en-rivas-pueblo/?$ /comprar/? [R=301,L]
+RewriteRule ^property/.+ /comprar/? [R=301,L]
+RewriteRule ^status/alquilar/?$ /alquilar/? [R=301,L]
+RewriteRule ^status/.* /comprar/? [R=301,L]
+RewriteRule ^(label|property-label|property_label|property-type|property_type|property-city|property_city|city|property-area|property_area|area|property-feature|property_feature|feature)/.* /comprar/? [R=301,L]
+RewriteRule ^agent/.* /sobre-aljumar/? [R=301,L]
+RewriteRule ^author/.* /sobre-aljumar/? [R=301,L]
+RewriteRule ^35450-2/?$ /sobre-aljumar/? [R=301,L]
+RewriteRule ^guia-comprador/?$ /consejos-inmobiliarios/tema/comprar-y-vender/? [R=301,L]
+RewriteRule ^guia-vendedor/?$ /vender-mi-vivienda/? [R=301,L]
+RewriteRule ^category/sin-categoria/?$ /consejos-inmobiliarios/? [R=301,L]
+RewriteRule ^category/blog-inmobiliario/?$ /consejos-inmobiliarios/tema/comprar-y-vender/? [R=301,L]
+RewriteRule ^category/consejos-hogar/?$ /consejos-inmobiliarios/tema/hogar-y-reformas/? [R=301,L]
+RewriteRule ^category/noticias-inmobiliarias/?$ /consejos-inmobiliarios/tema/mercado-y-normativa/? [R=301,L]
+RewriteRule ^category/.* /consejos-inmobiliarios/? [R=301,L]
+RewriteRule ^tag/.* /consejos-inmobiliarios/? [R=301,L]
+RewriteRule ^(comments/)?feed/?$ /consejos-inmobiliarios/? [R=301,L]
+RewriteRule ^sitemap_index\.xml$ /sitemap-index.xml? [R=301,L]
+RewriteRule ^[a-z_]+-sitemap\d*\.xml$ /sitemap-index.xml? [R=301,L]

@@ -1,0 +1,310 @@
+---
+import Base from '../layouts/Base.astro';
+import ContactForm from '../components/ContactForm.astro';
+import Icon from '../components/Icon.astro';
+import { site } from '../data/site';
+
+// Servicios tal y como los describe Aljumar en su web actual («¿Quieres vender?»).
+const services = [
+  { icon: 'chart', title: 'Informe de valoración sin compromiso', text: 'Analizamos tu vivienda y el mercado para determinar su valor real de venta y aconsejarte el precio de salida.' },
+  { icon: 'camera', title: 'Preparación de la vivienda', text: 'La preparamos para la venta y le sacamos el máximo partido, para que sea un hogar deseable que llame la atención.' },
+  { icon: 'users', title: 'Más compradores', text: 'Disponemos de una amplia base de datos de compradores y vendedores, gracias también a nuestra colaboración con varias MLS (redes de agencias) de la zona.' },
+  { icon: 'shield', title: 'Compradores filtrados', text: 'Analizamos a los candidatos y descartamos a quienes no cumplen los requisitos de solvencia y fiabilidad.' },
+  { icon: 'doc', title: 'Trámites resueltos', text: 'Te ayudamos con los trámites legales y financieros para que tengas todos los papeles en orden.' },
+  { icon: 'pin', title: 'Conocimiento de la zona', text: `Más de ${new Date().getFullYear() - site.foundingYear - 1} años trabajando en Moratalaz: conocemos sus viviendas, calles y compradores.` },
+] as const;
+
+const faqs = [
+  {
+    q: '¿La valoración tiene algún coste o compromiso?',
+    a: 'No. El informe de valoración es sin compromiso: te explicamos cómo hemos llegado al precio y decides después con calma si quieres vender con nosotros.',
+  },
+  {
+    q: '¿Trabajáis en exclusiva?',
+    a: 'Sí. Somos una agencia dedicada a la compraventa de inmuebles en exclusiva. Te explicaremos con detalle las condiciones antes de firmar nada.',
+  },
+  {
+    q: '¿Qué documentos necesito para vender?',
+    a: 'Entre otros, la nota simple, el certificado energético, la escritura, el último recibo del IBI y el certificado de deuda con la comunidad. Te ayudamos a reunirlos y tienes la lista completa en nuestro artículo sobre documentación.',
+    link: { href: '/check-list-de-los-documentos-que-necesitas-para-vender-tu-propiedad/', label: 'Ver la lista de documentos' },
+  },
+  {
+    q: '¿También gestionáis alquileres?',
+    a: 'Sí. Si prefieres alquilar tu vivienda, analizamos el mercado, te asesoramos sobre el precio y buscamos inquilinos que encajen.',
+  },
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+};
+---
+
+<Base
+  title="Vender mi vivienda en Moratalaz y Madrid: valoración sin compromiso"
+  description="¿Vendes tu piso en Moratalaz o Madrid? Valoración sin compromiso, preparación de la vivienda, compradores filtrados y ayuda con todos los trámites."
+  breadcrumbs={[
+    { name: 'Inicio', href: '/' },
+    { name: 'Vender mi vivienda', href: '/vender-mi-vivienda/' },
+  ]}
+  jsonLd={[faqSchema]}
+  contactFormHref="#formulario"
+>
+  <section class="sell-hero">
+    <div class="container sell-hero__grid">
+      <div>
+        <p class="eyebrow">Propietarios</p>
+        <h1>Vende tu vivienda con quien conoce tu barrio</h1>
+        <p class="lead">
+          Te decimos cuánto vale de verdad, la preparamos para el mercado y la ponemos delante de compradores
+          solventes. Te acompañamos durante todo el proceso.
+        </p>
+        <ul class="ticks">
+          <li><Icon name="check" /> Valoración sin compromiso</li>
+          <li><Icon name="check" /> Trámites legales y financieros resueltos</li>
+          <li><Icon name="check" /> Desde {site.foundingYear} en Moratalaz</li>
+        </ul>
+      </div>
+      <div class="sell-form" id="solicitar">
+        <ContactForm
+          variant="vender"
+          id="formulario"
+          heading="Cuéntanos sobre tu inmueble"
+          intro="Solo lo imprescindible. Te llamamos para conocer tu situación y concertar la visita de valoración."
+        />
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--tint" aria-labelledby="que-pasa">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Qué pasa después</p>
+          <h2 id="que-pasa">Así trabajamos contigo</h2>
+          <p>Sin prisas ni compromisos: en cada paso decides tú.</p>
+        </div>
+      </div>
+      <ol class="flow">
+        <li>
+          <h3>Te llamamos</h3>
+          <p>Revisamos tu solicitud y te llamamos en horario de oficina para conocer tu situación, tus plazos y tus dudas.</p>
+        </li>
+        <li>
+          <h3>Visitamos y valoramos</h3>
+          <p>Vemos la vivienda y preparamos un informe de valoración con su valor real de venta según el mercado de la zona.</p>
+        </li>
+        <li>
+          <h3>Te proponemos un plan</h3>
+          <p>Precio de salida, cómo presentar la vivienda y cómo llegar a más compradores. Si no te convence, no hay compromiso.</p>
+        </li>
+        <li>
+          <h3>Vendemos contigo</h3>
+          <p>Organizamos las visitas, filtramos a los compradores, negociamos y te ayudamos con toda la documentación.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="servicios-vender">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Qué incluye</p>
+          <h2 id="servicios-vender">Un servicio de calidad para maximizar el valor de tu vivienda</h2>
+        </div>
+      </div>
+      <ul class="services">
+        {
+          services.map((s) => (
+            <li data-reveal>
+              <span class="services__icon">
+                <Icon name={s.icon} size={24} />
+              </span>
+              <h3>{s.title}</h3>
+              <p>{s.text}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="section section--tint" aria-labelledby="faq">
+    <div class="container container--narrow">
+      <h2 id="faq">Preguntas frecuentes</h2>
+      <div class="faq">
+        {
+          faqs.map((f) => (
+            <details>
+              <summary>{f.q}</summary>
+              <div>
+                <p>{f.a}</p>
+                {f.link && (
+                  <a class="link-arrow" href={f.link.href}>
+                    {f.link.label}
+                  </a>
+                )}
+              </div>
+            </details>
+          ))
+        }
+      </div>
+      <p class="faq__more">
+        ¿Prefieres hablarlo por teléfono? Llámanos al <a href={`tel:${site.phones.office.tel}`}>{site.phones.office.display}</a>
+        o al <a href={`tel:${site.phones.mobile.tel}`}>{site.phones.mobile.display}</a>.
+      </p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .sell-hero {
+    padding-block: var(--s-6) var(--section);
+    background: linear-gradient(180deg, var(--navy-50), var(--white) 70%);
+  }
+  .sell-hero__grid {
+    display: grid;
+    gap: var(--s-7);
+    align-items: start;
+  }
+  .sell-hero h1 {
+    font-size: var(--fs-2xl);
+  }
+  .ticks {
+    display: grid;
+    gap: var(--s-2);
+    margin: var(--s-5) 0 0;
+    padding: 0;
+    list-style: none;
+    font-weight: 600;
+    color: var(--navy-900);
+  }
+  .ticks li {
+    display: flex;
+    gap: var(--s-2);
+    align-items: center;
+  }
+  .ticks :global(svg) {
+    color: var(--success);
+  }
+  .sell-form {
+    padding: var(--s-6);
+    border-radius: var(--r-xl);
+    background: var(--white);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--line);
+  }
+  .flow {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+    gap: var(--s-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: flow;
+  }
+  .flow li {
+    counter-increment: flow;
+    padding: var(--s-5);
+    border-radius: var(--r-lg);
+    background: var(--white);
+    border-top: 4px solid var(--lime-500);
+  }
+  .flow li::before {
+    content: '0' counter(flow);
+    display: block;
+    margin-bottom: var(--s-2);
+    font-family: var(--font-display);
+    font-size: var(--fs-xl);
+    color: var(--navy-500);
+  }
+  .flow h3 {
+    margin-bottom: var(--s-2);
+  }
+  .flow p {
+    margin: 0;
+    color: var(--ink-2);
+    font-size: var(--fs-sm);
+  }
+  .services {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+    gap: var(--s-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .services li {
+    padding: var(--s-5);
+    border-radius: var(--r-lg);
+    border: 1px solid var(--line);
+  }
+  .services__icon {
+    display: inline-grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    margin-bottom: var(--s-3);
+    border-radius: 12px;
+    background: var(--lime-100);
+    color: var(--navy-900);
+  }
+  .services h3 {
+    margin-bottom: var(--s-2);
+  }
+  .services p {
+    margin: 0;
+    color: var(--ink-2);
+    font-size: var(--fs-sm);
+  }
+  .faq {
+    display: grid;
+    gap: var(--s-3);
+    margin-top: var(--s-5);
+  }
+  .faq details {
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    background: var(--white);
+  }
+  .faq summary {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--s-4);
+    padding: var(--s-4) var(--s-5);
+    font-weight: 700;
+    color: var(--navy-900);
+    cursor: pointer;
+    list-style: none;
+  }
+  .faq summary::-webkit-details-marker {
+    display: none;
+  }
+  .faq summary::after {
+    content: '+';
+    font-size: 1.4rem;
+    line-height: 1;
+    color: var(--navy-500);
+  }
+  .faq details[open] summary::after {
+    content: '−';
+  }
+  .faq details > div {
+    padding: 0 var(--s-5) var(--s-4);
+  }
+  .faq__more {
+    margin-top: var(--s-5);
+    color: var(--ink-2);
+  }
+  @media (min-width: 1000px) {
+    .sell-hero__grid {
+      grid-template-columns: 1fr 1.05fr;
+    }
+    .sell-hero__grid > div:first-child {
+      position: sticky;
+      top: calc(var(--header-h) + var(--s-6));
+    }
+  }
+</style>

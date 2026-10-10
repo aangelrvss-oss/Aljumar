@@ -1,0 +1,415 @@
+---
+/**
+ * Formulario de contacto con tres variantes:
+ *  - general  → /contacto/
+ *  - inmueble → fichas (lleva la referencia del inmueble)
+ *  - vender   → /vender-mi-vivienda/ (captación de propietarios)
+ *
+ * Envía a /api/contacto.php (PHP en el alojamiento). Con JavaScript se envía
+ * por fetch y se muestra la confirmación en la página; sin JavaScript el
+ * servidor responde con una redirección a /contacto/enviado/.
+ * La validación se repite en el servidor (public/api/contacto.php).
+ */
+import Icon from './Icon.astro';
+import { site } from '../data/site';
+
+interface Props {
+  variant?: 'general' | 'inmueble' | 'vender';
+  id?: string;
+  propertyRef?: string;
+  propertyTitle?: string;
+  propertyUrl?: string;
+  heading?: string;
+  intro?: string;
+}
+const {
+  variant = 'general',
+  id = 'formulario',
+  propertyRef,
+  propertyTitle,
+  propertyUrl,
+  heading,
+  intro,
+} = Astro.props;
+const uid = `${id}-`;
+const defaultMessage =
+  variant === 'inmueble' && propertyTitle ? `Hola, me interesa «${propertyTitle}» (ref. ${propertyRef}). ` : '';
+---
+
+<form
+  class="cform"
+  id={id}
+  action="/api/contacto.php"
+  method="post"
+  novalidate
+  data-contact-form
+  data-variant={variant}
+>
+  {heading && <h2 class="cform__title">{heading}</h2>}
+  {intro && <p class="cform__intro">{intro}</p>}
+
+  <div class="alert alert--error" role="alert" data-form-error hidden>
+    <Icon name="info" />
+    <div>
+      <strong>No hemos podido enviar tu mensaje.</strong>
+      <p data-form-error-text>Revisa los campos marcados.</p>
+    </div>
+  </div>
+
+  <input type="hidden" name="formulario" value={variant} />
+  <input type="hidden" name="ts" value="" data-ts />
+  {propertyRef && <input type="hidden" name="inmueble_ref" value={propertyRef} />}
+  {propertyTitle && <input type="hidden" name="inmueble_titulo" value={propertyTitle} />}
+  {propertyUrl && <input type="hidden" name="inmueble_url" value={propertyUrl} />}
+
+  <!-- Trampa para robots: invisible para personas y lectores de pantalla -->
+  <div class="cform__trap" aria-hidden="true">
+    <label for={`${uid}web`}>No rellenar este campo</label>
+    <input id={`${uid}web`} type="text" name="web" tabindex="-1" autocomplete="off" />
+  </div>
+
+  <div class="cform__grid">
+    <div class="field">
+      <label for={`${uid}nombre`}>Nombre y apellidos</label>
+      <input
+        class="input"
+        id={`${uid}nombre`}
+        name="nombre"
+        type="text"
+        autocomplete="name"
+        required
+        minlength="2"
+        maxlength="120"
+        aria-describedby={`${uid}nombre-err`}
+      />
+      <p class="field__error" id={`${uid}nombre-err`} data-error-for="nombre"></p>
+    </div>
+
+    <div class="field">
+      <label for={`${uid}telefono`}>Teléfono</label>
+      <input
+        class="input"
+        id={`${uid}telefono`}
+        name="telefono"
+        type="tel"
+        autocomplete="tel"
+        inputmode="tel"
+        maxlength="25"
+        required={variant !== 'general'}
+        aria-describedby={`${uid}telefono-err ${uid}telefono-hint`}
+      />
+      <p class="field__hint" id={`${uid}telefono-hint`}>
+        {variant === 'general' ? 'Opcional si nos dejas tu correo.' : 'Te llamaremos para concretar.'}
+      </p>
+      <p class="field__error" id={`${uid}telefono-err`} data-error-for="telefono"></p>
+    </div>
+
+    <div class="field cform__full">
+      <label for={`${uid}email`}>Correo electrónico</label>
+      <input
+        class="input"
+        id={`${uid}email`}
+        name="email"
+        type="email"
+        autocomplete="email"
+        required
+        maxlength="160"
+        aria-describedby={`${uid}email-err`}
+      />
+      <p class="field__error" id={`${uid}email-err`} data-error-for="email"></p>
+    </div>
+
+    {
+      variant === 'general' && (
+        <div class="field cform__full">
+          <label for={`${uid}motivo`}>¿En qué podemos ayudarte?</label>
+          <select class="select" id={`${uid}motivo`} name="motivo" data-motivo>
+            <option value="comprar">Busco una vivienda para comprar</option>
+            <option value="alquilar">Busco una vivienda en alquiler</option>
+            <option value="vender">Quiero vender mi vivienda</option>
+            <option value="poner-en-alquiler">Quiero alquilar mi vivienda</option>
+            <option value="otro">Otra consulta</option>
+          </select>
+        </div>
+      )
+    }
+
+    {
+      variant === 'inmueble' && (
+        <fieldset class="field cform__full cform__radios">
+          <legend>¿Qué necesitas?</legend>
+          <label class="check">
+            <input type="radio" name="interes" value="visita" checked /> <span>Concertar una visita</span>
+          </label>
+          <label class="check">
+            <input type="radio" name="interes" value="informacion" /> <span>Recibir más información</span>
+          </label>
+        </fieldset>
+      )
+    }
+
+    {
+      variant === 'vender' && (
+        <>
+          <div class="field">
+            <label for={`${uid}operacion`}>Quiero</label>
+            <select class="select" id={`${uid}operacion`} name="motivo">
+              <option value="vender">Vender mi inmueble</option>
+              <option value="poner-en-alquiler">Alquilar mi inmueble</option>
+              <option value="valorar">Conocer su valor de mercado</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for={`${uid}tipo`}>Tipo de inmueble</label>
+            <select class="select" id={`${uid}tipo`} name="tipo_inmueble">
+              <option value="piso">Piso o apartamento</option>
+              <option value="atico">Ático o dúplex</option>
+              <option value="chalet">Chalet o casa</option>
+              <option value="local">Local u oficina</option>
+              <option value="garaje">Garaje o trastero</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+          <div class="field cform__full">
+            <label for={`${uid}zona`}>Zona o calle del inmueble</label>
+            <input
+              class="input"
+              id={`${uid}zona`}
+              name="zona"
+              type="text"
+              maxlength="140"
+              required
+              placeholder="Ej.: Moratalaz, calle Arroyo Belincoso"
+              aria-describedby={`${uid}zona-err ${uid}zona-hint`}
+            />
+            <p class="field__hint" id={`${uid}zona-hint`}>
+              No hace falta el número ni el piso: lo vemos contigo después.
+            </p>
+            <p class="field__error" id={`${uid}zona-err`} data-error-for="zona" />
+          </div>
+        </>
+      )
+    }
+
+    <div class="field cform__full">
+      <label for={`${uid}mensaje`}>
+        Mensaje {variant !== 'general' && <span class="muted">(opcional)</span>}
+      </label>
+      <textarea
+        class="textarea"
+        id={`${uid}mensaje`}
+        name="mensaje"
+        maxlength="3000"
+        required={variant === 'general'}
+        rows="5"
+        aria-describedby={`${uid}mensaje-err`}>{defaultMessage}</textarea
+      >
+      <p class="field__error" id={`${uid}mensaje-err`} data-error-for="mensaje"></p>
+    </div>
+
+    <div class="field cform__full">
+      <label class="check">
+        <input type="checkbox" name="privacidad" value="1" required aria-describedby={`${uid}privacidad-err`} />
+        <span>
+          He leído la <a href="/politica-privacidad/" target="_blank" rel="noopener">política de privacidad</a> y
+          acepto que {site.name} trate mis datos para responder a esta solicitud.
+        </span>
+      </label>
+      <p class="field__error" id={`${uid}privacidad-err`} data-error-for="privacidad"></p>
+      <label class="check">
+        <input type="checkbox" name="comunicaciones" value="1" />
+        <span>Quiero recibir información de inmuebles que encajen con lo que busco (opcional).</span>
+      </label>
+    </div>
+  </div>
+
+  <p class="cform__legal">
+    Responsable: {site.legalName}. Finalidad: atender tu solicitud y, si lo marcas, enviarte inmuebles de tu interés.
+    No se cederán datos a terceros salvo obligación legal. Puedes ejercer tus derechos escribiendo a {site.email}.
+    Más información en la <a href="/politica-privacidad/">política de privacidad</a>.
+  </p>
+
+  <button type="submit" class="btn btn--accent cform__submit" data-submit>
+    <span data-submit-label>
+      {variant === 'inmueble' ? 'Enviar solicitud' : variant === 'vender' ? 'Quiero que me llaméis' : 'Enviar mensaje'}
+    </span>
+    <Icon name="arrow-right" />
+  </button>
+</form>
+
+<div class="cform-done" data-form-success hidden tabindex="-1">
+  <div class="alert alert--success" role="status">
+    <Icon name="check" />
+    <div>
+      <strong>¡Gracias! Hemos recibido tu mensaje.</strong>
+      <p>
+        Te responderemos lo antes posible en horario de oficina. Si es urgente, llámanos al
+        <a href={`tel:${site.phones.office.tel}`}>{site.phones.office.display}</a>.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const MESSAGES: Record<string, string> = {
+    nombre: 'Escribe tu nombre.',
+    email: 'Escribe un correo válido, por ejemplo nombre@dominio.es.',
+    telefono: 'Escribe un teléfono válido (9 cifras como mínimo).',
+    contacto: 'Déjanos un teléfono o un correo para poder responderte.',
+    zona: 'Indica la zona o la calle del inmueble.',
+    mensaje: 'Cuéntanos brevemente qué necesitas.',
+    privacidad: 'Necesitamos tu consentimiento para poder responderte.',
+  };
+
+  function validate(form: HTMLFormElement): Record<string, string> {
+    const errors: Record<string, string> = {};
+    const val = (n: string) => ((form.elements.namedItem(n) as HTMLInputElement | null)?.value ?? '').trim();
+    const el = (n: string) => form.elements.namedItem(n) as HTMLInputElement | null;
+    if (val('nombre').length < 2) errors.nombre = MESSAGES.nombre!;
+    const email = val('email');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) errors.email = MESSAGES.email!;
+    const tel = val('telefono').replace(/[\s().-]/g, '');
+    if (el('telefono')?.required || tel) {
+      if (!/^\+?\d{9,15}$/.test(tel)) errors.telefono = MESSAGES.telefono!;
+    }
+    if (el('zona')?.required && val('zona').length < 3) errors.zona = MESSAGES.zona!;
+    if (el('mensaje')?.required && val('mensaje').length < 5) errors.mensaje = MESSAGES.mensaje!;
+    if (!el('privacidad')?.checked) errors.privacidad = MESSAGES.privacidad!;
+    return errors;
+  }
+
+  function showErrors(form: HTMLFormElement, errors: Record<string, string>) {
+    form.querySelectorAll<HTMLElement>('[data-error-for]').forEach((p) => {
+      const name = p.dataset.errorFor!;
+      const msg = errors[name] ?? '';
+      p.textContent = msg;
+      const input = form.elements.namedItem(name);
+      if (input instanceof HTMLElement) {
+        if (msg) input.setAttribute('aria-invalid', 'true');
+        else input.removeAttribute('aria-invalid');
+      }
+    });
+  }
+
+  document.querySelectorAll<HTMLFormElement>('[data-contact-form]').forEach((form) => {
+    const ts = form.querySelector<HTMLInputElement>('[data-ts]');
+    if (ts) ts.value = String(Date.now());
+    const errorBox = form.querySelector<HTMLElement>('[data-form-error]')!;
+    const errorText = form.querySelector<HTMLElement>('[data-form-error-text]')!;
+    const submit = form.querySelector<HTMLButtonElement>('[data-submit]')!;
+    const label = form.querySelector<HTMLElement>('[data-submit-label]')!;
+    const success = form.nextElementSibling as HTMLElement | null;
+
+    // Preselecciona el motivo si llega en la URL (?motivo=vender).
+    const motivo = new URLSearchParams(location.search).get('motivo');
+    const select = form.querySelector<HTMLSelectElement>('[data-motivo]');
+    if (select && motivo && [...select.options].some((o) => o.value === motivo)) select.value = motivo;
+
+    form.addEventListener('blur', (e) => {
+      const t = e.target as HTMLInputElement;
+      if (!t.name || !t.getAttribute('aria-invalid')) return;
+      const errors = validate(form);
+      showErrors(form, { ...Object.fromEntries(Object.entries(errors).filter(([k]) => k === t.name)) });
+    }, true);
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorBox.hidden = true;
+      const errors = validate(form);
+      showErrors(form, errors);
+      const keys = Object.keys(errors);
+      if (keys.length) {
+        errorText.textContent = `Revisa ${keys.length === 1 ? 'el campo marcado' : `los ${keys.length} campos marcados`}.`;
+        errorBox.hidden = false;
+        (form.elements.namedItem(keys[0]!) as HTMLElement | null)?.focus();
+        return;
+      }
+      submit.disabled = true;
+      const original = label.textContent;
+      label.textContent = 'Enviando…';
+      try {
+        const res = await fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { Accept: 'application/json' },
+        });
+        const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string; fields?: Record<string, string> };
+        if (res.ok && data.ok) {
+          form.hidden = true;
+          if (success) {
+            success.hidden = false;
+            success.focus();
+          }
+          return;
+        }
+        if (data.fields) showErrors(form, data.fields);
+        errorText.textContent = data.error || 'Ha ocurrido un error inesperado. Inténtalo de nuevo o llámanos.';
+        errorBox.hidden = false;
+        errorBox.focus?.();
+      } catch {
+        errorText.textContent = 'No hay conexión con el servidor. Comprueba tu conexión o llámanos por teléfono.';
+        errorBox.hidden = false;
+      } finally {
+        submit.disabled = false;
+        label.textContent = original;
+      }
+    });
+  });
+</script>
+
+<style>
+  .cform {
+    display: grid;
+    gap: var(--s-4);
+  }
+  .cform__title {
+    margin: 0;
+    font-size: var(--fs-xl);
+  }
+  .cform__intro {
+    margin: 0;
+    color: var(--ink-2);
+  }
+  .cform__grid {
+    display: grid;
+    gap: var(--s-4);
+  }
+  .cform__radios {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    gap: var(--s-2);
+  }
+  .cform__trap {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+  .cform__legal {
+    margin: 0;
+    font-size: var(--fs-xs);
+    color: var(--ink-2);
+    line-height: 1.55;
+  }
+  .cform__submit {
+    justify-self: start;
+    min-width: 220px;
+  }
+  .cform__submit[disabled] {
+    opacity: 0.7;
+    cursor: progress;
+  }
+  .cform-done:focus {
+    outline: none;
+  }
+  @media (min-width: 640px) {
+    .cform__grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    .cform__full {
+      grid-column: 1 / -1;
+    }
+  }
+</style>

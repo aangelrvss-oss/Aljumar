@@ -1,0 +1,75 @@
+---
+/**
+ * Barra fija inferior en móvil con las vías de contacto verificadas.
+ * En las fichas de inmueble se le pasa la referencia para que el correo
+ * llegue identificado.
+ */
+import Icon from './Icon.astro';
+import { site } from '../data/site';
+
+interface Props {
+  /** Texto para el asunto del correo, p. ej. «Ref. 30312733». */
+  subject?: string;
+  /** Ancla del formulario de la página (si existe), en lugar del correo. */
+  formHref?: string;
+}
+const { subject, formHref } = Astro.props;
+const mailto = `mailto:${site.email}${subject ? `?subject=${encodeURIComponent(subject)}` : ''}`;
+---
+
+<div class="mobile-bar" role="region" aria-label="Contacto rápido">
+  <a href={`tel:${site.phones.office.tel}`} class="mobile-bar__item mobile-bar__item--primary">
+    <Icon name="phone" size={20} />
+    <span>Llamar</span>
+  </a>
+  {
+    site.whatsapp && (
+      <a href={`https://wa.me/${site.whatsapp.number}`} class="mobile-bar__item" rel="noopener" target="_blank">
+        <Icon name="whatsapp" size={20} />
+        <span>WhatsApp</span>
+      </a>
+    )
+  }
+  <a href={formHref ?? mailto} class="mobile-bar__item">
+    <Icon name={formHref ? 'calendar' : 'mail'} size={20} />
+    <span>{formHref ? 'Pedir visita' : 'Escribir'}</span>
+  </a>
+</div>
+
+<style>
+  .mobile-bar {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 40;
+    display: flex;
+    gap: var(--s-2);
+    padding: var(--s-2) var(--s-3) calc(var(--s-2) + env(safe-area-inset-bottom));
+    background: var(--white);
+    border-top: 1px solid var(--line);
+    box-shadow: 0 -6px 20px rgb(23 53 79 / 0.1);
+  }
+  .mobile-bar__item {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--s-2);
+    min-height: 48px;
+    border-radius: var(--r-pill);
+    border: 1.5px solid var(--line-strong);
+    color: var(--navy-900);
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .mobile-bar__item--primary {
+    background: var(--lime-500);
+    border-color: var(--lime-500);
+    color: var(--navy-950);
+  }
+  @media (min-width: 1024px) {
+    .mobile-bar {
+      display: none;
+    }
+  }
+</style>

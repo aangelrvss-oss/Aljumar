@@ -1,0 +1,77 @@
+---
+import Icon from './Icon.astro';
+import { site } from '../data/site';
+
+interface Props {
+  title: string;
+  text: string;
+  primary: { label: string; href: string };
+  showPhone?: boolean;
+}
+const { title, text, primary, showPhone = true } = Astro.props;
+---
+
+<section class="cta on-dark" aria-labelledby="cta-title">
+  <div class="container cta__inner">
+    <div>
+      <h2 id="cta-title">{title}</h2>
+      <p>{text}</p>
+    </div>
+    <div class="cta__actions">
+      <a class="btn btn--accent" href={primary.href}>{primary.label} <Icon name="arrow-right" /></a>
+      {
+        showPhone && (
+          <a class="btn btn--on-dark" href={`tel:${site.phones.office.tel}`}>
+            <Icon name="phone" /> {site.phones.office.display}
+          </a>
+        )
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .cta {
+    position: relative;
+    overflow: hidden;
+    background: var(--navy-900);
+    color: var(--navy-100);
+    padding-block: var(--s-8);
+  }
+  .cta::before {
+    content: '';
+    position: absolute;
+    right: -120px;
+    top: -120px;
+    width: 420px;
+    height: 420px;
+    border-radius: 50%;
+    border: 70px solid rgb(191 214 0 / 0.08);
+    pointer-events: none;
+  }
+  .cta__inner {
+    position: relative;
+    display: grid;
+    gap: var(--s-5);
+    align-items: center;
+  }
+  .cta h2 {
+    color: var(--white);
+    font-size: var(--fs-xl);
+    margin-bottom: var(--s-2);
+  }
+  .cta p {
+    max-width: 58ch;
+    margin: 0;
+  }
+  .cta__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-3);
+  }
+  @media (min-width: 900px) {
+    .cta__inner {
+      grid-template-columns: 1.4fr auto;
+    }
+  }
+</style>
